@@ -1,0 +1,88 @@
+body {
+}
+.show-me {
+    //border-color: black;
+    //border-width: 1px;
+    //border-style: solid;
+    outline: 1px solid blue;
+    outline-offset: -1px;
+}
+
+.full-frame {
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#menu-container {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-flow: column;
+}
+
+.menu-button {
+    //position: relative;
+    //height: 20px;
+    //width: 20px;
+    background-color: tan;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.icon-container {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.icon {
+    background-color: tan;
+    padding: 5px;
+    //margin: 5px;
+    width: 20px;
+    height: 20px;
+}
+
+.row-container {
+    background-color: tan;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-flow: row;
+}
+
+#test-container {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: tan;
+    display: flex;
+    display: none;
+    justify-content: center;
+    align-content: center;
+    flex-flow: column;
+}
+
+.test-button {
+    font-size: 8pt;
+    width: 75px;
+    line-height: 50px;
+    //background-color: white;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    flex-flow: row;
+}
+
+#canvas-container {
+}
+
+#whiteboard {
+}
