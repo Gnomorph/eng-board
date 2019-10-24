@@ -58,7 +58,7 @@ body {
     flex-flow: row;
 }
 
-#test-container {
+#debug-menu {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -70,7 +70,7 @@ body {
     flex-flow: column;
 }
 
-.test-button {
+.debug-label {
     font-size: 8pt;
     width: 75px;
     line-height: 50px;

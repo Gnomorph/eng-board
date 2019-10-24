@@ -264,7 +264,7 @@ function init(context) {
 }
 
 let debugState = false;
-let debugElement = document.getElementById("test-container");
+let debugElement = document.getElementById("debug-menu");
 
 function toggleDebug(e) {
     if (debugState) {
