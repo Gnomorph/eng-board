@@ -20,6 +20,11 @@ board.addEventListener('pointerup', stopPoint);
 
 settingsButton.addEventListener('click', toggleDebug);
 
+document.getElementById('trash').addEventListener('click', clearScreen, false);
+
+function clearScreen() {
+    ctx.clearRect(0, 0, board.width, board.height);
+}
 class Pointer {
     constructor(id, width, pressureThreashold) {
         this.id = id;
