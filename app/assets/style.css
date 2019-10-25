@@ -16,6 +16,20 @@ body {
     overflow: hidden;
 }
 
+.sub-menu {
+    position: absolute;
+    top: 0px;
+    right: 50px;
+    width: 250px;
+    display: none;
+    justify-content: center;
+    align-content: center;
+    flex-flow: column;
+    background-color: tan;
+    padding: 5px;
+    margin: 5px;
+}
+
 #menu-container {
     position: absolute;
     top: 0px;

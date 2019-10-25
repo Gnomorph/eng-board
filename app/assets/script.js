@@ -3,7 +3,6 @@ const resolution = 2;
 const width  = resolution*(window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth);
 const height = resolution*(window.innerHeight|| document.documentElement.clientHeight|| document.body.clientHeight);
 
-
 const penWidth = 1.5*resolution;
 //console.log(width, height);
 
@@ -12,11 +11,15 @@ var settingsButton = document.getElementById("settings-button");
 var ctx = board.getContext("2d");
 init(ctx);
 
-
 board.addEventListener('pointermove', pointHere);
 board.addEventListener('pointerdown', startPoint);
 board.addEventListener('pointerup', stopPoint);
 //board.addEventListener('click', clickPoint);
+
+document.body.addEventListener('click', bodyClick);
+function bodyClick(e) {
+    console.log("hello body", e.target.id);
+}
 
 settingsButton.addEventListener('click', toggleDebug);
 
@@ -39,11 +42,22 @@ class Pointer {
             this.id = id;
             this.clearHistory();
         }
+
+        if (this.id == 1) {
+            this.type = "mouse";
+        }
     }
 
     clearHistory() {
         this.type = "eraser";
         this.history = [null, null, null, null];
+    }
+
+    flushHistory() {
+        this.type = "eraser";
+        this.history[1] = null;
+        this.history[2] = null;
+        this.history[3] = null;
     }
 
     hasTilt(tiltX, tiltY) {
@@ -57,75 +71,69 @@ class Pointer {
         }
     }
 
-    async draw(context, x, y, pressure) {
-            this.history[3] = [x, y];
-
-            if (pressure > this.pressureThreashold) {
-                let pressureWidth = (pressure*(0.5 + pressure) * this.width);
-                drawBezier(context, ...this.history, pressureWidth);
-            }
-
-            this.history[0] = this.history[1];
-            this.history[1] = this.history[2];
-            this.history[2] = this.history[3];
+    async pushHistory(point){
+        this.history[0] = this.history[1];
+        this.history[1] = this.history[2];
+        this.history[2] = this.history[3];
+        this.history[3] = point;
     }
 
-    async erase(context, x, y) {
-        drawArc(context, x, y, 50*this.width, "#ffffff")
+    async draw(context, point, pressure) {
+        this.pushHistory(point);
+
+        if (pressure < this.pressureThreashold) {
+            pressure = this.pressureThreashold;
+        }
+
+        let pressureWidth = (pressure*(0.5 + pressure) * this.width);
+        drawBezier(context, ...this.history, pressureWidth);
+
+    }
+
+    async erase(context, point) {
+        drawArc(context, point, 50*this.width, "#ffffff")
     }
 
 }
 
 let last = [0, 0];
-let n0, n1, n2, n3;
 let mousePoints = [null, null, null, null];
-let penPoints = [null, null, null, null];
 let penId;
-let pen = new Pointer(null, penWidth, 0.4);
+let pen = new Pointer(null, penWidth, 0.25);
 let timerId = null;
 let touchEnabled = false;
 
 function pointHere(e) {
+    let n3 = [ resolution*e.clientX, resolution*e.clientY ];
     if (e.pointerType=="pen") {
         pen.setId(e.pointerId);
         pen.hasTilt(e.tiltX, e.tiltY);
 
         if (e.buttons == "1") {
             if (pen.type == "pen") {
-                pen.draw(ctx, resolution*e.clientX, resolution*e.clientY, e.pressure);
-                /*
-            penPoints[3] = [resolution*e.clientX, resolution*e.clientY];
-
-            if (e.pressure > 0.4) {
-                let penPressureWidth = (e.pressure*(0.5 + e.pressure) * penWidth);
-                drawBezier(ctx, ...penPoints, penPressureWidth);
-            }
-
-            penPoints[0] = penPoints[1];
-            penPoints[1] = penPoints[2];
-            penPoints[2] = penPoints[3];
-            */
+                pen.draw(ctx, n3, e.pressure);
             } else if (pen.type == "eraser") {
-                pen.erase(ctx, resolution*e.clientX, resolution*e.clientY);
+                pen.erase(ctx, n3);
             }
         } else {
-            pen.clearHistory();
+            pen.pushHistory(n3);
         }
     } else if (e.pointerType=="mouse" && e.buttons == "1") {
+        pen.setId(e.pointerId);
         // mouse support
-        mousePoints[3] = [resolution*e.clientX, resolution*e.clientY];
-
-        drawBezier(ctx, ...mousePoints, penWidth);
-
         mousePoints[0] = mousePoints[1];
         mousePoints[1] = mousePoints[2];
         mousePoints[2] = mousePoints[3];
+        mousePoints[3] = n3;
+
+        drawBezier(ctx, ...mousePoints, penWidth);
+
     } else if (penId == e.pointerId && e.pointerType == "touch") {
         // legacy/default pen support
-        //drawBezier(ctx, ...n0, ...n1, ...n2, penWidth);
+        //drawBezier(ctx, ...n3, ...n1, ...n2, penWidth);
     } else if (e.pointerType=="touch" && touchEnabled && e.buttons=="1") {
         // touch support
-        //drawBezier(ctx, ...n0, ...n1, ...n2, penWidth);
+        //drawBezier(ctx, ...n3, ...n1, ...n2, penWidth);
     }
 }
 
@@ -137,13 +145,27 @@ function drawPage() {
 }
 
 function startPoint(e) {
+    let current = [resolution*e.clientX, resolution*e.clientY];
+    pen.pushHistory(current);
+    pen.history[0] = null;
+    pen.history[1] = null;
+
+    if (e.mozInputSource == 2 || e.mozInputSource == 1) {
+        //drawArc(ctx, current, 10*resolution, '#0000ff');
+    }
 }
 
 function stopPoint(e) {
+    let current = [resolution*e.clientX, resolution*e.clientY];
+
+    // TODO
+    // you should actually just draw the last point
     if (e.mozInputSource == 1) {
         mousePoints = [null, null, null, null];
-    } else if (e.mozInputSource == 2) {
-        penPoints = [null, null, null, null];
+        //drawArc(ctx, current, 2*resolution, '#ff00ff');
+    } else if (e.mozInputSource == 2 || e.mozInputSource == 1) {
+        drawLine(ctx, pen.history[2], current, pen.width);
+        //drawArc(ctx, current, 2*resolution, '#ff00ff');
     }
 }
 
@@ -155,36 +177,10 @@ async function drawPoints(context, x, y, width) {
     context.fill();
 }
 
-/*
-async function drawLines(context, path, width) {
-    //context.beginPath();
-    context.lineWidth = width;
-    context.lineCap = "round";
-
-    if (path.length > 0) {
-        p0 = path[0];
-
-        for (let p1 of path) {
-            if (Math.abs(p0[0] - p1[0]) + Math.abs(p0[1] - p1[1]) < penWidth) {
-                drawArc(context, p1, penWidth);
-                //context.arc(p1[0], p1[1], width/4, 0, 2 * Math.PI, false);
-                //context.fill();
-            } else {
-                drawLine(context, p0, p1, penWidth);
-                context.moveTo(...p0);
-                context.lineTo(...p1);
-            }
-        }
-        //context.closePath();
-        context.stroke();
-    }
-}
-*/
-
-async function drawArc(context, x, y, width, style) {
+async function drawArc(context, point, width, style) {
     context.beginPath();
     context.lineWidth = 0;
-    context.arc(x, y, width/2, 0, 2 * Math.PI, false);
+    context.arc(...point, width/2, 0, 2 * Math.PI, false);
     context.fillStyle = style || "rgb(0, 0, 0)";
     context.fill();
     context.closePath();
@@ -209,15 +205,27 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
 
     context.strokeCap = "round";
 
+    let dabs = Math.abs(p2[0] - p1[0]) + Math.abs(p2[1] - p1[1]);
     let d = (p2[0] - p1[0]) + (p2[1] - p1[1]);
 
     let pLeft = getBezierRight(p0, p1, p2);
     let pRight = getBezierLeft(p1, p2, p3);
 
     context.moveTo(...p1);
-    context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
+    if (dabs*resolution > 5*width) {
+        //console.log(width, d*resolution);
+        //context.strokeStyle = "#00ff00";
+        context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
+    } else {
+        //context.strokeStyle = "#ff0000";
+        context.lineTo(...p2, width);
+    }
     context.stroke();
     context.closePath();
+
+    if (dabs*resolution < width) {
+        drawArc(context, p1, 1.5*width, style);
+    }
 }
 
 function getBezierLeft(pl, p, pr) {
@@ -249,13 +257,13 @@ function getBezierPoints(p0, p1, p2) {
 }
 
 async function drawLine(context, from, to, width, style) {
-    //context.beginPath();
+    context.beginPath();
     context.lineWidth = width;
     context.strokeStyle = style;
     context.moveTo(...from);
     context.lineTo(...to);
     context.stroke();
-    //context.closePath();
+    context.closePath();
 }
 
 function init(context) {
