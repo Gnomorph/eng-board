@@ -13,8 +13,17 @@
     <link href="assets/style.css" rel="stylesheet">
   </head>
   <body class="full-frame">
-    <div id="test-submenu" class="sub-menu" class="show-me">
-      hello there!
+    <div id="pen-submenu" class="sub-menu" class="show-me">
+      the pen 
+    </div>
+    <div id="pencil-submenu" class="sub-menu" class="show-me">
+      pencil submenu
+    </div>
+    <div id="highlighter-submenu" class="sub-menu" class="show-me">
+      highlighter some day
+    </div>
+    <div id="eraser-submenu" class="sub-menu" class="show-me">
+      eraser soon!
     </div>
     <div id="debug-menu" class="show-me">
       <div id="mouse" class="row-container">
@@ -40,7 +49,7 @@
           id: &nbsp;<span id=id></span></div>
       </div>
 
-      <div id="pen" class="row-container">
+      <div id="pen-debug" class="row-container">
 
         <div id="label" class="debug-label">
           pen </div>
@@ -64,7 +73,7 @@
           id: &nbsp;<span id=id></span></div>
 
       </div>
-      <div id="touch" class="row-container">
+      <div id="touch-debug" class="row-container">
 
         <div id="label" class="debug-label">
           touch </div>
@@ -91,30 +100,30 @@
     </div>
 
     <div id="menu-container" class="show-me">
-      <div class="menu-button">
+      <button id="pen" class="menu-button">
         <img src="assets/pencil.svg" class="icon"></img>
-      </div>
-      <div class="menu-button">
+      </button>
+      <button id='pencil' class="menu-button">
         <img src="assets/pen.svg" class="icon"></img>
-      </div>
-      <div class="menu-button">
+      </button>
+      <button id='highlighter' class="menu-button">
         <img src="assets/highlighter.svg" class="icon"></img>
-      </div>
-      <div class="menu-button">
+      </button>
+      <button id='undo' class="menu-button">
         <img src="assets/undo.svg" class="icon"></img>
-      </div>
-      <div class="menu-button">
+      </button>
+      <button id='redo' class="menu-button">
         <img src="assets/redo.svg" class="icon"></img>
-      </div>
-      <div class="menu-button">
+      </button>
+      <button id='eraser' class="menu-button">
         <img src="assets/eraser.svg" class="icon"></img>
-      </div>
-      <div id="trash" class="menu-button">
+      </button>
+      <button id="trash" class="menu-button">
         <img src="assets/trash.svg" class="icon"></img>
-      </div>
-      <div class="menu-button">
+      </button>
+      <button id='save' class="menu-button">
         <img src="assets/save.svg" class="icon"></img>
-      </div>
+      </button>
       <button id="settings-button" class="menu-button">
         <span>dbg</span>
       </button>

@@ -4,7 +4,6 @@ const width  = resolution*(window.innerWidth || document.documentElement.clientW
 const height = resolution*(window.innerHeight|| document.documentElement.clientHeight|| document.body.clientHeight);
 
 const penWidth = 1.5*resolution;
-//console.log(width, height);
 
 var board = document.getElementById("whiteboard");
 var settingsButton = document.getElementById("settings-button");
@@ -17,9 +16,42 @@ board.addEventListener('pointerup', stopPoint);
 //board.addEventListener('click', clickPoint);
 
 document.body.addEventListener('click', bodyClick);
+const subMenuPattern = /sub-menu/;
+let activeSubMenu = null;
 function bodyClick(e) {
-    console.log("hello body", e.target.id);
+    if (!subMenuPattern.test(e.target.className) && activeSubMenu) {
+        activeSubMenu.style.display = "none";
+    }
 }
+
+function makeShowSubMenu(menu) {
+    return function(e) {
+        if (activeSubMenu) {
+            activeSubMenu.style.display = "none";
+        }
+
+        activeSubMenu = menu;
+        activeSubMenu.style.display = "flex";
+        e.cancelBubble = true;
+    }
+}
+
+const menuMap = [
+    [ document.getElementById('pen'),
+        document.getElementById('pen-submenu') ],
+    [ document.getElementById('pencil'),
+        document.getElementById('pencil-submenu') ],
+    [ document.getElementById('highlighter'),
+        document.getElementById('highlighter-submenu') ],
+    [ document.getElementById('eraser'),
+        document.getElementById('eraser-submenu') ],
+];
+
+for (let map of menuMap) {
+    map[0].addEventListener('click', makeShowSubMenu(map[1]));
+}
+//document.getElementById('pen-menu').addEventListener('click', makeShowSubMenu(
+//document.getElementById('pen-submenu')));
 
 settingsButton.addEventListener('click', toggleDebug);
 
@@ -27,6 +59,25 @@ document.getElementById('trash').addEventListener('click', clearScreen, false);
 
 function clearScreen() {
     ctx.clearRect(0, 0, board.width, board.height);
+    ctx.beginPath();
+    ctx.fillStyle = "#ccddcc";
+    ctx.rect(0, 0, width, height);
+    ctx.fill();
+    ctx.closePath();
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#99bbaa";
+    ctx.lineWidth = 1;
+    for (let i=50*resolution; i<width; i+=50*resolution) {
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, height);
+    }
+    for (let i=50*resolution; i<height; i+=50*resolution) {
+        ctx.moveTo(0, i);
+        ctx.lineTo(width, i);
+    }
+    ctx.stroke();
+    ctx.closePath();
 }
 class Pointer {
     constructor(id, width, pressureThreashold) {
@@ -163,7 +214,7 @@ function stopPoint(e) {
     if (e.mozInputSource == 1) {
         mousePoints = [null, null, null, null];
         //drawArc(ctx, current, 2*resolution, '#ff00ff');
-    } else if (e.mozInputSource == 2 || e.mozInputSource == 1) {
+    } else if (e.mozInputSource == 2 && pen.type=="pen") {
         drawLine(ctx, pen.history[2], current, pen.width);
         //drawArc(ctx, current, 2*resolution, '#ff00ff');
     }
@@ -213,7 +264,6 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
 
     context.moveTo(...p1);
     if (dabs*resolution > 5*width) {
-        //console.log(width, d*resolution);
         //context.strokeStyle = "#00ff00";
         context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
     } else {
@@ -269,6 +319,7 @@ async function drawLine(context, from, to, width, style) {
 function init(context) {
     context.canvas.width = width;
     context.canvas.height = height;
+    clearScreen();
 }
 
 let debugState = false;
