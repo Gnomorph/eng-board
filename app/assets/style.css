@@ -30,6 +30,34 @@ body {
     margin: 5px;
 }
 
+#color-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.color-button {
+    width: 50px;
+    height: 50px;
+}
+
+#red { background-color:red; }
+#orange { background-color:orange; }
+#yellow { background-color:yellow; }
+#green { background-color:green; }
+#blue { background-color:blue; }
+#indigo { background-color:indigo; }
+#violet { background-color:violet; }
+#black { background-color:black; }
+#purple { background-color:purple; }
+#grey { background-color:grey; }
+#cream { background-color:grey; }
+
+.pointer-width {
+    width: auto;
+    margin: 2px;
+    padding: 2px;
+}
+
 #menu-container {
     position: absolute;
     top: 0px;
@@ -95,7 +123,15 @@ body {
     flex-flow: row;
 }
 
+#bg-board {
+}
+
+#fg-board {
+    display:none;
+}
+
 #canvas-container {
+    display:flex;
 }
 
 #whiteboard {

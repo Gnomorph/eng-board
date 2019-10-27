@@ -1,86 +1,39 @@
+/**********
+ *
+ *  Define Constants
+ *
+ **********/
 const resolution = 2;
-
-const width  = resolution*(window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth);
-const height = resolution*(window.innerHeight|| document.documentElement.clientHeight|| document.body.clientHeight);
-
+const width  = resolution*getWidth();
+const height = resolution*getHeight();
 const penWidth = 1.5*resolution;
 
-var board = document.getElementById("whiteboard");
-var settingsButton = document.getElementById("settings-button");
-var ctx = board.getContext("2d");
-init(ctx);
 
-board.addEventListener('pointermove', pointHere);
-board.addEventListener('pointerdown', startPoint);
-board.addEventListener('pointerup', stopPoint);
-//board.addEventListener('click', clickPoint);
-
-document.body.addEventListener('click', bodyClick);
-const subMenuPattern = /sub-menu/;
-let activeSubMenu = null;
-function bodyClick(e) {
-    if (!subMenuPattern.test(e.target.className) && activeSubMenu) {
-        activeSubMenu.style.display = "none";
-    }
+/**********
+ *
+ *  Helper Methods
+ *
+ **********/
+function getWidth() {
+    return window.innerWidth
+        || document.documentElement.clientWidth
+        || document.body.clientWidth;
 }
 
-function makeShowSubMenu(menu) {
-    return function(e) {
-        if (activeSubMenu) {
-            activeSubMenu.style.display = "none";
-        }
-
-        activeSubMenu = menu;
-        activeSubMenu.style.display = "flex";
-        e.cancelBubble = true;
-    }
+function getHeight() {
+    return window.innerHeight
+        || document.documentElement.clientHeight
+        || document.body.clientHeight;
 }
 
-const menuMap = [
-    [ document.getElementById('pen'),
-        document.getElementById('pen-submenu') ],
-    [ document.getElementById('pencil'),
-        document.getElementById('pencil-submenu') ],
-    [ document.getElementById('highlighter'),
-        document.getElementById('highlighter-submenu') ],
-    [ document.getElementById('eraser'),
-        document.getElementById('eraser-submenu') ],
-];
-
-for (let map of menuMap) {
-    map[0].addEventListener('click', makeShowSubMenu(map[1]));
-}
-//document.getElementById('pen-menu').addEventListener('click', makeShowSubMenu(
-//document.getElementById('pen-submenu')));
-
-settingsButton.addEventListener('click', toggleDebug);
-
-document.getElementById('trash').addEventListener('click', clearScreen, false);
-
-function clearScreen() {
-    ctx.clearRect(0, 0, board.width, board.height);
-    ctx.beginPath();
-    ctx.fillStyle = "#ccddcc";
-    ctx.rect(0, 0, width, height);
-    ctx.fill();
-    ctx.closePath();
-
-    ctx.beginPath();
-    ctx.strokeStyle = "#99bbaa";
-    ctx.lineWidth = 1;
-    for (let i=50*resolution; i<width; i+=50*resolution) {
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, height);
-    }
-    for (let i=50*resolution; i<height; i+=50*resolution) {
-        ctx.moveTo(0, i);
-        ctx.lineTo(width, i);
-    }
-    ctx.stroke();
-    ctx.closePath();
-}
+/**********
+ *
+ *  Class Definitions
+ *
+ **********/
 class Pointer {
     constructor(id, width, pressureThreashold) {
+        this.hasUpdates = false;
         this.id = id;
         this.width = width;
         this.pressureThreashold = pressureThreashold;
@@ -130,6 +83,8 @@ class Pointer {
     }
 
     async draw(context, point, pressure) {
+        this.hasUpdates = true;
+
         this.pushHistory(point);
 
         if (pressure < this.pressureThreashold) {
@@ -142,18 +97,87 @@ class Pointer {
     }
 
     async erase(context, point) {
-        drawArc(context, point, 50*this.width, "#ffffff")
+        this.hasUpdates = true;
+
+        let d = 25*resolution;
+        let x = point[0];
+        let y = point[1];
+
+        context.clearRect(x-d, y-d, 2*d, 2*d);
+        //drawArc(context, point, 50*this.width, "#ffffff")
     }
 
 }
 
+let fpsTimer;
+
+var fgBoard = document.getElementById("fg-board");
+var bgBoard = document.getElementById("bg-board");
+
+var settingsButton = document.getElementById("settings-button");
+var fCtx = fgBoard.getContext("2d");
+var bCtx = bgBoard.getContext("2d");
+
 let last = [0, 0];
-let mousePoints = [null, null, null, null];
-let penId;
 let pen = new Pointer(null, penWidth, 0.25);
 let timerId = null;
 let touchEnabled = false;
 
+init(fCtx, bCtx);
+
+bgBoard.addEventListener('pointermove', pointHere);
+bgBoard.addEventListener('pointerdown', startPoint);
+bgBoard.addEventListener('pointerup', stopPoint);
+//bgBoard.addEventListener('click', clickPoint);
+
+document.body.addEventListener('click', bodyClick);
+const subMenuPattern = /sub-menu/;
+let activeSubMenu = null;
+function bodyClick(e) {
+    if (!subMenuPattern.test(e.target.className) && activeSubMenu) {
+        activeSubMenu.style.display = "none";
+    }
+}
+
+function makeShowSubMenu(menu) {
+    return function(e) {
+        if (activeSubMenu) {
+            activeSubMenu.style.display = "none";
+        }
+
+        activeSubMenu = menu;
+        activeSubMenu.style.display = "flex";
+        e.cancelBubble = true;
+    }
+}
+
+const menuMap = [
+    [ document.getElementById('pen'),
+        document.getElementById('pen-submenu') ],
+    [ document.getElementById('pencil'),
+        document.getElementById('pencil-submenu') ],
+    [ document.getElementById('highlighter'),
+        document.getElementById('highlighter-submenu') ],
+    [ document.getElementById('eraser'),
+        document.getElementById('eraser-submenu') ],
+];
+
+for (let map of menuMap) {
+    map[0].addEventListener('click', makeShowSubMenu(map[1]));
+}
+//document.getElementById('pen-menu').addEventListener('click', makeShowSubMenu(
+//document.getElementById('pen-submenu')));
+
+settingsButton.addEventListener('click', toggleDebug);
+
+document.getElementById('trash').addEventListener('click', clearScreen, false);
+
+function clearScreen() {
+    pen.hasUpdates = true;
+    fCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
+}
+
+let penId;
 function pointHere(e) {
     let n3 = [ resolution*e.clientX, resolution*e.clientY ];
     if (e.pointerType=="pen") {
@@ -162,29 +186,32 @@ function pointHere(e) {
 
         if (e.buttons == "1") {
             if (pen.type == "pen") {
-                pen.draw(ctx, n3, e.pressure);
+                pen.draw(fCtx, n3, e.pressure);
             } else if (pen.type == "eraser") {
-                pen.erase(ctx, n3);
+                pen.erase(fCtx, n3);
             }
         } else {
             pen.pushHistory(n3);
         }
-    } else if (e.pointerType=="mouse" && e.buttons == "1") {
+    } else if (e.pointerType=="mouse") {
         pen.setId(e.pointerId);
-        // mouse support
-        mousePoints[0] = mousePoints[1];
-        mousePoints[1] = mousePoints[2];
-        mousePoints[2] = mousePoints[3];
-        mousePoints[3] = n3;
+        pen.type = "pen";
+        //pen.hasTilt(e.tiltX, e.tiltY);
 
-        drawBezier(ctx, ...mousePoints, penWidth);
-
+        if (e.buttons == "1") {
+            pen.draw(fCtx, n3, 1);
+        } else if (e.buttons == "4") {
+            console.log("erase");
+            pen.erase(fCtx, n3);
+        } else {
+            pen.pushHistory(n3);
+        }
     } else if (penId == e.pointerId && e.pointerType == "touch") {
         // legacy/default pen support
-        //drawBezier(ctx, ...n3, ...n1, ...n2, penWidth);
+        //drawBezier(fCtx, ...n3, ...n1, ...n2, penWidth);
     } else if (e.pointerType=="touch" && touchEnabled && e.buttons=="1") {
         // touch support
-        //drawBezier(ctx, ...n3, ...n1, ...n2, penWidth);
+        //drawBezier(fCtx, ...n3, ...n1, ...n2, penWidth);
     }
 }
 
@@ -192,17 +219,18 @@ function drawPage() {
     //let path = JSON.parse(JSON.stringify(stroke));
     let path = stroke;
     //stroke = [path[path.length-1]];
-    //drawLines(ctx, path, penWidth);
+    //drawLines(fCtx, path, penWidth);
 }
 
 function startPoint(e) {
+    let activeSubMenu = null;
     let current = [resolution*e.clientX, resolution*e.clientY];
     pen.pushHistory(current);
     pen.history[0] = null;
     pen.history[1] = null;
 
     if (e.mozInputSource == 2 || e.mozInputSource == 1) {
-        //drawArc(ctx, current, 10*resolution, '#0000ff');
+        //drawArc(fCtx, current, 10*resolution, '#0000ff');
     }
 }
 
@@ -212,11 +240,10 @@ function stopPoint(e) {
     // TODO
     // you should actually just draw the last point
     if (e.mozInputSource == 1) {
-        mousePoints = [null, null, null, null];
-        //drawArc(ctx, current, 2*resolution, '#ff00ff');
+        //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     } else if (e.mozInputSource == 2 && pen.type=="pen") {
-        drawLine(ctx, pen.history[2], current, pen.width);
-        //drawArc(ctx, current, 2*resolution, '#ff00ff');
+        drawLine(fCtx, pen.history[2], current, pen.width);
+        //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     }
 }
 
@@ -316,11 +343,50 @@ async function drawLine(context, from, to, width, style) {
     context.closePath();
 }
 
-function init(context) {
-    context.canvas.width = width;
-    context.canvas.height = height;
+function init(foreground, background) {
+    background.canvas.width = width;
+    background.canvas.height = height;
+    foreground.canvas.width = width;
+    foreground.canvas.height = height;
     clearScreen();
+
+    greenScreen();
+    fpsTimer = setInterval(buildCopyScreens(background, foreground), 20);
 }
+
+function buildCopyScreens(bg, fg) {
+    return function(e) {
+        if (pen.hasUpdates) {
+            pen.hasUpdates = false;
+            greenScreen();
+            bg.drawImage(fg.canvas, 0, 0);
+        }
+    }
+}
+
+function greenScreen() {
+    bCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
+    bCtx.beginPath();
+    bCtx.fillStyle = "#ccddcc";
+    bCtx.rect(0, 0, width, height);
+    bCtx.fill();
+    bCtx.closePath();
+
+    bCtx.beginPath();
+    bCtx.strokeStyle = "#99bbaa";
+    bCtx.lineWidth = 1;
+    for (let i=50*resolution; i<width; i+=50*resolution) {
+        bCtx.moveTo(i, 0);
+        bCtx.lineTo(i, height);
+    }
+    for (let i=50*resolution; i<height; i+=50*resolution) {
+        bCtx.moveTo(0, i);
+        bCtx.lineTo(width, i);
+    }
+    bCtx.stroke();
+    bCtx.closePath();
+}
+
 
 let debugState = false;
 let debugElement = document.getElementById("debug-menu");
@@ -336,24 +402,25 @@ function toggleDebug(e) {
 function enableDebug() {
     debugState = true;
     debugElement.style.display = "flex";
-    board.addEventListener('pointermove', testMove);
-    board.addEventListener('pointerdown', testDown);
-    board.addEventListener('pointerup', testUp);
+    bgBoard.addEventListener('pointermove', testMove);
+    bgBoard.addEventListener('pointerdown', testDown);
+    bgBoard.addEventListener('pointerup', testUp);
 }
 
 function disableDebug() {
     debugState = false;
     debugElement.style.display = "none";
-    board.removeEventListener('pointermove', testMove);
-    board.removeEventListener('pointerdown', testDown);
-    board.removeEventListener('pointerup', testUp);
+    bgBoard.removeEventListener('pointermove', testMove);
+    bgBoard.removeEventListener('pointerdown', testDown);
+    bgBoard.removeEventListener('pointerup', testUp);
 }
 
 function testMove(e) {
-    let type = document.getElementById(e.pointerType);
+    console.log(e);
+    let type = document.getElementById(e.pointerType + "-debug");
 
-    type.querySelector('#x').innerHTML = resolution*e.tiltX;
-    type.querySelector('#y').innerHTML = resolution*e.tiltY;
+    type.querySelector('#x').innerHTML = resolution*e.clientX;
+    type.querySelector('#y').innerHTML = resolution*e.clientY;
     type.querySelector('#buttons').innerHTML = e.buttons;
     type.querySelector('#pressure').innerHTML = e.pressure;
     type.querySelector('#id').innerHTML = e.pointerId;
