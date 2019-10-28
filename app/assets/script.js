@@ -93,7 +93,7 @@ class Pointer {
             pressure = this.pressureThreashold;
         }
 
-        let pressureWidth = (pressure*(0.5 + pressure) * this.width);
+        let pressureWidth = (0.5 + pressure) * this.width;
         drawBezier(context, ...this.history, pressureWidth);
 
     }
@@ -272,7 +272,7 @@ function stopPoint(e) {
     if (e.mozInputSource == 1) {
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     } else if (e.mozInputSource == 2 && pen.type=="pen") {
-        drawLine(fCtx, pen.history[2], current, pen.width);
+        drawLine(fCtx, pen.history[2], current, pen.width/2);
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     }
 }
@@ -320,7 +320,7 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     let pRight = getBezierLeft(p1, p2, p3);
 
     context.moveTo(...p1);
-    if (dabs*resolution > 5*width) {
+    if (false && dabs*resolution > 5*width) {
         //context.strokeStyle = "#00ff00";
         context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
     } else {
