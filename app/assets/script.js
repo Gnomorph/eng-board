@@ -26,6 +26,7 @@ function getHeight() {
         || document.body.clientHeight;
 }
 
+
 /**********
  *
  *  Class Definitions
@@ -129,6 +130,23 @@ bgBoard.addEventListener('pointermove', pointHere);
 bgBoard.addEventListener('pointerdown', startPoint);
 bgBoard.addEventListener('pointerup', stopPoint);
 //bgBoard.addEventListener('click', clickPoint);
+
+document.getElementById("save").addEventListener('click', myFullscreen);
+function myFullscreen(e) {
+    var elem = document.getElementById("bg-board");
+    elem = document.body;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    }
+
+    console.log("post:", getWidth(), getHeight());
+}
 
 document.body.addEventListener('click', bodyClick);
 const subMenuPattern = /sub-menu/;
