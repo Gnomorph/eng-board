@@ -4,9 +4,10 @@
  *
  **********/
 const resolution = 2;
-const width  = resolution*getWidth();
-const height = resolution*getHeight();
 const penWidth = 1.5*resolution;
+
+let width  = resolution*getWidth();
+let height = resolution*getHeight();
 
 
 /**********
@@ -130,6 +131,17 @@ bgBoard.addEventListener('pointermove', pointHere);
 bgBoard.addEventListener('pointerdown', startPoint);
 bgBoard.addEventListener('pointerup', stopPoint);
 //bgBoard.addEventListener('click', clickPoint);
+
+window.addEventListener('resize', resizeCanvas);
+function resizeCanvas(event) {
+    width  = resolution*getWidth();
+    height = resolution*getHeight();
+    pen.hasUpdates = true;
+    bCtx.canvas.width = width;
+    fCtx.canvas.width = width;
+    bCtx.canvas.height = height;
+    fCtx.canvas.height = height;
+}
 
 document.getElementById("save").addEventListener('click', myFullscreen);
 function myFullscreen(e) {
