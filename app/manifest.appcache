@@ -2,9 +2,9 @@ CACHE MANIFEST
 # v1 2019-10-24
 
 FALLBACK:
-index.html index.html
-assets/script.js assets/script.js
-assets/style.css assets/style.css
+#index.html index.html
+#assets/script.js assets/script.js
+#assets/style.css assets/style.css
 assets/pen.svg assets/pen.svg
 assets/pencil.svg assets/pencil.svg
 assets/highlighter.svg assets/highlighter.svg

@@ -3,8 +3,9 @@
  *  Define Constants
  *
  **********/
-const resolution = 2;
-const penWidth = 1.5*resolution;
+//const resolution = 2;
+const resolution = window.devicePixelRatio;
+console.log(resolution);
 
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
@@ -26,7 +27,6 @@ let colorList = [
     [ "grey", "#808080"],
 ];
 
-
 /**********
  *
  *  Helper Methods
@@ -44,7 +44,6 @@ function getHeight() {
         || document.body.clientHeight;
 }
 
-
 /**********
  *
  *  Class Definitions
@@ -53,23 +52,44 @@ function getHeight() {
 class Pointer {
     constructor(id, width, pressureThreashold) {
         this.hasUpdates = false;
-        this.id = id;
+        this._id = id;
         this.width = width;
         this.pressureThreashold = pressureThreashold;
         this.color = "#000000";
+        this.lastPressure = 1;
+        this.currentPressure = 1;
 
         this.clearHistory();
     }
 
-    setId(id) {
-        if (this.id != id) {
-            this.id = id;
+    get id() {
+        return this.id;
+    }
+
+    set id(value) {
+        if (this._id != value) {
+            this._id = value;
             this.clearHistory();
         }
 
-        if (this.id == 1) {
+        if (this._id == 1) {
             this.type = "mouse";
         }
+    }
+
+    get pressure() {
+        return this.currentPressure;
+    }
+
+    set pressure(value) {
+        this.lastPressure = this.currentPressure;
+
+        if (value < this.pressureThreashold) {
+            this.currentPressure = this.pressureThreashold;
+        } else {
+            this.currentPressure = value;
+        }
+
     }
 
     clearHistory() {
@@ -102,16 +122,12 @@ class Pointer {
         this.history[3] = point;
     }
 
-    async draw(context, point, pressure) {
+    async draw(context, point) {
         this.hasUpdates = true;
 
         this.pushHistory(point);
 
-        if (pressure < this.pressureThreashold) {
-            pressure = this.pressureThreashold;
-        }
-
-        let pressureWidth = (0.5 + pressure) * this.width;
+        let pressureWidth = this.pressure * this.width;
         drawBezier(context, ...this.history, pressureWidth, this.color);
 
     }
@@ -138,7 +154,7 @@ var fCtx = fgBoard.getContext("2d");
 var bCtx = bgBoard.getContext("2d");
 
 let last = [0, 0];
-let pen = new Pointer(null, penWidth, 0.25);
+let pen = new Pointer(null, 4, 0.25);
 let timerId = null;
 let touchEnabled = false;
 
@@ -174,7 +190,7 @@ function myFullscreen(e) {
         elem.webkitRequestFullscreen();
     }
 
-    console.log("post:", getWidth(), getHeight());
+    //console.log("post:", getWidth(), getHeight());
 }
 
 document.body.addEventListener('click', bodyClick);
@@ -228,37 +244,40 @@ let penId;
 function pointHere(e) {
     let n3 = [ resolution*e.clientX, resolution*e.clientY ];
     if (e.pointerType=="pen") {
-        pen.setId(e.pointerId);
+        pen.id = e.pointerId;
         pen.hasTilt(e.tiltX, e.tiltY);
 
         if (e.buttons == "1") {
             if (pen.type == "pen") {
-                pen.draw(fCtx, n3, e.pressure);
+                pen.pressure = e.pressure;
+                pen.draw(fCtx, n3);
             } else if (pen.type == "eraser") {
                 pen.erase(fCtx, n3);
             }
+        } else if (e.pressure != 0){
+            pen.pressure = e.pressure;
+            pen.draw(fCtx, [ e.clientX, resolution*e.clientY ]);
         } else {
             pen.pushHistory(n3);
         }
     } else if (e.pointerType=="mouse") {
-        pen.setId(e.pointerId);
+        pen.id = e.pointerId;
         pen.type = "pen";
         //pen.hasTilt(e.tiltX, e.tiltY);
 
         if (e.buttons == "1") {
-            pen.draw(fCtx, n3, 1);
+            pen.pressure = 1;
+            pen.draw(fCtx, n3);
         } else if (e.buttons == "4") {
-            console.log("erase");
+            //console.log("erase");
             pen.erase(fCtx, n3);
         } else {
             pen.pushHistory(n3);
         }
     } else if (penId == e.pointerId && e.pointerType == "touch") {
         // legacy/default pen support
-        //drawBezier(fCtx, ...n3, ...n1, ...n2, penWidth);
     } else if (e.pointerType=="touch" && touchEnabled && e.buttons=="1") {
         // touch support
-        //drawBezier(fCtx, ...n3, ...n1, ...n2, penWidth);
     }
 }
 
@@ -266,7 +285,6 @@ function drawPage() {
     //let path = JSON.parse(JSON.stringify(stroke));
     let path = stroke;
     //stroke = [path[path.length-1]];
-    //drawLines(fCtx, path, penWidth);
 }
 
 function startPoint(e) {
@@ -289,7 +307,7 @@ function stopPoint(e) {
     if (e.mozInputSource == 1) {
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     } else if (e.mozInputSource == 2 && pen.type=="pen") {
-        drawLine(fCtx, pen.history[2], current, pen.width/2);
+        drawLine(fCtx, pen.history[2], current, 0, pen.color, 10);
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     }
 }
@@ -297,6 +315,7 @@ function stopPoint(e) {
 async function drawArc(context, point, width, style) {
     context.beginPath();
     context.lineWidth = 0;
+    context.strokeStyle = style;
     context.arc(...point, width/2, 0, 2 * Math.PI, false);
     context.fillStyle = style || "rgb(0, 0, 0)";
     context.fill();
@@ -320,7 +339,7 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     context.lineWidth = width;
     context.strokeStyle = style;
 
-    context.strokeCap = "round";
+    //context.lineCap = "round";
 
     let dabs = Math.abs(p2[0] - p1[0]) + Math.abs(p2[1] - p1[1]);
     let d = (p2[0] - p1[0]) + (p2[1] - p1[1]);
@@ -337,11 +356,10 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
         context.lineTo(...p2, width);
     }
     context.stroke();
-    context.closePath();
 
     if (dabs*resolution < 100*width) {
-        drawArc(context, p1, width, style);
-        drawArc(context, p2, width, style);
+        //drawArc(context, p1, width, style);
+        //drawArc(context, p2, width, style);
     }
 }
 
@@ -374,14 +392,48 @@ function getBezierPoints(p0, p1, p2) {
     return [cp1, cp2];
 }
 
-async function drawLine(context, from, to, width, style) {
-    context.beginPath();
+async function drawLine(context, from, to, pressure, style, interpolate) {
+    pen.hasUpdates = true;
+    interpolate = interpolate || false;
     context.lineWidth = width;
     context.strokeStyle = style;
     context.moveTo(...from);
-    context.lineTo(...to);
-    context.stroke();
-    context.closePath();
+    //context.lineTo(0, 0);
+    //context.stroke();
+    if (interpolate) {
+        pressure = Math.max(pressure, pen.pressureThreashold);
+        let dp = (pressure - pen.pressure)/interpolate;
+        let dx = (to[0] - from[0])/interpolate;
+        let dy = (to[1] - from[1])/interpolate;
+
+        let ip = pen.pressure;
+        let ix = from[0];
+        let iy = from[1];
+        //console.log("pressure: ", dp);
+        //console.log("position: ", dx, dy);
+        for (let i=0; i<interpolate; i++) {
+            context.beginPath();
+            context.moveTo(ix, iy);
+            ip += dp;
+            ix += dx;
+            iy += dy;
+
+            let randStyle = "";
+            do {
+                randStyle = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+            } while (randStyle.length != 7);
+
+            //context.strokeStyle = randStyle
+            context.strokeStyle = style;
+            context.lineWidth = pen.width*ip;
+            context.lineTo(ix, iy);
+            context.stroke();
+        }
+    } else {
+        context.beginPath();
+        context.lineTo(...to);
+        context.stroke();
+    }
 }
 
 function init(foreground, background) {
@@ -416,8 +468,6 @@ function init(foreground, background) {
         penColors.appendChild(colorButton);
     }
 
-
-
     background.canvas.width = width;
     background.canvas.height = height;
     foreground.canvas.width = width;
@@ -441,11 +491,9 @@ function buildCopyScreens(bg, fg) {
 
 function greenScreen() {
     bCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
-    bCtx.beginPath();
     bCtx.fillStyle = "#ccddcc";
     bCtx.rect(0, 0, width, height);
     bCtx.fill();
-    bCtx.closePath();
 
     bCtx.beginPath();
     bCtx.strokeStyle = "#99bbaa";
@@ -459,9 +507,7 @@ function greenScreen() {
         bCtx.lineTo(width, i);
     }
     bCtx.stroke();
-    bCtx.closePath();
 }
-
 
 let debugState = false;
 let debugElement = document.getElementById("debug-menu");
@@ -491,7 +537,7 @@ function disableDebug() {
 }
 
 function testMove(e) {
-    console.log(e);
+    //console.log(e);
     let type = document.getElementById(e.pointerType + "-debug");
 
     type.querySelector('#x').innerHTML = resolution*e.clientX;
