@@ -8,6 +8,23 @@ const penWidth = 1.5*resolution;
 
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
+let colorList = [
+    [ "black", "#000000"],
+    [ "red", "#ff0000"],
+    [ "maroon", "#800000"],
+    [ "green", "#00a000"],
+    [ "darkgreen", "#106010"],
+    [ "blue", "#0000ff"],
+    [ "deepblue", "#000080"],
+    [ "purple", "#800080"],
+    [ "violet", "#ee82ee"],
+    [ "indigo", "#4b0082"],
+    [ "yellow", "#d0d000"],
+    [ "aqua", "#008080"],
+    [ "teal", "#00cccc"],
+    [ "brown", "#421010"],
+    [ "grey", "#808080"],
+];
 
 
 /**********
@@ -39,6 +56,7 @@ class Pointer {
         this.id = id;
         this.width = width;
         this.pressureThreashold = pressureThreashold;
+        this.color = "#000000";
 
         this.clearHistory();
     }
@@ -94,7 +112,7 @@ class Pointer {
         }
 
         let pressureWidth = (0.5 + pressure) * this.width;
-        drawBezier(context, ...this.history, pressureWidth);
+        drawBezier(context, ...this.history, pressureWidth, this.color);
 
     }
 
@@ -106,7 +124,6 @@ class Pointer {
         let y = point[1];
 
         context.clearRect(x-d, y-d, 2*d, 2*d);
-        //drawArc(context, point, 50*this.width, "#ffffff")
     }
 
 }
@@ -277,14 +294,6 @@ function stopPoint(e) {
     }
 }
 
-async function drawPoints(context, x, y, width) {
-    context.beginPath();
-    context.lineWidth = 0;
-    context.arc(x, y, width/2, 0, 2 * Math.PI, false);
-    context.fillStyle = "rgb(0, 0, 0)";
-    context.fill();
-}
-
 async function drawArc(context, point, width, style) {
     context.beginPath();
     context.lineWidth = 0;
@@ -294,11 +303,11 @@ async function drawArc(context, point, width, style) {
     context.closePath();
 }
 
-async function drawPoint(context, x, y, width) {
+async function drawPoint(context, x, y, width, style) {
     context.beginPath();
     context.lineWidth = 0;
     context.arc(x, y, width/2, 0, 2 * Math.PI, false);
-    context.fillStyle = "rgb(0, 0, 0)";
+    context.fillStyle = style || "rgb(0, 0, 0)";
     context.fill();
     context.closePath();
 }
@@ -320,7 +329,7 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     let pRight = getBezierLeft(p1, p2, p3);
 
     context.moveTo(...p1);
-    if (false && dabs*resolution > 5*width) {
+    if (dabs*resolution > 5*width) {
         //context.strokeStyle = "#00ff00";
         context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
     } else {
@@ -330,8 +339,9 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     context.stroke();
     context.closePath();
 
-    if (dabs*resolution < width) {
-        drawArc(context, p1, 1.5*width, style);
+    if (dabs*resolution < 100*width) {
+        drawArc(context, p1, width, style);
+        drawArc(context, p2, width, style);
     }
 }
 
@@ -346,7 +356,8 @@ function getBezierRight(pl, p, pr) {
 }
 
 function getBezierPoints(p0, p1, p2) {
-    let h = 0.25;
+    let h = 0.5;
+    //let h = 1;
 
     let d = [ p2[0] - p0[0], p2[1] - p0[1] ];
 
@@ -374,6 +385,39 @@ async function drawLine(context, from, to, width, style) {
 }
 
 function init(foreground, background) {
+    let penColors = document.getElementById('color-container');
+    let penWidth = document.getElementById('pen-width-slider');
+    let penWidthOut = document.getElementById('pen-width-value');
+
+    penWidth.addEventListener('input', function(e) {
+        penWidthOut.innerHTML = penWidth.value;
+    });
+
+    penWidth.addEventListener('change', function(e) {
+        pen.width = penWidth.value;
+    });
+
+    pen.width = 4;
+    penWidthOut.innerHTML = 4;
+    penWidth.value = 4;
+
+    for (let color of colorList) {
+        var colorButton = document.createElement("div");
+        colorButton.id = "pen-" + color[0];
+        colorButton.style.backgroundColor = color[1];
+        colorButton.title = color[0];
+        colorButton.style.width = "50px";
+        colorButton.style.height = "50px";
+
+        colorButton.addEventListener('click', function(e) {
+            pen.color = color[1];
+        });
+
+        penColors.appendChild(colorButton);
+    }
+
+
+
     background.canvas.width = width;
     background.canvas.height = height;
     foreground.canvas.width = width;
@@ -382,6 +426,7 @@ function init(foreground, background) {
 
     greenScreen();
     fpsTimer = setInterval(buildCopyScreens(background, foreground), 20);
+    pen.color = "#000000";
 }
 
 function buildCopyScreens(bg, fg) {

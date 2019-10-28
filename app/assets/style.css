@@ -40,18 +40,6 @@ body {
     height: 50px;
 }
 
-#red { background-color:red; }
-#orange { background-color:orange; }
-#yellow { background-color:yellow; }
-#green { background-color:green; }
-#blue { background-color:blue; }
-#indigo { background-color:indigo; }
-#violet { background-color:violet; }
-#black { background-color:black; }
-#purple { background-color:purple; }
-#grey { background-color:grey; }
-#cream { background-color:grey; }
-
 .pointer-width {
     width: auto;
     margin: 2px;
