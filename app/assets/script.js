@@ -7,6 +7,8 @@
 const resolution = window.devicePixelRatio;
 console.log(resolution);
 
+document.ontouchmove = function(e) { e.preventDefault(); }
+
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
 let colorList = [
@@ -58,6 +60,7 @@ class Pointer {
         this.color = "#000000";
         this.lastPressure = 1;
         this.currentPressure = 1;
+        this.tip = "pen";
 
         this.clearHistory();
     }
@@ -123,13 +126,52 @@ class Pointer {
     }
 
     async draw(context, point) {
+        if (this.tip == "pen") {
+            this.drawPen(context, point);
+        } else if (this.tip == "pencil") {
+            this.drawPencil(context, point);
+        } else if (this.tip == "highlighter") {
+            this.drawHighlighter(context, point);
+        } else if (this.tip == "eraser") {
+            this.erase(context, point);
+        }
+    }
+
+    async drawPen(context, point) {
         this.hasUpdates = true;
 
         this.pushHistory(point);
 
         let pressureWidth = this.pressure * this.width;
+        context.globalAlpha = 1;
         drawBezier(context, ...this.history, pressureWidth, this.color);
 
+    }
+
+    async drawPencil(context, point) {
+        this.hasUpdates = true;
+
+        this.pushHistory(point);
+
+        let pressureWidth = this.pressure * this.width;
+        context.globalAlpha = 0.8;
+        drawBezier(context, ...this.history, pressureWidth, this.color);
+
+    }
+
+    async drawHighlighter(context, point) {
+        this.hasUpdates = true;
+        console.log("drawing", this.type, this.tip);
+
+        let d = 25*resolution;
+        let x = point[0];
+        let y = point[1];
+
+        context.globalAlpha = 0.01;
+        context.beginPath();
+        context.fillStyle = "yellow";
+        context.rect(x-d, y-d, 2*d, 2*d);
+        context.fill();
     }
 
     async erase(context, point) {
@@ -202,12 +244,13 @@ function bodyClick(e) {
     }
 }
 
-function makeShowSubMenu(menu) {
+function makeShowSubMenu(tip, menu) {
     return function(e) {
         if (activeSubMenu) {
             activeSubMenu.style.display = "none";
         }
 
+        pen.tip = tip.id;
         activeSubMenu = menu;
         activeSubMenu.style.display = "flex";
         e.cancelBubble = true;
@@ -226,7 +269,7 @@ const menuMap = [
 ];
 
 for (let map of menuMap) {
-    map[0].addEventListener('click', makeShowSubMenu(map[1]));
+    map[0].addEventListener('click', makeShowSubMenu(...map));
 }
 //document.getElementById('pen-menu').addEventListener('click', makeShowSubMenu(
 //document.getElementById('pen-submenu')));
@@ -250,10 +293,12 @@ function pointHere(e) {
         if (e.buttons == "1") {
             if (pen.type == "pen") {
                 pen.pressure = e.pressure;
-                pen.draw(fCtx, n3);
+                //pen.draw(fCtx, n3);
             } else if (pen.type == "eraser") {
-                pen.erase(fCtx, n3);
+                pen.tip = "eraser";
+                //pen.erase(fCtx, n3);
             }
+            pen.draw(fCtx, n3);
         } else if (e.pressure != 0){
             pen.pressure = e.pressure;
             pen.draw(fCtx, [ e.clientX, resolution*e.clientY ]);

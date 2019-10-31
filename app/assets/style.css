@@ -1,4 +1,7 @@
-body {
+html, body {
+    position: fixed;
+    overflow: hidden;
+    //touch-action: none;
 }
 .show-me {
     //border-color: black;
