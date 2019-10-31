@@ -1,15 +1,15 @@
 CACHE MANIFEST
-# v1 2019-10-24
+# v1 2019-10-28
 
 FALLBACK:
-#index.html index.html
-#assets/script.js assets/script.js
-#assets/style.css assets/style.css
-assets/pen.svg assets/pen.svg
-assets/pencil.svg assets/pencil.svg
-assets/highlighter.svg assets/highlighter.svg
-assets/undo.svg assets/undo.svg
-assets/redo.svg assets/redo.svg
-assets/eraser.svg assets/eraser.svg
-assets/trash.svg assets/trash.svg
-assets/save.svg assets/save.svg
+index.html offline/index.html
+assets/script.js offline/assets/script.js
+assets/style.css offline/assets/style.css
+assets/pen.svg offline/assets/pen.svg
+assets/pencil.svg offline/assets/pencil.svg
+assets/highlighter.svg offline/assets/highlighter.svg
+assets/undo.svg offline/assets/undo.svg
+assets/redo.svg offline/assets/redo.svg
+assets/eraser.svg offline/assets/eraser.svg
+assets/trash.svg offline/assets/trash.svg
+assets/save.svg offline/assets/save.svg

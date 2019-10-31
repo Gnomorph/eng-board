@@ -7,23 +7,20 @@ import string
 import tarfile
 
 path_fmt = "./{0}/{1}"
-start_pattern = re.compile("([\s]*)(?:<!--+)(?:[\s]*)(?:START)(?:[\s]*)(?:BUILDER)(?:[\s]*)(?:\:)(?:[\s]*)([A-Za-z.]+[A-Za-z])+(?:[\s]*)(?:-+->)")
-end_pattern = re.compile("([\s]*)(?:<!--+)(?:[\s]*)(?:END)(?:[\s]*)(?:BUILDER)(?:[\s]*)(?:\:)(?:[\s]*)([A-Za-z.]+[A-Za-z])+(?:[\s]*)(?:-+->)")
-script_pattern = re.compile('src="([^"]*)"')
-link_pattern = re.compile('href="([^"]*)"')
 
 def build(args):
-    filename = args[1]
     src = args[0]
-    srcFile = path_fmt.format(src, filename)
+    filename = args[1]
 
     # Create a temp folder in ./dist
     dst_root = "dist/temp_{:s}/".format(makeRandomText())
     dst = "{:s}ui".format(dst_root)
+    offline = "{:s}ui/offline".format(dst_root)
 
     try:
         os.mkdir(dst_root)
         shutil.copytree(src, dst)
+        shutil.copytree(src, offline)
     except:
         print("\nThere was an issue copying to the temp folder\n")
         raise
