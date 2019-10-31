@@ -110,6 +110,7 @@ class Pointer {
     hasTilt(tiltX, tiltY) {
         if (tiltX != 0 || tiltY != 0) {
             this.type = "pen";
+            this.tip = "pen";
             return true;
         } else if (this.type === "pen") {
             return true;
@@ -161,7 +162,7 @@ class Pointer {
 
     async drawHighlighter(context, point) {
         this.hasUpdates = true;
-        console.log("drawing", this.type, this.tip);
+        //console.log("drawing", this.type, this.tip);
 
         let d = 25*resolution;
         let x = point[0];
@@ -351,7 +352,7 @@ function stopPoint(e) {
     // you should actually just draw the last point
     if (e.mozInputSource == 1) {
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
-    } else if (e.mozInputSource == 2 && pen.type=="pen") {
+    } else if (e.mozInputSource == 2 && pen.type=="pen" && pen.tip=="pen") {
         drawLine(fCtx, pen.history[2], current, 0, pen.color, 10);
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     }
