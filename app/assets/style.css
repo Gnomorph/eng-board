@@ -99,8 +99,8 @@ html, body {
     top: 0px;
     left: 0px;
     background-color: tan;
-    display: none;
     display: flex;
+    display: none;
     justify-content: center;
     align-content: center;
     flex-flow: column;

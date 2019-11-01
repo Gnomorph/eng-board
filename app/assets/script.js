@@ -7,8 +7,7 @@
 const resolution = window.devicePixelRatio;
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 let debugState = false;
-let debugElement = document.getElementById("debug-menu");
-
+let debugMenu = document.getElementById("debug-menu");
 
 /*
 document.ontouchmove = function(e) { e.preventDefault(); }
@@ -23,8 +22,6 @@ document.ontouchstart = function(e) { handleAll(e); }
 document.ontouchend = function(e) { handleAll(e); }
 document.ontouchcancel = function(e) { handleAll(e); }
 */
-
-
 
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
@@ -162,14 +159,7 @@ class Pointer {
 
         let pressureWidth = this.pressure * this.width;
         context.globalAlpha = 1;
-        //document.getElementById("flag1").innerHTML = "here1";
         drawBezier(context, ...this.history, pressureWidth, this.color);
-        document.getElementById("flag1").innerHTML = this.color;
-        document.getElementById("flag2").innerHTML = pressureWidth;
-        document.getElementById("flag3").innerHTML = JSON.stringify(this.history);
-        document.getElementById("flag4").innerHTML = "here1";
-        document.getElementById("flag5").innerHTML = "here5";
-
     }
 
     async drawPencil(context, point) {
@@ -232,21 +222,24 @@ bgBoard.addEventListener('pointerdown', startPoint);
 bgBoard.addEventListener('pointerup', stopPoint);
 //bgBoard.addEventListener('click', clickPoint);
 
-window.addEventListener('resize', resizeCanvas);
-function resizeCanvas(event) {
-    let oWidth = document.getElementById('width');
-    let oHeight = document.getElementById('height');
-    oWidth.innerHTML = getWidth();
-    oHeight.innerHTML = getHeight();
+window.addEventListener('resize', (e) => setTimeout(resizeCanvas(e), 10));
 
-    width  = resolution*getWidth();
-    height = resolution*getHeight();
-    pen.hasUpdates = true;
-    stylus.hasUpdates = true;
-    bCtx.canvas.width = width;
-    fCtx.canvas.width = width;
-    bCtx.canvas.height = height;
-    fCtx.canvas.height = height;
+function resizeCanvas(event) {
+    return function() {
+        let oWidth = document.getElementById('width');
+        let oHeight = document.getElementById('height');
+        oWidth.innerHTML = getWidth();
+        oHeight.innerHTML = getHeight();
+
+        width  = resolution*getWidth();
+        height = resolution*getHeight();
+        pen.hasUpdates = true;
+        stylus.hasUpdates = true;
+        bCtx.canvas.width = width;
+        fCtx.canvas.width = width;
+        bCtx.canvas.height = height;
+        fCtx.canvas.height = height;
+    }
 }
 
 document.getElementById("save").addEventListener('click', myFullscreen);
@@ -262,8 +255,6 @@ function myFullscreen(e) {
     } else if (elem.webkitRequestFullscreen) {
         elem.webkitRequestFullscreen();
     }
-
-    //console.log("post:", getWidth(), getHeight());
 }
 
 document.body.addEventListener('click', bodyClick);
@@ -315,36 +306,38 @@ function clearScreen() {
     fCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
 }
 
-var el = document.getElementsByTagName("canvas")[0];
-el.addEventListener("touchstart", handleAll, false);
-el.addEventListener("touchend", handleAll, false);
-el.addEventListener("touchcancel", handleAll, false);
-el.addEventListener("touchmove", handleAll, false);
-console.log("initialized.");
 
-function handleAll1(e) { e.preventDefault(); }
-
-function handleAll(e) {
-    touchHere(e);
-    e.preventDefault();
-    let row = document.getElementById("events-debug");
-    let tp = e.touches[0];
-
-    //row.querySelector('#pressure').innerHTML = e.force;
-    row.querySelector('#id').innerHTML = tp.identifier;
-    row.querySelector('#state').innerHTML = resolution;
-    row.querySelector('#x').innerHTML = tp.clientX;
-    row.querySelector('#y').innerHTML = tp.clientY;
-    row.querySelector('#pressure').innerHTML = tp.force.toFixed(2);
-    row.querySelector('#tiltx').innerHTML = tp.radiusX.toFixed(2);
-    row.querySelector('#tilty').innerHTML = tp.rotationAngle.toFixed(2);
-    row.querySelector('#buttons').innerHTML = tp.touchType;
-    //row.querySelector('#pressure').innerHTML = e.force.toFixed(3);
-    //row.querySelector('#pressure').innerHTML = e.touches[0];
+if ('ontouchstart' in window) {
+    var el = document.getElementsByTagName("canvas")[0];
+    el.addEventListener("touchstart", handleAll, false);
+    el.addEventListener("touchend", handleAll, false);
+    el.addEventListener("touchcancel", handleAll, false);
+    el.addEventListener("touchmove", handleAll, false);
+    console.log("initialized.");
 }
 
-function touchHere(e) {
+function handleAll(e) {
+    //console.log(e);
+    e.preventDefault();
+    let debugContainer = document.getElementById("events-debug");
+    if (e.touches.length <= 0) { return; }
     let tp = e.touches[0];
+    touchHere(tp);
+
+    //debugContainer.querySelector('#pressure').innerHTML = e.force;
+    debugContainer.querySelector('#id').innerHTML = tp.identifier;
+    debugContainer.querySelector('#state').innerHTML = resolution;
+    debugContainer.querySelector('#x').innerHTML = tp.clientX;
+    debugContainer.querySelector('#y').innerHTML = tp.clientY;
+    debugContainer.querySelector('#pressure').innerHTML = tp.force.toFixed(2);
+    debugContainer.querySelector('#tiltx').innerHTML = tp.radiusX.toFixed(2);
+    debugContainer.querySelector('#tilty').innerHTML = tp.rotationAngle.toFixed(2);
+    debugContainer.querySelector('#buttons').innerHTML = tp.touchType;
+    //debugContainer.querySelector('#pressure').innerHTML = e.force.toFixed(3);
+    //debugContainer.querySelector('#pressure').innerHTML = e.touches[0];
+}
+
+function touchHere(tp) {
     if (tp.touchType=="stylus") {
         let t3 = [ resolution*tp.clientX, resolution*tp.clientY ];
         stylus.id = tp.identifier;
@@ -353,7 +346,7 @@ function touchHere(e) {
 
         stylus.pressure = tp.force;
         stylus.draw(fCtx, t3);
-    } else if (e.touchType=="touch" && touchEnabled) {
+    } else if (tp.touchType=="touch" && touchEnabled) {
         // touch support
     }
 }
@@ -467,22 +460,26 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     let pLeft = getBezierRight(p0, p1, p2);
     let pRight = getBezierLeft(p1, p2, p3);
 
-    document.getElementById("flag2").innerHTML = "here2";
     context.moveTo(...p1);
-    if (dabs*resolution > 5*width) {
+
+    // always draw bezier
+    //context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
+    if (dabs*resolution > width) {
         //context.strokeStyle = "#00ff00";
         context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
     } else {
         //context.strokeStyle = "#ff0000";
-        context.lineTo(...p2, width);
+        //context.lineTo(...p2, width);
     }
     context.stroke();
 
-    document.getElementById("flag3").innerHTML = "here3";
-    if (dabs*resolution < 100*width) {
+    //always draw the arc
+    drawArc(context, p1, width, style);
+    drawArc(context, p2, width, style);
+    //if (dabs*resolution < 100*width) {
         //drawArc(context, p1, width, style);
         //drawArc(context, p2, width, style);
-    }
+    //}
 }
 
 function getBezierLeft(pl, p, pr) {
@@ -611,7 +608,6 @@ function init(foreground, background) {
     fpsTimer = setInterval(buildCopyScreens(background, foreground), 20);
     pen.color = "#000000";
     stylus.color = "#000000";
-    disableDebug();
 }
 
 function buildCopyScreens(bg, fg) {
@@ -660,7 +656,7 @@ function toggleDebug(e) {
 
 function enableDebug() {
     debugState = true;
-    debugElement.style.display = "flex";
+    debugMenu.style.display = "flex";
     bgBoard.addEventListener('pointermove', testMove);
     bgBoard.addEventListener('pointerdown', testDown);
     bgBoard.addEventListener('pointerup', testUp);
@@ -668,7 +664,7 @@ function enableDebug() {
 
 function disableDebug() {
     debugState = false;
-    debugElement.style.display = "none";
+    debugMenu.style.display = "none";
     bgBoard.removeEventListener('pointermove', testMove);
     bgBoard.removeEventListener('pointerdown', testDown);
     bgBoard.removeEventListener('pointerup', testUp);
