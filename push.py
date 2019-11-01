@@ -5,7 +5,6 @@ import time
 import os
 import subprocess
 
-from thread_pool import ThreadPool
 import dev_utils as utils
 
 from help import help_
