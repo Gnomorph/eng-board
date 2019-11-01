@@ -122,6 +122,11 @@ html, body {
 }
 
 #fg-board {
+    width:100%;
+    display:none;
+}
+
+#bs-board {
     width: 100%;
     display:none;
 }

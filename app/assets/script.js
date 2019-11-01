@@ -204,10 +204,12 @@ let fpsTimer;
 
 var fgBoard = document.getElementById("fg-board");
 var bgBoard = document.getElementById("bg-board");
+var bsBoard = document.getElementById("bs-board");
 
 var settingsButton = document.getElementById("settings-button");
 var fCtx = fgBoard.getContext("2d");
 var bCtx = bgBoard.getContext("2d");
+var sCtx = bsBoard.getContext("2d");
 
 let last = [0, 0];
 let pen = new Pointer(null, 4, 0.25);
@@ -222,23 +224,48 @@ bgBoard.addEventListener('pointerdown', startPoint);
 bgBoard.addEventListener('pointerup', stopPoint);
 //bgBoard.addEventListener('click', clickPoint);
 
-window.addEventListener('resize', (e) => setTimeout(resizeCanvas(e), 10));
+window.addEventListener('resize', (e) => setTimeout(resizeCanvas(e), 100));
 
 function resizeCanvas(event) {
     return function() {
+        width  = resolution*getWidth();
+        height = resolution*getHeight();
+
+        let minWidth = width;
+        minWidth = Math.max(minWidth, fgBoard.width);
+        minWidth = Math.max(minWidth, bgBoard.width);
+        minWidth = Math.max(minWidth, bsBoard.width);
+
+        let minHeight = height;
+        minHeight = Math.max(minHeight, fgBoard.height);
+        minHeight = Math.max(minHeight, bgBoard.height);
+        minHeight = Math.max(minHeight, bsBoard.height);
+
+        pen.hasUpdates = true;
+        stylus.hasUpdates = true;
+
+        sCtx.drawImage(fgBoard, 0, 0);
+
+        bgBoard.width = width;
+        bgBoard.height = height;
+        bCtx.clearRect(0, 0, bgBoard.width, bgBoard.height);
+        bCtx.drawImage(bsBoard, 0, 0);
+
+        fgBoard.width = minWidth;
+        fgBoard.height = minHeight;
+        fCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
+
+        fCtx.drawImage(bsBoard, 0, 0);
+
+        bsBoard.width = minWidth;
+        bsBoard.height = minHeight;
+        sCtx.drawImage(fgBoard, 0, 0);
+        /*
         let oWidth = document.getElementById('width');
         let oHeight = document.getElementById('height');
         oWidth.innerHTML = getWidth();
         oHeight.innerHTML = getHeight();
-
-        width  = resolution*getWidth();
-        height = resolution*getHeight();
-        pen.hasUpdates = true;
-        stylus.hasUpdates = true;
-        bCtx.canvas.width = width;
-        fCtx.canvas.width = width;
-        bCtx.canvas.height = height;
-        fCtx.canvas.height = height;
+        */
     }
 }
 
@@ -304,6 +331,7 @@ function clearScreen() {
     pen.hasUpdates = true;
     stylus.hasUpdates = true;
     fCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
+    sCtx.clearRect(0, 0, bsBoard.width, bsBoard.height);
 }
 
 
@@ -602,10 +630,12 @@ function init(foreground, background) {
     background.canvas.height = height;
     foreground.canvas.width = width;
     foreground.canvas.height = height;
+    bsBoard.width = width;
+    bsBoard.height = height;
     clearScreen();
 
     greenScreen();
-    fpsTimer = setInterval(buildCopyScreens(background, foreground), 20);
+    fpsTimer = setInterval(buildCopyScreens(background, foreground), 30);
     pen.color = "#000000";
     stylus.color = "#000000";
 }
