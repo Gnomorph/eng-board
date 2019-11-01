@@ -5,9 +5,26 @@
  **********/
 //const resolution = 2;
 const resolution = window.devicePixelRatio;
-console.log(resolution);
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+let debugState = false;
+let debugElement = document.getElementById("debug-menu");
 
+
+/*
 document.ontouchmove = function(e) { e.preventDefault(); }
+document.ontouchstart = function(e) { e.preventDefault(); }
+document.ontouchend = function(e) { e.preventDefault(); }
+document.ontouchcancel = function(e) { e.preventDefault(); }
+*/
+
+/*
+document.ontouchmove = function(e) { handleAll(e); }
+document.ontouchstart = function(e) { handleAll(e); }
+document.ontouchend = function(e) { handleAll(e); }
+document.ontouchcancel = function(e) { handleAll(e); }
+*/
+
+
 
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
@@ -145,7 +162,13 @@ class Pointer {
 
         let pressureWidth = this.pressure * this.width;
         context.globalAlpha = 1;
+        //document.getElementById("flag1").innerHTML = "here1";
         drawBezier(context, ...this.history, pressureWidth, this.color);
+        document.getElementById("flag1").innerHTML = this.color;
+        document.getElementById("flag2").innerHTML = pressureWidth;
+        document.getElementById("flag3").innerHTML = JSON.stringify(this.history);
+        document.getElementById("flag4").innerHTML = "here1";
+        document.getElementById("flag5").innerHTML = "here5";
 
     }
 
@@ -198,6 +221,7 @@ var bCtx = bgBoard.getContext("2d");
 
 let last = [0, 0];
 let pen = new Pointer(null, 4, 0.25);
+let stylus = new Pointer(null, 4, 0.25);
 let timerId = null;
 let touchEnabled = false;
 
@@ -210,9 +234,15 @@ bgBoard.addEventListener('pointerup', stopPoint);
 
 window.addEventListener('resize', resizeCanvas);
 function resizeCanvas(event) {
+    let oWidth = document.getElementById('width');
+    let oHeight = document.getElementById('height');
+    oWidth.innerHTML = getWidth();
+    oHeight.innerHTML = getHeight();
+
     width  = resolution*getWidth();
     height = resolution*getHeight();
     pen.hasUpdates = true;
+    stylus.hasUpdates = true;
     bCtx.canvas.width = width;
     fCtx.canvas.width = width;
     bCtx.canvas.height = height;
@@ -281,7 +311,51 @@ document.getElementById('trash').addEventListener('click', clearScreen, false);
 
 function clearScreen() {
     pen.hasUpdates = true;
+    stylus.hasUpdates = true;
     fCtx.clearRect(0, 0, fgBoard.width, fgBoard.height);
+}
+
+var el = document.getElementsByTagName("canvas")[0];
+el.addEventListener("touchstart", handleAll, false);
+el.addEventListener("touchend", handleAll, false);
+el.addEventListener("touchcancel", handleAll, false);
+el.addEventListener("touchmove", handleAll, false);
+console.log("initialized.");
+
+function handleAll1(e) { e.preventDefault(); }
+
+function handleAll(e) {
+    touchHere(e);
+    e.preventDefault();
+    let row = document.getElementById("events-debug");
+    let tp = e.touches[0];
+
+    //row.querySelector('#pressure').innerHTML = e.force;
+    row.querySelector('#id').innerHTML = tp.identifier;
+    row.querySelector('#state').innerHTML = resolution;
+    row.querySelector('#x').innerHTML = tp.clientX;
+    row.querySelector('#y').innerHTML = tp.clientY;
+    row.querySelector('#pressure').innerHTML = tp.force.toFixed(2);
+    row.querySelector('#tiltx').innerHTML = tp.radiusX.toFixed(2);
+    row.querySelector('#tilty').innerHTML = tp.rotationAngle.toFixed(2);
+    row.querySelector('#buttons').innerHTML = tp.touchType;
+    //row.querySelector('#pressure').innerHTML = e.force.toFixed(3);
+    //row.querySelector('#pressure').innerHTML = e.touches[0];
+}
+
+function touchHere(e) {
+    let tp = e.touches[0];
+    if (tp.touchType=="stylus") {
+        let t3 = [ resolution*tp.clientX, resolution*tp.clientY ];
+        stylus.id = tp.identifier;
+        stylus.type = "pen";
+        stylus.tip = "pen";
+
+        stylus.pressure = tp.force;
+        stylus.draw(fCtx, t3);
+    } else if (e.touchType=="touch" && touchEnabled) {
+        // touch support
+    }
 }
 
 let penId;
@@ -393,6 +467,7 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     let pLeft = getBezierRight(p0, p1, p2);
     let pRight = getBezierLeft(p1, p2, p3);
 
+    document.getElementById("flag2").innerHTML = "here2";
     context.moveTo(...p1);
     if (dabs*resolution > 5*width) {
         //context.strokeStyle = "#00ff00";
@@ -403,6 +478,7 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     }
     context.stroke();
 
+    document.getElementById("flag3").innerHTML = "here3";
     if (dabs*resolution < 100*width) {
         //drawArc(context, p1, width, style);
         //drawArc(context, p2, width, style);
@@ -487,15 +563,25 @@ function init(foreground, background) {
     let penWidth = document.getElementById('pen-width-slider');
     let penWidthOut = document.getElementById('pen-width-value');
 
+    let oBrowser = document.getElementById('browser');
+    oBrowser.innerHTML = isSafari ? "safari" : "firefox";
+
+    let oWidth = document.getElementById('width');
+    let oHeight = document.getElementById('height');
+    oWidth.innerHTML = getWidth();
+    oHeight.innerHTML = getHeight();
+
     penWidth.addEventListener('input', function(e) {
         penWidthOut.innerHTML = penWidth.value;
     });
 
     penWidth.addEventListener('change', function(e) {
         pen.width = penWidth.value;
+        stylus.width = penWidth.value;
     });
 
     pen.width = 4;
+    stylus.width = 4;
     penWidthOut.innerHTML = 4;
     penWidth.value = 4;
 
@@ -509,6 +595,7 @@ function init(foreground, background) {
 
         colorButton.addEventListener('click', function(e) {
             pen.color = color[1];
+            stylus.color = color[1];
         });
 
         penColors.appendChild(colorButton);
@@ -523,10 +610,18 @@ function init(foreground, background) {
     greenScreen();
     fpsTimer = setInterval(buildCopyScreens(background, foreground), 20);
     pen.color = "#000000";
+    stylus.color = "#000000";
+    disableDebug();
 }
 
 function buildCopyScreens(bg, fg) {
     return function(e) {
+        if (stylus.hasUpdates) {
+            stylus.hasUpdates = false;
+            greenScreen();
+            bg.drawImage(fg.canvas, 0, 0);
+        }
+
         if (pen.hasUpdates) {
             pen.hasUpdates = false;
             greenScreen();
@@ -554,9 +649,6 @@ function greenScreen() {
     }
     bCtx.stroke();
 }
-
-let debugState = false;
-let debugElement = document.getElementById("debug-menu");
 
 function toggleDebug(e) {
     if (debugState) {
@@ -589,18 +681,20 @@ function testMove(e) {
     type.querySelector('#x').innerHTML = resolution*e.clientX;
     type.querySelector('#y').innerHTML = resolution*e.clientY;
     type.querySelector('#buttons').innerHTML = e.buttons;
-    type.querySelector('#pressure').innerHTML = e.pressure;
+    type.querySelector('#pressure').innerHTML = e.pressure.toFixed(3);
+    type.querySelector('#tiltx').innerHTML = e.tiltX;
+    type.querySelector('#tilty').innerHTML = e.tiltY;
     type.querySelector('#id').innerHTML = e.pointerId;
 }
 
 function testUp(e) {
-    let type = document.getElementById(e.pointerType);
+    let type = document.getElementById(e.pointerType + "-debug");
 
     type.querySelector('#state').innerHTML = "up";
 }
 
 function testDown(e) {
-    let type = document.getElementById(e.pointerType);
+    let type = document.getElementById(e.pointerType + "-debug");
 
     type.querySelector('#state').innerHTML = "dn";
 }

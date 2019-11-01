@@ -1,14 +1,17 @@
 html, body {
     position: fixed;
     overflow: hidden;
-    //touch-action: none;
 }
 .show-me {
     //border-color: black;
     //border-width: 1px;
     //border-style: solid;
-    outline: 1px solid blue;
-    outline-offset: -1px;
+    outline: 5px solid blue;
+    outline-offset: -10px;
+}
+
+.bigfont {
+    font-size:16px;
 }
 
 .full-frame {
@@ -96,8 +99,8 @@ html, body {
     top: 0px;
     left: 0px;
     background-color: tan;
-    display: flex;
     display: none;
+    display: flex;
     justify-content: center;
     align-content: center;
     flex-flow: column;
@@ -115,9 +118,11 @@ html, body {
 }
 
 #bg-board {
+    width: 100%;
 }
 
 #fg-board {
+    width: 100%;
     display:none;
 }
 
