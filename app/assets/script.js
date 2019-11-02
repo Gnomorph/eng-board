@@ -344,25 +344,61 @@ if ('ontouchstart' in window) {
     console.log("initialized.");
 }
 
-function handleAll(e) {
-    //console.log(e);
-    e.preventDefault();
-    let debugContainer = document.getElementById("events-debug");
-    if (e.touches.length <= 0) { return; }
-    let tp = e.touches[0];
-    touchHere(tp);
+function getPens(touchList) {
+    let i;
+    let pens = [];
+    for (i=0; i<touchList.length; i++) {
+        let touch = touchList[i];
+        if (touch.touchType == "stylus") {
+            pens.push(touch);
+        }
+    }
 
-    //debugContainer.querySelector('#pressure').innerHTML = e.force;
-    debugContainer.querySelector('#id').innerHTML = tp.identifier;
-    debugContainer.querySelector('#state').innerHTML = resolution;
-    debugContainer.querySelector('#x').innerHTML = tp.clientX;
-    debugContainer.querySelector('#y').innerHTML = tp.clientY;
-    debugContainer.querySelector('#pressure').innerHTML = tp.force.toFixed(2);
-    debugContainer.querySelector('#tiltx').innerHTML = tp.radiusX.toFixed(2);
-    debugContainer.querySelector('#tilty').innerHTML = tp.rotationAngle.toFixed(2);
-    debugContainer.querySelector('#buttons').innerHTML = tp.touchType;
-    //debugContainer.querySelector('#pressure').innerHTML = e.force.toFixed(3);
-    //debugContainer.querySelector('#pressure').innerHTML = e.touches[0];
+    //return i;
+    return pens;
+}
+
+function testEraser(touch) {
+    let x = resolution*touch.clientX;
+    let y = resolution*touch.clientY;
+    return (x > width-resolution*100) && (y > height-resolution*100);
+}
+
+function getErasers(touchList) {
+    let enabled = false;
+    let erasers = [];
+
+    let i;
+    for (i=0; i<touchList.length; i++) {
+        let touch = touchList[i];
+        //if (enabled && touch.touchType == "direct") {
+        if (enabled) {
+            erasers.push(touch);
+        }
+        enabled = enabled || testEraser(touch);
+    }
+
+    return erasers;
+}
+
+function handleAll(e) {
+    e.preventDefault();
+
+    let pens = getPens(e.touches);
+    let erasers = getErasers(e.touches);
+
+    if (pens.length > 0) {
+        let pen = pens[0];
+        let pt = [ resolution*pen.clientX, resolution*pen.clientY ];
+        stylus.id = pen.identifier;
+        stylus.pressure = pen.force;
+        stylus.draw(fCtx, pt);
+    } else if (erasers.length > 0){
+        for (let eraser of erasers) {
+            let pt = [ resolution*eraser.clientX, resolution*eraser.clientY ];
+            stylus.erase(fCtx, pt);
+        }
+    }
 }
 
 function touchHere(tp) {
