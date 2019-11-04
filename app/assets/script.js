@@ -9,20 +9,6 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 let debugState = false;
 let debugMenu = document.getElementById("debug-menu");
 
-/*
-document.ontouchmove = function(e) { e.preventDefault(); }
-document.ontouchstart = function(e) { e.preventDefault(); }
-document.ontouchend = function(e) { e.preventDefault(); }
-document.ontouchcancel = function(e) { e.preventDefault(); }
-*/
-
-/*
-document.ontouchmove = function(e) { handleAll(e); }
-document.ontouchstart = function(e) { handleAll(e); }
-document.ontouchend = function(e) { handleAll(e); }
-document.ontouchcancel = function(e) { handleAll(e); }
-*/
-
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
 let colorList = [
@@ -341,12 +327,11 @@ function clearScreen() {
 
 
 if ('ontouchstart' in window) {
-    var el = document.getElementsByTagName("canvas")[0];
-    el.addEventListener("touchstart", handleAll, false);
-    el.addEventListener("touchend", handleAll, false);
-    el.addEventListener("touchcancel", handleAll, false);
-    el.addEventListener("touchmove", handleAll, false);
-    console.log("initialized.");
+    let canvas = document.getElementsByTagName("canvas")[0];
+    canvas.addEventListener("touchstart", handleAll, false);
+    canvas.addEventListener("touchend", handleAll, false);
+    canvas.addEventListener("touchcancel", handleAll, false);
+    canvas.addEventListener("touchmove", handleAll, false);
 }
 
 function getPens(touchList) {
