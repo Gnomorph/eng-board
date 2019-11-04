@@ -217,6 +217,11 @@ let stylus = new Pointer(null, 4, 0.25);
 let timerId = null;
 let touchEnabled = false;
 
+let nw = document.getElementById('nw');
+let ne = document.getElementById('ne');
+let sw = document.getElementById('sw');
+let se = document.getElementById('se');
+
 init(fCtx, bCtx);
 
 bgBoard.addEventListener('pointermove', pointHere);
@@ -422,7 +427,8 @@ function pointHere(e) {
         pen.id = e.pointerId;
         pen.hasTilt(e.tiltX, e.tiltY);
 
-        if (e.buttons == "1") {
+        if (e.buttons == "2") {
+        } else if (e.buttons == "1") {
             if (pen.type == "pen") {
                 pen.pressure = e.pressure;
                 //pen.draw(fCtx, n3);
@@ -464,7 +470,43 @@ function drawPage() {
     //stroke = [path[path.length-1]];
 }
 
+function drawRadial(x, y) {
+    nw.style.display = "initial";
+    sw.style.display = "initial";
+    ne.style.display = "initial";
+    se.style.display = "initial";
+
+    nw.style.left = (x - 144) + "px";
+    ne.style.left = (x) + "px";
+    sw.style.left = (x - 144) + "px";
+    se.style.left = (x) + "px";
+
+    nw.style.top = (y - 144) + "px";
+    ne.style.top = (y - 144) + "px";
+    sw.style.top = (y) + "px";
+    se.style.top = (y) + "px";
+}
+
+function hideRadial(x, y) {
+    nw.style.display = "none";
+    sw.style.display = "none";
+    ne.style.display = "none";
+    se.style.display = "none";
+}
+
 function startPoint(e) {
+    if (e.pointerType == "mouse" && e.buttons == "2") {
+        //e.preventDefault();
+        drawRadial(e.clientX, e.clientY);
+    }
+
+    console.log("in", e);
+    if (e.buttons == "2") {
+        pen.clearHistory();
+        console.log("TWO");
+        return;
+    }
+
     let activeSubMenu = null;
     let current = [resolution*e.clientX, resolution*e.clientY];
     pen.pushHistory(current);
@@ -477,6 +519,12 @@ function startPoint(e) {
 }
 
 function stopPoint(e) {
+    console.log("out", e);
+    if (e.buttons == "2") {
+        console.log("TWO");
+        return;
+    }
+
     let current = [resolution*e.clientX, resolution*e.clientY];
 
     // TODO
@@ -484,7 +532,7 @@ function stopPoint(e) {
     if (e.mozInputSource == 1) {
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     } else if (e.mozInputSource == 2 && pen.type=="pen" && pen.tip=="pen") {
-        drawLine(fCtx, pen.history[2], current, 0, pen.color, 10);
+        drawLine(fCtx, pen.history[3], current, 0, pen.color, 10);
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     }
 }
@@ -495,8 +543,8 @@ async function drawArc(context, point, width, style) {
     context.strokeStyle = style;
     context.arc(...point, width/2, 0, 2 * Math.PI, false);
     context.fillStyle = style || "rgb(0, 0, 0)";
-    context.fill();
     context.closePath();
+    context.fill();
 }
 
 async function drawPoint(context, x, y, width, style) {
@@ -505,7 +553,7 @@ async function drawPoint(context, x, y, width, style) {
     context.arc(x, y, width/2, 0, 2 * Math.PI, false);
     context.fillStyle = style || "rgb(0, 0, 0)";
     context.fill();
-    context.closePath();
+    //context.closePath();
 }
 
 async function drawBezier(context, p0, p1, p2, p3, width, style) {
@@ -519,27 +567,37 @@ async function drawBezier(context, p0, p1, p2, p3, width, style) {
     //context.lineCap = "round";
 
     let dabs = Math.abs(p2[0] - p1[0]) + Math.abs(p2[1] - p1[1]);
-    let d = (p2[0] - p1[0]) + (p2[1] - p1[1]);
-
-    let pLeft = getBezierRight(p0, p1, p2);
-    let pRight = getBezierLeft(p1, p2, p3);
+    //let d = (p2[0] - p1[0]) + (p2[1] - p1[1]);
 
     context.moveTo(...p1);
 
     // always draw bezier
     //context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
     if (dabs*resolution > width) {
+        let pLeft = getBezierRight(p0, p1, p2);
+        let pRight = getBezierLeft(p1, p2, p3);
+
         //context.strokeStyle = "#00ff00";
         context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
+
+        context.stroke();
+
+        //drawArc(context, pLeft, width, "#ff0000");
+        //drawArc(context, pRight, width, "#00ff00");
+        //context.lineTo(...p2, width);
     } else {
         //context.strokeStyle = "#ff0000";
-        //context.lineTo(...p2, width);
+        //style = "#0000ff";
+        context.lineTo(...p2, width);
+        context.stroke();
+        drawArc(context, p1, width, style);
+        drawArc(context, p2, width, style);
     }
-    context.stroke();
 
+    //style = "#0000ff";
+    //drawArc(context, p1, width, style);
+    //drawArc(context, p2, width, style);
     //always draw the arc
-    drawArc(context, p1, width, style);
-    drawArc(context, p2, width, style);
     //if (dabs*resolution < 100*width) {
         //drawArc(context, p1, width, style);
         //drawArc(context, p2, width, style);
@@ -556,26 +614,38 @@ function getBezierRight(pl, p, pr) {
     return c;
 }
 
-function getBezierPoints(p0, p1, p2) {
-    let h = 0.5;
+function getBezierPoints(pl, pc, pr) {
+    let h = 0.4;
     //let h = 1;
 
-    let d = [ p2[0] - p0[0], p2[1] - p0[1] ];
+    //let d = [ pr[0] - pl[0], pr[1] - pl[1] ];
+    let Dx = pr[0] - pl[0];
+    let Dy = pr[1] - pl[1];
 
-    let d0 = Math.abs(p0[0] - p1[0]) + Math.abs(p0[1] - p1[1]);
-    let d2 = Math.abs(p2[0] - p1[0]) + Math.abs(p2[1] - p1[1]);
+    let Dl = Math.sqrt(Math.pow(pl[0] - pc[0], 2) + Math.pow(pl[1] - pc[1], 2));
+    let Dr = Math.sqrt(Math.pow(pr[0] - pc[0], 2) + Math.pow(pr[1] - pc[1], 2));
+    //let d0 = Math.abs(pl[0] - pc[0]) + Math.abs(pl[1] - pc[1]);
+    //let d2 = Math.abs(pr[0] - pc[0]) + Math.abs(pr[1] - pc[1]);
 
-    let s0 = h * d0 / (d0 + d2);
-    let s2 = h * d2 / (d0 + d2);
+    let sl = h * Dl / (Dl + Dr);
+    let sr = h * Dr / (Dl + Dr);
 
-    let cp1 = [ p1[0]  - s0 * d[0], p1[1]  - s0 * d[1] ];
+    let dlx = sl*Dx;
+    let dly = sl*Dy;
 
-    let cp2 = [ p1[0]  + s2 * d[0], p1[1]  + s2 * d[1] ];
+    let drx = sr*Dx;
+    let dry = sr*Dy;
+
+    let cp1 = [ pc[0]  - dlx, pc[1]  - dly ];
+
+    let cp2 = [ pc[0]  + drx, pc[1]  + dry ];
 
     return [cp1, cp2];
 }
 
 async function drawLine(context, from, to, pressure, style, interpolate) {
+    if (!from) { return; }
+
     pen.hasUpdates = true;
     interpolate = interpolate || false;
     context.lineWidth = width;
@@ -619,7 +689,38 @@ async function drawLine(context, from, to, pressure, style, interpolate) {
     }
 }
 
+function nwClick(e) {
+    console.log("nw");
+    hideRadial();
+}
+
+function swClick(e) {
+    console.log("sw");
+    hideRadial();
+}
+
+function neClick(e) {
+    console.log("ne");
+    hideRadial();
+}
+
+function seClick(e) {
+    console.log("se");
+    hideRadial();
+}
+
 function init(foreground, background) {
+    hideRadial();
+    nw.addEventListener("click", nwClick);
+    ne.addEventListener("click", neClick);
+    sw.addEventListener("click", swClick);
+    se.addEventListener("click", seClick);
+    // disable right click
+    document.body.addEventListener("contextmenu", function(e) {
+        e.preventDefault();
+    });
+
+
     let penColors = document.getElementById('color-container');
     let penWidth = document.getElementById('pen-width-slider');
     let penWidthOut = document.getElementById('pen-width-value');
@@ -641,10 +742,10 @@ function init(foreground, background) {
         stylus.width = penWidth.value;
     });
 
-    pen.width = 4;
-    stylus.width = 4;
-    penWidthOut.innerHTML = 4;
-    penWidth.value = 4;
+    pen.width = 5;
+    stylus.width = 5;
+    penWidthOut.innerHTML = 5;
+    penWidth.value = 5;
 
     for (let color of colorList) {
         var colorButton = document.createElement("div");

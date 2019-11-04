@@ -1,0 +1,29 @@
+<svg role="img" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3in" height="3in"
+   version="1.1" id="svg8">
+
+<!--
+<use xlink:href="#sw"></use>
+<use xlink:href="#se"></use>
+<use xlink:href="#nw"></use>
+<use xlink:href="#ne"></use>
+-->
+<symbol id="base">
+    <path
+       style="opacity:0.25;fill:#009700;fill-opacity:1;stroke:none;stroke-width:0.96000004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       d="M 216 144 C 216.00002 183.76452 183.76452 216 144 216 L 144 288 A 144 144 0 0 0 288 144 L 216 144 z "
+       id="path4586-8"
+       transform="matrix(1,0,0,1,-144,-144)" />
+</symbol>
+<symbol id="nw" transform="matrix(-1, 0, 0, -1, 144, 144)">
+    <use xlink:href="#base"></use>
+</symbol>
+<symbol id="ne" transform="matrix(0, -1, 1, 0, 0, 144)">
+    <use xlink:href="#base"></use>
+</symbol>
+<symbol id="sw" transform="matrix(0, 1, -1, 0, 144, 0)">
+    <use xlink:href="#base"></use>
+</symbol>
+<symbol id="se" transform="matrix(1, 0, 0, 1, 0, 0)">
+    <use xlink:href="#base"></use>
+</symbol>
+</svg>
