@@ -9,6 +9,9 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 let debugState = false;
 let debugMenu = document.getElementById("debug-menu");
 
+import * as Radial from "./Radial.js";
+import * as Draw from "./Draw.js";
+
 let width  = resolution*getWidth();
 let height = resolution*getHeight();
 let colorList = [
@@ -46,145 +49,7 @@ function getHeight() {
         || document.body.clientHeight;
 }
 
-/**********
- *
- *  Class Definitions
- *
- **********/
-class Pointer {
-    constructor(id, width, pressureThreashold) {
-        this.hasUpdates = false;
-        this._id = id;
-        this.width = width;
-        this.pressureThreashold = pressureThreashold;
-        this.color = "#000000";
-        this.lastPressure = 1;
-        this.currentPressure = 1;
-        this.tip = "pen";
-
-        this.clearHistory();
-    }
-
-    get id() {
-        return this.id;
-    }
-
-    set id(value) {
-        if (this._id != value) {
-            this._id = value;
-            this.clearHistory();
-        }
-
-        if (this._id == 1) {
-            this.type = "mouse";
-        }
-    }
-
-    get pressure() {
-        return this.currentPressure;
-    }
-
-    set pressure(value) {
-        this.lastPressure = this.currentPressure;
-
-        if (value < this.pressureThreashold) {
-            this.currentPressure = this.pressureThreashold;
-        } else {
-            this.currentPressure = value;
-        }
-
-    }
-
-    clearHistory() {
-        this.type = "eraser";
-        this.history = [null, null, null, null];
-    }
-
-    flushHistory() {
-        this.type = "eraser";
-        this.history[1] = null;
-        this.history[2] = null;
-        this.history[3] = null;
-    }
-
-    hasTilt(tiltX, tiltY) {
-        if (tiltX != 0 || tiltY != 0) {
-            this.type = "pen";
-            this.tip = "pen";
-            return true;
-        } else if (this.type === "pen") {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    async pushHistory(point){
-        this.history[0] = this.history[1];
-        this.history[1] = this.history[2];
-        this.history[2] = this.history[3];
-        this.history[3] = point;
-    }
-
-    async draw(context, point) {
-        if (this.tip == "pen") {
-            this.drawPen(context, point);
-        } else if (this.tip == "pencil") {
-            this.drawPencil(context, point);
-        } else if (this.tip == "highlighter") {
-            this.drawHighlighter(context, point);
-        } else if (this.tip == "eraser") {
-            this.erase(context, point);
-        }
-    }
-
-    async drawPen(context, point) {
-        this.hasUpdates = true;
-
-        this.pushHistory(point);
-
-        let pressureWidth = this.pressure * this.width;
-        context.globalAlpha = 1;
-        drawBezier(context, ...this.history, pressureWidth, this.color);
-    }
-
-    async drawPencil(context, point) {
-        this.hasUpdates = true;
-
-        this.pushHistory(point);
-
-        let pressureWidth = this.pressure * this.width;
-        context.globalAlpha = 0.8;
-        drawBezier(context, ...this.history, pressureWidth, this.color);
-
-    }
-
-    async drawHighlighter(context, point) {
-        this.hasUpdates = true;
-        //console.log("drawing", this.type, this.tip);
-
-        let d = 25*resolution;
-        let x = point[0];
-        let y = point[1];
-
-        context.globalAlpha = 0.01;
-        context.beginPath();
-        context.fillStyle = "yellow";
-        context.rect(x-d, y-d, 2*d, 2*d);
-        context.fill();
-    }
-
-    async erase(context, point) {
-        this.hasUpdates = true;
-
-        let d = 25*resolution;
-        let x = point[0];
-        let y = point[1];
-
-        context.clearRect(x-d, y-d, 2*d, 2*d);
-    }
-
-}
+import { Pointer } from "./Pointer.js";
 
 let fpsTimer;
 
@@ -198,8 +63,8 @@ var bCtx = bgBoard.getContext("2d");
 var sCtx = bsBoard.getContext("2d");
 
 let last = [0, 0];
-let pen = new Pointer(null, 4, 0.25);
-let stylus = new Pointer(null, 4, 0.25);
+let pen = new Pointer(null, 4, 0.25, resolution);
+let stylus = new Pointer(null, 4, 0.25, resolution);
 let timerId = null;
 let touchEnabled = false;
 
@@ -361,7 +226,6 @@ function getErasers(touchList) {
     let i;
     for (i=0; i<touchList.length; i++) {
         let touch = touchList[i];
-        //if (enabled && touch.touchType == "direct") {
         if (enabled) {
             erasers.push(touch);
         }
@@ -449,48 +313,8 @@ function pointHere(e) {
     }
 }
 
-function drawPage() {
-    //let path = JSON.parse(JSON.stringify(stroke));
-    let path = stroke;
-    //stroke = [path[path.length-1]];
-}
-
-function drawRadial(x, y) {
-    nw.style.display = "initial";
-    sw.style.display = "initial";
-    ne.style.display = "initial";
-    se.style.display = "initial";
-
-    nw.style.left = (x - 144) + "px";
-    ne.style.left = (x) + "px";
-    sw.style.left = (x - 144) + "px";
-    se.style.left = (x) + "px";
-
-    nw.style.top = (y - 144) + "px";
-    ne.style.top = (y - 144) + "px";
-    sw.style.top = (y) + "px";
-    se.style.top = (y) + "px";
-}
-
-function hideRadial(x, y) {
-    nw.style.display = "none";
-    sw.style.display = "none";
-    ne.style.display = "none";
-    se.style.display = "none";
-}
-
 function startPoint(e) {
-    if (e.pointerType == "mouse" && e.buttons == "2") {
-        //e.preventDefault();
-        drawRadial(e.clientX, e.clientY);
-    }
-
-    console.log("in", e);
-    if (e.buttons == "2") {
-        pen.clearHistory();
-        console.log("TWO");
-        return;
-    }
+    Radial.start(e, pen, stylus);
 
     let activeSubMenu = null;
     let current = [resolution*e.clientX, resolution*e.clientY];
@@ -504,9 +328,8 @@ function startPoint(e) {
 }
 
 function stopPoint(e) {
-    console.log("out", e);
+    // This should be handled by Radial somehow
     if (e.buttons == "2") {
-        console.log("TWO");
         return;
     }
 
@@ -517,194 +340,13 @@ function stopPoint(e) {
     if (e.mozInputSource == 1) {
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     } else if (e.mozInputSource == 2 && pen.type=="pen" && pen.tip=="pen") {
-        drawLine(fCtx, pen.history[3], current, 0, pen.color, 10);
+        Draw.line(pen, fCtx, pen.history[3], current, 0, pen.color, 10);
         //drawArc(fCtx, current, 2*resolution, '#ff00ff');
     }
 }
 
-async function drawArc(context, point, width, style) {
-    context.beginPath();
-    context.lineWidth = 0;
-    context.strokeStyle = style;
-    context.arc(...point, width/2, 0, 2 * Math.PI, false);
-    context.fillStyle = style || "rgb(0, 0, 0)";
-    context.closePath();
-    context.fill();
-}
-
-async function drawPoint(context, x, y, width, style) {
-    context.beginPath();
-    context.lineWidth = 0;
-    context.arc(x, y, width/2, 0, 2 * Math.PI, false);
-    context.fillStyle = style || "rgb(0, 0, 0)";
-    context.fill();
-    //context.closePath();
-}
-
-async function drawBezier(context, p0, p1, p2, p3, width, style) {
-    if (!(p0 && p1 && p2 && p3)) { return }
-
-    style = style || "rgb(0, 0, 0)";
-    context.beginPath();
-    context.lineWidth = width;
-    context.strokeStyle = style;
-
-    //context.lineCap = "round";
-
-    let dabs = Math.abs(p2[0] - p1[0]) + Math.abs(p2[1] - p1[1]);
-    //let d = (p2[0] - p1[0]) + (p2[1] - p1[1]);
-
-    context.moveTo(...p1);
-
-    // always draw bezier
-    //context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
-    if (dabs*resolution > width) {
-        let pLeft = getBezierRight(p0, p1, p2);
-        let pRight = getBezierLeft(p1, p2, p3);
-
-        //context.strokeStyle = "#00ff00";
-        context.bezierCurveTo(...pLeft, ...pRight, ...p2, width);
-
-        context.stroke();
-
-        //drawArc(context, pLeft, width, "#ff0000");
-        //drawArc(context, pRight, width, "#00ff00");
-        //context.lineTo(...p2, width);
-    } else {
-        //context.strokeStyle = "#ff0000";
-        //style = "#0000ff";
-        context.lineTo(...p2, width);
-        context.stroke();
-        drawArc(context, p1, width, style);
-        drawArc(context, p2, width, style);
-    }
-
-    //style = "#0000ff";
-    //drawArc(context, p1, width, style);
-    //drawArc(context, p2, width, style);
-    //always draw the arc
-    //if (dabs*resolution < 100*width) {
-        //drawArc(context, p1, width, style);
-        //drawArc(context, p2, width, style);
-    //}
-}
-
-function getBezierLeft(pl, p, pr) {
-    [c, dummy] = getBezierPoints(pl, p, pr);
-    return c;
-}
-
-function getBezierRight(pl, p, pr) {
-    [dummy, c] = getBezierPoints(pl, p, pr);
-    return c;
-}
-
-function getBezierPoints(pl, pc, pr) {
-    let h = 0.4;
-    //let h = 1;
-
-    //let d = [ pr[0] - pl[0], pr[1] - pl[1] ];
-    let Dx = pr[0] - pl[0];
-    let Dy = pr[1] - pl[1];
-
-    let Dl = Math.sqrt(Math.pow(pl[0] - pc[0], 2) + Math.pow(pl[1] - pc[1], 2));
-    let Dr = Math.sqrt(Math.pow(pr[0] - pc[0], 2) + Math.pow(pr[1] - pc[1], 2));
-    //let d0 = Math.abs(pl[0] - pc[0]) + Math.abs(pl[1] - pc[1]);
-    //let d2 = Math.abs(pr[0] - pc[0]) + Math.abs(pr[1] - pc[1]);
-
-    let sl = h * Dl / (Dl + Dr);
-    let sr = h * Dr / (Dl + Dr);
-
-    let dlx = sl*Dx;
-    let dly = sl*Dy;
-
-    let drx = sr*Dx;
-    let dry = sr*Dy;
-
-    let cp1 = [ pc[0]  - dlx, pc[1]  - dly ];
-
-    let cp2 = [ pc[0]  + drx, pc[1]  + dry ];
-
-    return [cp1, cp2];
-}
-
-async function drawLine(context, from, to, pressure, style, interpolate) {
-    if (!from) { return; }
-
-    pen.hasUpdates = true;
-    interpolate = interpolate || false;
-    context.lineWidth = width;
-    context.strokeStyle = style;
-    context.moveTo(...from);
-    //context.lineTo(0, 0);
-    //context.stroke();
-    if (interpolate) {
-        pressure = Math.max(pressure, pen.pressureThreashold);
-        let dp = (pressure - pen.pressure)/interpolate;
-        let dx = (to[0] - from[0])/interpolate;
-        let dy = (to[1] - from[1])/interpolate;
-
-        let ip = pen.pressure;
-        let ix = from[0];
-        let iy = from[1];
-        //console.log("pressure: ", dp);
-        //console.log("position: ", dx, dy);
-        for (let i=0; i<interpolate; i++) {
-            context.beginPath();
-            context.moveTo(ix, iy);
-            ip += dp;
-            ix += dx;
-            iy += dy;
-
-            let randStyle = "";
-            do {
-                randStyle = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-            } while (randStyle.length != 7);
-
-            //context.strokeStyle = randStyle
-            context.strokeStyle = style;
-            context.lineWidth = pen.width*ip;
-            context.lineTo(ix, iy);
-            context.stroke();
-        }
-    } else {
-        context.beginPath();
-        context.lineTo(...to);
-        context.stroke();
-    }
-}
-
-function nwClick(e) {
-    console.log("nw");
-    hideRadial();
-}
-
-function swClick(e) {
-    console.log("sw");
-    hideRadial();
-}
-
-function neClick(e) {
-    console.log("ne");
-    hideRadial();
-}
-
-function seClick(e) {
-    console.log("se");
-    hideRadial();
-}
-
 function init(foreground, background) {
-    hideRadial();
-    nw.addEventListener("click", nwClick);
-    ne.addEventListener("click", neClick);
-    sw.addEventListener("click", swClick);
-    se.addEventListener("click", seClick);
-    // disable right click
-    document.body.addEventListener("contextmenu", function(e) {
-        e.preventDefault();
-    });
-
+    Radial.init();
 
     let penColors = document.getElementById('color-container');
     let penWidth = document.getElementById('pen-width-slider');
