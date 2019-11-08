@@ -32,7 +32,7 @@ function hide(x, y) {
     se.style.display = "none";
 }
 
-function start(e, pen, stylus) {
+function start(e, pen) {
     if (e.pointerType == "mouse" && e.buttons == "2") {
         //e.preventDefault();
         draw(e.clientX, e.clientY);
@@ -40,7 +40,6 @@ function start(e, pen, stylus) {
 
     if (e.buttons == "2") {
         pen.clearHistory();
-        stylus.clearHistory();
         return;
     }
 }

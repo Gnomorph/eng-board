@@ -1,7 +1,7 @@
 import * as Bezier from "./Bezier.js";
 
 export class Pointer {
-    constructor(id, width, pressureThreashold, resolution) {
+    constructor(id, width, pressureThreashold, resolution, color) {
         this.resolution = resolution || 1;
         this.hasUpdates = false;
         this._id = id;
@@ -15,9 +15,7 @@ export class Pointer {
         this.clearHistory();
     }
 
-    get id() {
-        return this.id;
-    }
+    get id() { return this._id; }
 
     set id(value) {
         if (this._id != value) {
@@ -30,9 +28,7 @@ export class Pointer {
         }
     }
 
-    get pressure() {
-        return this.currentPressure;
-    }
+    get pressure() { return this.currentPressure; }
 
     set pressure(value) {
         this.lastPressure = this.currentPressure;
@@ -43,6 +39,20 @@ export class Pointer {
             this.currentPressure = value;
         }
 
+    }
+
+    get tilt() { return [_tX, _tY]; }
+
+    set tilt(value) {
+        if (!value) { return; }
+
+        this._tX = value[0];
+        this._tY = value[1];
+
+        if (this._tX != 0 || this._tY != 0) {
+            this.type = "pen";
+            this.tip = "pen";
+        }
     }
 
     clearHistory() {
@@ -57,18 +67,6 @@ export class Pointer {
         this.history[3] = null;
     }
 
-    hasTilt(tiltX, tiltY) {
-        if (tiltX != 0 || tiltY != 0) {
-            this.type = "pen";
-            this.tip = "pen";
-            return true;
-        } else if (this.type === "pen") {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     async pushHistory(point){
         this.history[0] = this.history[1];
         this.history[1] = this.history[2];
@@ -76,32 +74,28 @@ export class Pointer {
         this.history[3] = point;
     }
 
-    async draw(context, point) {
+    async draw(context, point, width) {
         if (this.tip == "pen") {
-            this.drawPen(context, point);
+            this.drawPen(context, point, width);
         } else if (this.tip == "pencil") {
             this.drawPencil(context, point);
-        } else if (this.tip == "highlighter") {
+        } else if (this.tip == "highlighter", width) {
             this.drawHighlighter(context, point);
-        } else if (this.tip == "eraser") {
+        } else if (this.tip == "eraser", width) {
             this.erase(context, point);
         }
     }
 
-    async drawPen(context, point) {
+    async drawPen(context, point, width) {
         this.hasUpdates = true;
 
-        this.pushHistory(point);
-
-        let pressureWidth = this.pressure * this.width;
+        let pressureWidth = this.pressure * width;
         context.globalAlpha = 1;
         Bezier.draw(context, ...this.history, pressureWidth, this.color);
     }
 
-    async drawPencil(context, point) {
+    async drawPencil(context, point, width) {
         this.hasUpdates = true;
-
-        this.pushHistory(point);
 
         let pressureWidth = this.pressure * this.width;
         context.globalAlpha = 0.8;
@@ -109,9 +103,8 @@ export class Pointer {
 
     }
 
-    async drawHighlighter(context, point) {
+    async drawHighlighter(context, point, width) {
         this.hasUpdates = true;
-        //console.log("drawing", this.type, this.tip);
 
         let d = 25*this.resolution;
         let x = point[0];
@@ -133,5 +126,4 @@ export class Pointer {
 
         context.clearRect(x-d, y-d, 2*d, 2*d);
     }
-
 }
