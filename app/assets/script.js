@@ -19,6 +19,8 @@ let eraserTip = new DrawTip("eraser", 25, null, setSurfaceTip);
 
 surface.tip = penTip;
 
+let menu = new Menu(surface);
+
 Radial.init();
 let debug = new Debug();
 

@@ -1,7 +1,4 @@
-export class Menu {
-}
-
-/*
+const subMenuPattern = /sub-menu/;
 const colorList = [
     [ "black", "#000000"],
     [ "red", "#ff0000"],
@@ -20,64 +17,6 @@ const colorList = [
     [ "grey", "#808080"],
 ];
 
-var settingsButton = document.getElementById("settings-button");
-
-function init() {
-    let penColors = document.getElementById('color-container');
-    let penWidth = document.getElementById('pen-width-slider');
-    let penWidthOut = document.getElementById('pen-width-value');
-
-    penWidth.addEventListener('input', function(e) {
-        penWidthOut.innerHTML = penWidth.value;
-    });
-
-    penWidth.addEventListener('change', function(e) {
-        pen.width = penWidth.value;
-        stylus.width = penWidth.value;
-    });
-
-    penWidthOut.innerHTML = 5;
-    penWidth.value = 5;
-
-    for (let color of colorList) {
-        var colorButton = document.createElement("div");
-        colorButton.id = "pen-" + color[0];
-        colorButton.style.backgroundColor = color[1];
-        colorButton.title = color[0];
-        colorButton.style.width = "50px";
-        colorButton.style.height = "50px";
-
-        colorButton.addEventListener('click', function(e) {
-            pen.color = color[1];
-            stylus.color = color[1];
-        });
-
-        penColors.appendChild(colorButton);
-    }
-}
-
-document.body.addEventListener('click', bodyClick);
-const subMenuPattern = /sub-menu/;
-let activeSubMenu = null;
-function bodyClick(e) {
-    if (!subMenuPattern.test(e.target.className) && activeSubMenu) {
-        activeSubMenu.style.display = "none";
-    }
-}
-
-function makeShowSubMenu(tip, menu) {
-    return function(e) {
-        if (activeSubMenu) {
-            activeSubMenu.style.display = "none";
-        }
-
-        pen.tip = tip.id;
-        activeSubMenu = menu;
-        activeSubMenu.style.display = "flex";
-        e.cancelBubble = true;
-    }
-}
-
 const menuMap = [
     [ document.getElementById('pen'),
         document.getElementById('pen-submenu') ],
@@ -89,23 +28,92 @@ const menuMap = [
         document.getElementById('eraser-submenu') ],
 ];
 
-for (let map of menuMap) {
-    map[0].addEventListener('click', makeShowSubMenu(...map));
-}
-document.getElementById("save").addEventListener('click', myFullscreen);
-function myFullscreen(e) {
-    var elem = document.getElementById("bg-board");
-    elem = document.body;
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
+let settingsButton = document.getElementById("settings-button");
+
+export class Menu {
+    updateWidthDisplay(e) {
+        this.penWidthOut.innerHTML = this.penWidth.value;
+    }
+
+    updatePenWidth(e) {
+        this.surface.tip.width = this.penWidth.value;
+    }
+
+    makeSetPenColor(color) {
+        return function(e) {
+            this.surface.pen.color = color;
+        }
+    }
+
+    constructor(surface) {
+        this.surface = surface;
+
+        this.penColors = document.getElementById('color-container');
+        this.penWidth = document.getElementById('pen-width-slider');
+        this.penWidthOut = document.getElementById('pen-width-value');
+
+        this.penWidth.addEventListener('input', this.updateWidthDisplay.bind(this));
+
+        this.penWidth.addEventListener('change', this.updatePenWidth.bind(this));
+
+        this.penWidthOut.innerHTML = 5;
+        this.penWidth.value = 5;
+
+        for (let color of colorList) {
+            var colorButton = document.createElement("div");
+            colorButton.id = "pen-" + color[0];
+            colorButton.style.backgroundColor = color[1];
+            colorButton.title = color[0];
+            colorButton.style.width = "50px";
+            colorButton.style.height = "50px";
+
+            colorButton.addEventListener('click', this.makeSetPenColor(color[1]).bind(this));
+
+            this.penColors.appendChild(colorButton);
+        }
+
+        this.activeSubMenu = null;
+        document.body.addEventListener('click', this.deactivateMenu.bind(this));
+
+        document.getElementById("save").addEventListener('click', this.myFullscreen.bind(this));
+
+        for (let menu of menuMap) {
+            menu[0].addEventListener('click', this.makeShowSubMenu(...menu).bind(this));
+        }
+
+        document.getElementById('trash').addEventListener('click', surface.clearScreen.bind(surface), false);
+    }
+
+    deactivateMenu(e) {
+        if (!subMenuPattern.test(e.target.className) && this.activeSubMenu) {
+            this.activeSubMenu.style.display = "none";
+        }
+    }
+
+    myFullscreen(e) {
+        var elem = document.getElementById("bg-board");
+        elem = document.body;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        }
+    }
+
+    makeShowSubMenu(tip, menu) {
+        return function(e) {
+            if (this.activeSubMenu) {
+                this.activeSubMenu.style.display = "none";
+            }
+
+            this.surface.pen.tip = tip.id;
+            this.activeSubMenu = menu;
+            this.activeSubMenu.style.display = "flex";
+            e.cancelBubble = true;
+        }
     }
 }
-
-document.getElementById('trash').addEventListener('click', clearScreen, false);
-*/
