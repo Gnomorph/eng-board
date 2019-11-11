@@ -1,12 +1,12 @@
 'use strict'
 
-import { Pointer } from "./Pointer.js";
+import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
 
 export class Surface {
     constructor(canvas) {
         this.tip = null;
-        this.pen = new Pointer(null, 5, 0.25, Browser.resolution, "#000000");
+        //this.pen = new Pointer(null, 5, 0.25, Browser.resolution, "#000000");
 
         this.bgBoard = canvas;
         this.fgBoard = document.getElementById("fg-board");
