@@ -1,4 +1,5 @@
 import { Browser } from "./Browser.js";
+import * as Draw from "./Draw.js";
 import * as Radial from "./Radial.js";
 const touchEnabled = false;
 
@@ -13,6 +14,7 @@ export class PointerInput {
     }
 
     pointHere(e) {
+        e.preventDefault();
         let n3 = [ Browser.resolution*e.clientX, Browser.resolution*e.clientY ];
 
         // Check the type reported by the browser for this event
@@ -42,6 +44,7 @@ export class PointerInput {
     }
 
     startPoint(e) {
+        e.preventDefault();
         let activeSubMenu = null;
         Radial.start(e, this.surface.pen);
 
@@ -50,6 +53,7 @@ export class PointerInput {
     }
 
     stopPoint(e) {
+        e.preventDefault();
         // This should be handled by Radial somehow
         if (e.buttons == "2") {
             return;
