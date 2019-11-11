@@ -1,69 +1,68 @@
+import { Browser } from "./Browser.js";
+
 export class Debug {
     constructor(surface) {
+        this.surface = surface;
+        this.debugState = false;
+        this.debugMenu = document.getElementById("debug-menu");
+
+        this.oBrowser = document.getElementById('browser');
+        this.oBrowser.innerHTML = Browser.isSafari ? "safari" : "firefox";
+
+        this.oWidth = document.getElementById('width');
+        this.oHeight = document.getElementById('height');
+        this.oWidth.innerHTML = Browser.width;
+        this.oHeight.innerHTML = Browser.height;
+
+        this.settingsButton = document.getElementById("settings-button");
+        this.settingsButton.addEventListener('click', this.toggleDebug.bind(this));
+    }
+
+    toggleDebug(e) {
+        if (this.debugState) {
+            this.disableDebug();
+        } else {
+            this.enableDebug();
+        }
+    }
+
+    enableDebug() {
+        this.debugState = true;
+        this.debugMenu.style.display = "flex";
+        this.surface.bgBoard.addEventListener('pointermove', this.testMove.bind(this));
+        this.surface.bgBoard.addEventListener('pointerdown', this.testDown.bind(this));
+        this.surface.bgBoard.addEventListener('pointerup', this.testUp.bind(this));
+    }
+
+    disableDebug() {
+        this.debugState = false;
+        this.debugMenu.style.display = "none";
+        this.surface.bgBoard.removeEventListener('pointermove', this.testMove.bind(this));
+        this.surface.bgBoard.removeEventListener('pointerdown', this.testDown.bind(this));
+        this.surface.bgBoard.removeEventListener('pointerup', this.testUp.bind(this));
+    }
+
+    testMove(e) {
+        let type = document.getElementById(e.pointerType + "-debug");
+
+        type.querySelector('#x').innerHTML = Browser.resolution*e.clientX;
+        type.querySelector('#y').innerHTML = Browser.resolution*e.clientY;
+        type.querySelector('#buttons').innerHTML = e.buttons;
+        type.querySelector('#pressure').innerHTML = e.pressure.toFixed(3);
+        type.querySelector('#tiltx').innerHTML = e.tiltX;
+        type.querySelector('#tilty').innerHTML = e.tiltY;
+        type.querySelector('#id').innerHTML = e.pointerId;
+    }
+
+    testUp(e) {
+        let type = document.getElementById(e.pointerType + "-debug");
+
+        type.querySelector('#state').innerHTML = "up";
+    }
+
+    testDown(e) {
+        let type = document.getElementById(e.pointerType + "-debug");
+
+        type.querySelector('#state').innerHTML = "dn";
     }
 }
-
-/*
-let debugState = false;
-let debugMenu = document.getElementById("debug-menu");
-
-function init() {
-    let oBrowser = document.getElementById('browser');
-    oBrowser.innerHTML = isSafari ? "safari" : "firefox";
-
-    let oWidth = document.getElementById('width');
-    let oHeight = document.getElementById('height');
-    oWidth.innerHTML = getWidth();
-    oHeight.innerHTML = getHeight();
-}
-
-settingsButton.addEventListener('click', toggleDebug);
-
-function toggleDebug(e) {
-    if (debugState) {
-        disableDebug();
-    } else {
-        enableDebug();
-    }
-}
-
-function enableDebug() {
-    debugState = true;
-    debugMenu.style.display = "flex";
-    bgBoard.addEventListener('pointermove', testMove);
-    bgBoard.addEventListener('pointerdown', testDown);
-    bgBoard.addEventListener('pointerup', testUp);
-}
-
-function disableDebug() {
-    debugState = false;
-    debugMenu.style.display = "none";
-    bgBoard.removeEventListener('pointermove', testMove);
-    bgBoard.removeEventListener('pointerdown', testDown);
-    bgBoard.removeEventListener('pointerup', testUp);
-}
-
-function testMove(e) {
-    let type = document.getElementById(e.pointerType + "-debug");
-
-    type.querySelector('#x').innerHTML = resolution*e.clientX;
-    type.querySelector('#y').innerHTML = resolution*e.clientY;
-    type.querySelector('#buttons').innerHTML = e.buttons;
-    type.querySelector('#pressure').innerHTML = e.pressure.toFixed(3);
-    type.querySelector('#tiltx').innerHTML = e.tiltX;
-    type.querySelector('#tilty').innerHTML = e.tiltY;
-    type.querySelector('#id').innerHTML = e.pointerId;
-}
-
-function testUp(e) {
-    let type = document.getElementById(e.pointerType + "-debug");
-
-    type.querySelector('#state').innerHTML = "up";
-}
-
-function testDown(e) {
-    let type = document.getElementById(e.pointerType + "-debug");
-
-    type.querySelector('#state').innerHTML = "dn";
-}
-*/
