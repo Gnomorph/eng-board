@@ -1,7 +1,10 @@
 import * as Bezier from "./Bezier.js";
+import { CircularBuffer } from "./CircularBuffer.js";
 
 export class Pointer {
     constructor(id, width, pressureThreashold, resolution, color) {
+        this.buffer = new CircularBuffer();
+
         this.resolution = resolution || 1;
         this.hasUpdates = false;
         this._id = id;
@@ -57,21 +60,11 @@ export class Pointer {
 
     clearHistory() {
         this.type = "eraser";
-        this.history = [null, null, null, null];
-    }
-
-    flushHistory() {
-        this.type = "eraser";
-        this.history[1] = null;
-        this.history[2] = null;
-        this.history[3] = null;
+        this.buffer.length = 0;
     }
 
     async pushHistory(point){
-        this.history[0] = this.history[1];
-        this.history[1] = this.history[2];
-        this.history[2] = this.history[3];
-        this.history[3] = point;
+        this.buffer.push(point);
     }
 
     async draw(context, point, width) {
@@ -91,7 +84,7 @@ export class Pointer {
 
         let pressureWidth = this.pressure * width;
         context.globalAlpha = 1;
-        Bezier.draw(context, ...this.history, pressureWidth, this.color);
+        Bezier.draw(context, ...this.buffer.all, pressureWidth, this.color);
     }
 
     async drawPencil(context, point, width) {
@@ -99,8 +92,7 @@ export class Pointer {
 
         let pressureWidth = this.pressure * this.width;
         context.globalAlpha = 0.8;
-        Bezier.draw(context, ...this.history, pressureWidth, this.color);
-
+        Bezier.draw(context, ...this.buffer.all, pressureWidth, this.color);
     }
 
     async drawHighlighter(context, point, width) {

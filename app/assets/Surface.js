@@ -53,8 +53,7 @@ export class Surface {
 
     logStart(point) {
         this.pen.pushHistory(point);
-        this.pen.history[0] = null;
-        this.pen.history[1] = null;
+        this.pen.buffer.length = 2;
     }
 
     logMove(id, point, pressure, tilt) {
