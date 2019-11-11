@@ -61,7 +61,8 @@ export class PointerInput {
 
         let current = [Browser.resolution*e.clientX, Browser.resolution*e.clientY];
         if (e.mozInputSource == 2 && this.surface.pen.type=="pen" && this.surface.pen.tip=="pen") {
-            Draw.line(this.surface.pen, this.surface.fCtx, this.surface.pen.history[3], current, 0, this.surface.pen.color, 10);
+            // TODO THIS LINE CAUSES THE STREAK ERROR
+            //Draw.line(this.surface.pen, this.surface.fCtx, this.surface.pen.history[3], current, 0, this.surface.pen.color, 10);
         }
     }
 }
