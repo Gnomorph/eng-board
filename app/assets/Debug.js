@@ -3,6 +3,7 @@ import { Browser } from "./Browser.js";
 export class Debug {
     constructor(surface) {
         this.surface = surface;
+
         this.debugState = false;
         this.debugMenu = document.getElementById("debug-menu");
 
@@ -45,8 +46,8 @@ export class Debug {
     testMove(e) {
         let type = document.getElementById(e.pointerType + "-debug");
 
-        type.querySelector('#x').innerHTML = Browser.resolution*e.clientX;
-        type.querySelector('#y').innerHTML = Browser.resolution*e.clientY;
+        type.querySelector('#x').innerHTML = parseInt(Browser.resolution*e.clientX);
+        type.querySelector('#y').innerHTML = parseInt(Browser.resolution*e.clientY);
         type.querySelector('#buttons').innerHTML = e.buttons;
         type.querySelector('#pressure').innerHTML = e.pressure.toFixed(3);
         type.querySelector('#tiltx').innerHTML = e.tiltX;
