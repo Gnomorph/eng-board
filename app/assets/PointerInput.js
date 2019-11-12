@@ -59,6 +59,9 @@ export class PointerInput {
             return;
         }
 
+        this.surface.logEnd();
+        this.surface.strokeDraw();
+
         let current = [Browser.resolution*e.clientX, Browser.resolution*e.clientY];
         if (e.mozInputSource == 2 && this.surface.pen.type=="pen" && this.surface.pen.tip=="pen") {
             // TODO THIS LINE CAUSES THE STREAK ERROR

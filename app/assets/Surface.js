@@ -2,11 +2,15 @@
 
 import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
+import * as Draw from "./Draw.js";
 
 export class Surface {
     constructor(canvas) {
         this.tip = null;
         //this.pen = new Pointer(null, 5, 0.25, Browser.resolution, "#000000");
+        //this.stroke = new Path(null, 5, 0.25, Browser.resolution, "#000000");
+        this.drawables = [];
+        this.hasUpdates = false;
 
         this.bgBoard = canvas;
         this.fgBoard = document.getElementById("fg-board");
@@ -46,41 +50,49 @@ export class Surface {
     }
 
     clearScreen() {
-        this.pen.hasUpdates = true;
+        this.hasUpdates = true;
         this.fCtx.clearRect(0, 0, this.width, this.height);
         this.sCtx.clearRect(0, 0, this.width, this.height);
     }
 
-    logStart(point) {
-        this.pen.pushHistory(point);
-        this.pen.buffer.length = 2;
+    logStart(id, point) {
+        this.stroke = new Path(id, 5, 0.25, Browser.resolution, "#000000");
+        this.stroke.push(point);
+        //this.pen.pushHistory(point);
+        //this.pen.buffer.length = 2;
     }
 
     logMove(id, point, pressure, tilt) {
-        this.pen.id = id;
-        this.pen.pushHistory(point);
-        this.pen.pressure = pressure == null ? 1 : pressure;
-        this.pen.tilt = tilt;
+        if (this.stroke != null) {
+            this.stroke.push(point);
+        }
     }
 
     logEnd() {
+        this.drawables.push(this.stroke);
+        this.stroke = null;
     }
 
     erase(id, point) {
         //this.pen.id = id;
-        this.pen.erase(this.fCtx, point);
+        //this.pen.erase(this.fCtx, point);
+    }
+
+    strokeDraw() {
+        this.hasUpdates = true;
+        Draw.lines(this.fCtx, this.drawables.pop(), 5, "#000000");
     }
 
     penDraw(id, point, pressure, tilt) {
         //this.pen.id = id;
-        this.pen.draw(this.fCtx, point, this.tip.width);
+        //this.pen.draw(this.fCtx, point, this.tip.width);
     }
 
     mouseDraw(id, point) {
         //this.pen.id = id;
-        this.pen.type = "pen";
-        this.pen.pressure = 1;
-        this.pen.draw(this.fCtx, point, this.tip.width);
+        //this.pen.type = "pen";
+        //this.pen.pressure = 1;
+        //this.pen.draw(this.fCtx, point, this.tip.width);
     }
 
     greenScreen() {
@@ -106,12 +118,12 @@ export class Surface {
 
 function buildCopyScreens(vm) {
     return function(e) {
-        if (vm.pen.hasUpdates) {
-            vm.pen.hasUpdates = false;
-            vm.greenScreen();
-            vm.bCtx.drawImage(vm.fCtx.canvas, 0, 0);
+        if (this.hasUpdates) {
+            this.hasUpdates = false;
+            this.greenScreen();
+            this.bCtx.drawImage(vm.fCtx.canvas, 0, 0);
         }
-    }
+    }.bind(vm);
 }
 
 function buildResizeCanvas(vm) {
@@ -129,7 +141,7 @@ function buildResizeCanvas(vm) {
         minHeight = Math.max(minHeight, vm.height);
         minHeight = Math.max(minHeight, vm.height);
 
-        vm.pen.hasUpdates = true;
+        vm.hasUpdates = true;
 
         vm.sCtx.drawImage(vm.fgBoard, 0, 0);
 
