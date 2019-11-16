@@ -2,6 +2,7 @@ import * as Bezier from "./Bezier.js";
 
 export class Path {
     constructor(id, width, pressureThreashold, resolution, color) {
+        this.index = null;
         this._id = id;
         this.width = width || 5;
         this.pressureThreashold = pressureThreashold || 0.25;

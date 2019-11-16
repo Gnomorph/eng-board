@@ -4,6 +4,13 @@ import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
 import * as Draw from "./Draw.js";
 
+function makeBoard() {
+    let board = document.createElement('canvas');
+    board.class = "offscreen";
+    document.body.appendChild(board);
+    return board;
+}
+
 export class Surface {
     constructor(canvas) {
         this.tip = null;
@@ -13,8 +20,8 @@ export class Surface {
         this.hasUpdates = false;
 
         this.bgBoard = canvas;
-        this.fgBoard = document.getElementById("fg-board");
-        this.bsBoard = document.getElementById("bs-board");
+        this.fgBoard = makeBoard();
+        this.bsBoard = makeBoard();
 
         this.fCtx = this.fgBoard.getContext("2d");
         this.bCtx = this.bgBoard.getContext("2d");
@@ -35,6 +42,24 @@ export class Surface {
         this.fpsTimer = setInterval(buildCopyScreens(this), 30);
 
         window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
+
+        // active
+        // display
+        // history -> first approximation, just redraw everything on active
+        // resize -> you can probably just repaint everything
+
+        // TODO erasers cause a big problem
+        // this may require agressive path smoothing for older paths
+
+        // you need one foregraound board for the active pen
+            // only draw the active pen on here
+            // draw with only straight lines
+            // but actually, also draw the last 10 paths
+            // redraw this completely every time the pen is lifted
+            // do a screen dump every 1/60's sec
+        // you need one background board that will be displayed
+        // you can have one history board for long term history
+        // you can have one history board for short term history
     }
 
     addEventListener(trigger, callback) {
@@ -128,42 +153,36 @@ function buildCopyScreens(vm) {
 
 function buildResizeCanvas(vm) {
     return function (event) {
-        vm.width  = Browser.width;
-        vm.height = Browser.height;
+        this.width  = Browser.width;
+        this.height = Browser.height;
 
-        let minWidth = vm.width;
-        minWidth = Math.max(minWidth, vm.width);
-        minWidth = Math.max(minWidth, vm.width);
-        minWidth = Math.max(minWidth, vm.width);
+        let minWidth = this.width;
+        minWidth = Math.max(minWidth, this.width);
+        minWidth = Math.max(minWidth, this.width);
+        minWidth = Math.max(minWidth, this.width);
 
-        let minHeight = vm.height;
-        minHeight = Math.max(minHeight, vm.height);
-        minHeight = Math.max(minHeight, vm.height);
-        minHeight = Math.max(minHeight, vm.height);
+        let minHeight = this.height;
+        minHeight = Math.max(minHeight, this.height);
+        minHeight = Math.max(minHeight, this.height);
+        minHeight = Math.max(minHeight, this.height);
 
-        vm.hasUpdates = true;
+        this.hasUpdates = true;
 
-        vm.sCtx.drawImage(vm.fgBoard, 0, 0);
+        this.sCtx.drawImage(this.fgBoard, 0, 0);
 
-        vm.bgBoard.width = vm.width;
-        vm.bgBoard.height = vm.height;
-        vm.bCtx.clearRect(0, 0, vm.width, vm.height);
-        vm.bCtx.drawImage(vm.bsBoard, 0, 0);
+        this.bgBoard.width = this.width;
+        this.bgBoard.height = this.height;
+        this.bCtx.clearRect(0, 0, this.width, this.height);
+        this.bCtx.drawImage(this.bsBoard, 0, 0);
 
-        vm.fgBoard.width = minWidth;
-        vm.fgBoard.height = minHeight;
-        vm.fCtx.clearRect(0, 0, vm.width, vm.height);
+        this.fgBoard.width = minWidth;
+        this.fgBoard.height = minHeight;
+        this.fCtx.clearRect(0, 0, this.width, this.height);
 
-        vm.fCtx.drawImage(vm.bsBoard, 0, 0);
+        this.fCtx.drawImage(this.bsBoard, 0, 0);
 
-        vm.bsBoard.width = minWidth;
-        vm.bsBoard.height = minHeight;
-        vm.sCtx.drawImage(vm.fgBoard, 0, 0);
-        /*
-            let oWidth = document.getElementById('width');
-            let oHeight = document.getElementById('height');
-            oWidth.innerHTML = getWidth();
-            oHeight.innerHTML = getHeight();
-            */
-    }
+        this.bsBoard.width = minWidth;
+        this.bsBoard.height = minHeight;
+        this.sCtx.drawImage(this.fgBoard, 0, 0);
+    }.bind(vm);
 }
