@@ -76,6 +76,8 @@ export class Menu {
         document.body.addEventListener('click', this.deactivateMenu.bind(this));
 
         document.getElementById("save").addEventListener('click', this.myFullscreen.bind(this));
+        document.getElementById("undo").addEventListener('click', this.myUndo.bind(this));
+        document.getElementById("redo").addEventListener('click', this.myRedo.bind(this));
 
         for (let menu of menuMap) {
             menu[0].addEventListener('click', this.makeShowSubMenu(...menu).bind(this));
@@ -87,6 +89,20 @@ export class Menu {
     deactivateMenu(e) {
         if (!subMenuPattern.test(e.target.className) && this.activeSubMenu) {
             this.activeSubMenu.style.display = "none";
+        }
+    }
+
+    myUndo(e) {
+        if (this.surface.drawables.length > 0) {
+            this.surface.hasUpdates = true;
+            this.surface.undoStack.push(this.surface.drawables.pop());
+        }
+    }
+
+    myRedo(e) {
+        if (this.surface.undoStack.length > 0) {
+            this.surface.hasUpdates = true;
+            this.surface.drawables.push(this.surface.undoStack.pop());
         }
     }
 

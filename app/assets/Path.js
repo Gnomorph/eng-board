@@ -5,7 +5,8 @@ export class Path {
         this.index = null;
         this._id = id;
         this.width = width || 5;
-        this.pressureThreashold = pressureThreashold || 0.25;
+        //this.pressureThreashold = pressureThreashold || 0.25;
+        this.pressureThreashold = pressureThreashold || 0.0;
         this.resolution = resolution || 1;
         this.color = color || "#000000";
 

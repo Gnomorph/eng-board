@@ -14,18 +14,23 @@ function makeBoard() {
 export class Surface {
     constructor(canvas) {
         this.tip = null;
-        //this.pen = new Pointer(null, 5, 0.25, Browser.resolution, "#000000");
-        //this.stroke = new Path(null, 5, 0.25, Browser.resolution, "#000000");
+        this.pointerIsActive = false;
+        this.stroke = null;
         this.drawables = [];
+        this.drawdones = [];
         this.hasUpdates = false;
+
+        this.undoStack = [];
 
         this.bgBoard = canvas;
         this.fgBoard = makeBoard();
         this.bsBoard = makeBoard();
+        this.tpBoard = makeBoard();
 
         this.fCtx = this.fgBoard.getContext("2d");
         this.bCtx = this.bgBoard.getContext("2d");
         this.sCtx = this.bsBoard.getContext("2d");
+        this.tCtx = this.bsBoard.getContext("2d");
 
         this.width = Browser.width;
         this.height = Browser.height;
@@ -36,10 +41,12 @@ export class Surface {
         this.fCtx.canvas.height = this.height;
         this.bsBoard.width = this.width;
         this.bsBoard.height = this.height;
+        this.tCtx.canvas.width = this.width;
+        this.tCtx.canvas.height = this.height;
         this.clearScreen();
 
         this.greenScreen();
-        this.fpsTimer = setInterval(buildCopyScreens(this), 30);
+        this.fpsTimer = setInterval(buildCopyScreens(this), 10);
 
         window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
 
@@ -76,26 +83,57 @@ export class Surface {
 
     clearScreen() {
         this.hasUpdates = true;
-        this.fCtx.clearRect(0, 0, this.width, this.height);
-        this.sCtx.clearRect(0, 0, this.width, this.height);
+        this.drawables.length = 0;
+        this.drawdones.length = 0;
+        this.tCtx.clearRect(0, 0, this.width, this.height);
+        this.greenScreen();
+        // TODO: implement undo for clear
+        //this.undoStack.push(JSON.parse(JSON.stringify(this.drawables)));
+
+        //this.fCtx.clearRect(0, 0, this.width, this.height);
+        //this.sCtx.clearRect(0, 0, this.width, this.height);
+        //this.sCtx.clearRect(0, 0, this.width, this.height);
     }
 
-    logStart(id, point) {
-        this.stroke = new Path(id, 5, 0.25, Browser.resolution, "#000000");
+    logStart(id, point, e) {
+        //this.eventCount = 0;
+        //this.eventStart = Date.now();
+
+        this.undoStack.length = 0;
+        this.pointerIsActive = this.pointerIsActive || id;
+        //this.stroke = new Path(id, 5, 0.25, Browser.resolution, "#000000");
+        this.stroke = new Path(id, 5, 0.0, Browser.resolution, "#000000");
         this.stroke.push(point);
-        //this.pen.pushHistory(point);
-        //this.pen.buffer.length = 2;
+        this.drawables.push(this.stroke);
+
     }
 
-    logMove(id, point, pressure, tilt) {
-        if (this.stroke != null) {
-            this.stroke.push(point);
+    logMove(id, point, pressure, tilt, e) {
+        if (this.pointerIsActive === id) {
+            //this.eventCount++;
+
+            this.hasUpdates = true;
+            if (this.drawables[this.drawables.length-1] != null) {
+                this.drawables[this.drawables.length-1].push(point);
+            }
         }
     }
 
-    logEnd() {
-        this.drawables.push(this.stroke);
-        this.stroke = null;
+    logEnd(id, e) {
+        //this.eventCount++;
+        //let timeDelta = (Date.now()-this.eventStart);
+        //console.log("average time per draw: ", timeDelta/this.eventCount);
+
+        this.pointerIsActive = false;
+        if (this.drawables.length > 0) {
+            let inked = this.drawables.shift();
+
+            this.drawdones.push(inked);
+            this.hasUpdates = true;
+            this.fCtx.clearRect(0, 0, this.width, this.height);
+
+            Draw.curves(this.tCtx, inked, 5, "#000000");
+        }
     }
 
     erase(id, point) {
@@ -104,8 +142,9 @@ export class Surface {
     }
 
     strokeDraw() {
-        this.hasUpdates = true;
-        Draw.lines(this.fCtx, this.drawables.pop(), 5, "#000000");
+        //for (let drawable of this.drawables) {
+            //Draw.lines(this.fCtx, drawable, 5, "#000000");
+        //}
     }
 
     penDraw(id, point, pressure, tilt) {
@@ -141,17 +180,31 @@ export class Surface {
     }
 }
 
-function buildCopyScreens(vm) {
+function buildCopyScreens(surface) {
     return function(e) {
+        // Only draw if there are updates to draw
         if (this.hasUpdates) {
             this.hasUpdates = false;
+
+            // Draw all of the drawables to the foreground
+            for (let drawable of this.drawables) {
+                Draw.lines(this.fCtx, drawable, 5, "#000000");
+            }
+
+            // draw the background paper on the background canvas
             this.greenScreen();
-            this.bCtx.drawImage(vm.fCtx.canvas, 0, 0);
+
+            // Copy the foreground to the background
+            this.bCtx.drawImage(this.tCtx.canvas, 0, 0);
+            this.bCtx.drawImage(this.fCtx.canvas, 0, 0);
+
+            // clear the foreground
+            this.fCtx.clearRect(0, 0, this.width, this.height);
         }
-    }.bind(vm);
+    }.bind(surface);
 }
 
-function buildResizeCanvas(vm) {
+function buildResizeCanvas(surface) {
     return function (event) {
         this.width  = Browser.width;
         this.height = Browser.height;
@@ -184,5 +237,5 @@ function buildResizeCanvas(vm) {
         this.bsBoard.width = minWidth;
         this.bsBoard.height = minHeight;
         this.sCtx.drawImage(this.fgBoard, 0, 0);
-    }.bind(vm);
+    }.bind(surface);
 }

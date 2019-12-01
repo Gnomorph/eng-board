@@ -1,4 +1,7 @@
-export { arc, point, line, lines }
+export { arc, point, line, lines, curves }
+
+import * as Bezier from "./Bezier.js";
+import { CircularBuffer } from "./CircularBuffer.js";
 
 async function arc(context, point, width, style) {
     context.beginPath();
@@ -18,22 +21,68 @@ async function point(context, x, y, width, style) {
     context.fill();
 }
 
+async function curves(context, path, width, color) {
+    if (!path) { return; }
+    let points = path._points;
+
+    if (points.length < 2) { return };
+
+    context.lineWidth = width;
+    context.strokeStyle = color;
+
+    context.moveTo(...points[0]);
+
+    context.beginPath();
+    context.lineTo(...points[1]);
+
+    let last;
+    let buffer = new CircularBuffer();
+    for(let point of points) {
+        buffer.push(point);
+        let pointSet = buffer.all;
+        if (pointSet[pointSet.length-1] != null) {
+            Bezier.draw(context, ...pointSet, width, color);
+            //Bezier.draw(context, ...pointSet, width, "blue");
+        }
+    }
+
+
+    context.lineTo(...points[points.length-1]);
+    context.endPath();
+
+    /*buffer.push(points[0]);
+    buffer.push(points[1]);
+    buffer.push(points[2]);
+    //buffer.push(points[3]);
+
+    for(let i=3; i<points.length; i++) {
+    //for(let point of points) {
+        let point = points[i];
+        if (last) {
+            context.lineTo(...point);
+        }
+
+        last = point;
+    }
+    */
+    context.stroke();
+}
+
 async function lines(context, path, width, color) {
     if (!path) { return; }
     let points = path._points;
 
-    pen.hasUpdates = true;
     context.lineWidth = width;
     context.strokeStyle = color;
 
-    context.beginPath();
-
     context.moveTo(...points[0]);
+
+    context.beginPath();
 
     let last;
     for(let point of points) {
         if (last) {
-            context.lineTo(...point);
+            await context.lineTo(...point);
         }
 
         last = point;

@@ -34,6 +34,8 @@ export async function draw(context, p0, p1, p2, p3, width, style) {
 
     Draw.arc(context, p1, width, style);
     Draw.arc(context, p2, width, style);
+
+
     //style = "#0000ff";
     //Draw.arc(context, p1, width, style);
     //Draw.arc(context, p2, width, style);
