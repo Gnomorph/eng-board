@@ -27,10 +27,16 @@ export class Surface {
         this.bsBoard = makeBoard();
         this.tpBoard = makeBoard();
 
-        this.fCtx = this.fgBoard.getContext("2d");
-        this.bCtx = this.bgBoard.getContext("2d");
-        this.sCtx = this.bsBoard.getContext("2d");
-        this.tCtx = this.bsBoard.getContext("2d");
+        this.fCtx = this.fgBoard.getContext("2d", {desynchronized: true});
+        this.fCtx.imageSmoothingEnabled = false;
+        this.bCtx = this.bgBoard.getContext("2d", {desynchronized: true});
+        this.bCtx.imageSmoothingEnabled = false;
+        this.sCtx = this.bsBoard.getContext("2d", {desynchronized: true});
+        this.sCtx.imageSmoothingEnabled = false;
+        this.tCtx = this.bsBoard.getContext("2d", {desynchronized: true});
+        this.tCtx.imageSmoothingEnabled = false;
+
+        //console.log(this.fCtx.getContextAttributes().desynchronized);
 
         this.width = Browser.width;
         this.height = Browser.height;
@@ -46,7 +52,7 @@ export class Surface {
         this.clearScreen();
 
         this.greenScreen();
-        this.fpsTimer = setInterval(buildCopyScreens(this), 10);
+        this.fpsTimer = setInterval(buildCopyScreens(this), 1);
 
         window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
 
@@ -101,6 +107,9 @@ export class Surface {
 
         this.undoStack.length = 0;
         this.pointerIsActive = this.pointerIsActive || id;
+        this.currentPoint = point;
+
+
         //this.stroke = new Path(id, 5, 0.25, Browser.resolution, "#000000");
         this.stroke = new Path(id, 5, 0.0, Browser.resolution, "#000000");
         this.stroke.push(point);
@@ -112,10 +121,20 @@ export class Surface {
         if (this.pointerIsActive === id) {
             //this.eventCount++;
 
-            this.hasUpdates = true;
-            if (this.drawables[this.drawables.length-1] != null) {
-                this.drawables[this.drawables.length-1].push(point);
-            }
+            //this.hasUpdates = true;
+            //if (this.drawables[this.drawables.length-1] != null) {
+                //this.drawables[this.drawables.length-1].push(point);
+            //}
+
+            this.bCtx.beginPath();
+            this.bCtx.stroke
+            this.bCtx.lineWidth = 2;
+            this.bCtx.lineCap = "round";
+            this.bCtx.strokeStyle = "black";
+            this.bCtx.moveTo(...this.currentPoint);
+            this.bCtx.lineTo(...point);
+            this.bCtx.stroke();
+            this.currentPoint = point;
         }
     }
 
@@ -129,10 +148,10 @@ export class Surface {
             let inked = this.drawables.shift();
 
             this.drawdones.push(inked);
-            this.hasUpdates = true;
-            this.fCtx.clearRect(0, 0, this.width, this.height);
+            //this.hasUpdates = true;
+            //this.fCtx.clearRect(0, 0, this.width, this.height);
 
-            Draw.curves(this.tCtx, inked, 5, "#000000");
+            //Draw.curves(this.tCtx, inked, 5, "#000000");
         }
     }
 
