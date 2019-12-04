@@ -67,22 +67,29 @@ export class Menu {
             colorButton.style.width = "50px";
             colorButton.style.height = "50px";
 
+            colorButton.addEventListener('touchstart', this.makeSetPenColor(color[1]).bind(this));
             colorButton.addEventListener('click', this.makeSetPenColor(color[1]).bind(this));
 
             this.penColors.appendChild(colorButton);
         }
 
         this.activeSubMenu = null;
+        document.body.addEventListener('touchstart', this.deactivateMenu.bind(this));
         document.body.addEventListener('click', this.deactivateMenu.bind(this));
 
         document.getElementById("save").addEventListener('click', this.myFullscreen.bind(this));
+        document.getElementById("save").addEventListener('touchstart', this.myFullscreen.bind(this));
         document.getElementById("undo").addEventListener('click', this.myUndo.bind(this));
+        document.getElementById("undo").addEventListener('touchstart', this.myUndo.bind(this));
         document.getElementById("redo").addEventListener('click', this.myRedo.bind(this));
+        document.getElementById("redo").addEventListener('touchstart', this.myRedo.bind(this));
 
         for (let menu of menuMap) {
+            menu[0].addEventListener('touchstart', this.makeShowSubMenu(...menu).bind(this));
             menu[0].addEventListener('click', this.makeShowSubMenu(...menu).bind(this));
         }
 
+        document.getElementById('trash').addEventListener('touchstart', surface.clearScreen.bind(surface), false);
         document.getElementById('trash').addEventListener('click', surface.clearScreen.bind(surface), false);
     }
 
@@ -93,16 +100,18 @@ export class Menu {
     }
 
     myUndo(e) {
-        if (this.surface.drawables.length > 0) {
-            this.surface.hasUpdates = true;
-            this.surface.undoStack.push(this.surface.drawables.pop());
+        if (this.surface.strokeOrder.length > 0) {
+            //this.surface.hasUpdates = true;
+            this.surface.undoStack.push(this.surface.strokeOrder.pop());
+            this.surface.update();
         }
     }
 
     myRedo(e) {
         if (this.surface.undoStack.length > 0) {
-            this.surface.hasUpdates = true;
-            this.surface.drawables.push(this.surface.undoStack.pop());
+            //this.surface.hasUpdates = true;
+            this.surface.strokeOrder.push(this.surface.undoStack.pop());
+            this.surface.update();
         }
     }
 

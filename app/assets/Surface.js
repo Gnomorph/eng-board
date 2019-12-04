@@ -4,6 +4,9 @@ import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
 import * as Draw from "./Draw.js";
 
+import { Stroke } from "./Stroke.js";
+import { StrokePoint } from "./StrokePoint.js";
+
 function makeBoard() {
     let board = document.createElement('canvas');
     board.class = "offscreen";
@@ -13,6 +16,10 @@ function makeBoard() {
 
 export class Surface {
     constructor(canvas) {
+        this.openStrokes = {};
+        this.strokeOrder = [];
+
+
         this.tip = null;
         this.pointerIsActive = false;
         this.stroke = null;
@@ -36,8 +43,6 @@ export class Surface {
         this.tCtx = this.bsBoard.getContext("2d", {desynchronized: true});
         this.tCtx.imageSmoothingEnabled = false;
 
-        //console.log(this.fCtx.getContextAttributes().desynchronized);
-
         this.width = Browser.width;
         this.height = Browser.height;
 
@@ -52,7 +57,6 @@ export class Surface {
         this.clearScreen();
 
         this.greenScreen();
-        this.fpsTimer = setInterval(buildCopyScreens(this), 1);
 
         window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
 
@@ -87,95 +91,95 @@ export class Surface {
         this._tip = newTip;
     }
 
+    update() {
+        this.greenScreen();
+        let i = 0;
+        for (let path of this.strokeOrder) {
+            let last = null;
+            for (let point of path) {
+                if (last) {
+                    this.tempDraw(last.x, last.y, point.x, point.y);
+                }
+
+                last = point;
+            }
+
+            i++;
+        }
+    }
+
+    startEvent(id, x, y) {
+        // for mouse, start is unique, end is not
+        // for touch, start is unique, end is not
+
+        // get undo ready
+        this.undoStack.length = 0;
+
+        // create a new stroke
+        let stroke = new Stroke(id);
+
+        // add current point to the new stroke
+        stroke.addXY(x, y);
+
+        // add to stroke openStrokes
+        // add to stroke strokeOrder
+        this.openStrokes[id] = stroke;
+        this.strokeOrder.push(stroke);
+
+        // draw the stroke to the screen???
+    }
+
+    tempDraw(xi, yi, xf, yf) {
+        if (xi && yi && xf && yf) {
+            this.bCtx.beginPath();
+            this.bCtx.stroke
+            this.bCtx.lineWidth = 3;
+            this.bCtx.lineCap = "round";
+            this.bCtx.strokeStyle = "black";
+            this.bCtx.moveTo(xi, yi);
+            this.bCtx.lineTo(xf, yf);
+            this.bCtx.stroke();
+        }
+    }
+
+    moveEvent(id, x, y) {
+        if (id in this.openStrokes) {
+            let initial = this.openStrokes[id].last;
+
+            // draw the stroke to the screen
+            let current = new StrokePoint(x, y);
+            this.tempDraw(initial.x, initial.y, current.x, current.y);
+
+            this.openStrokes[id].addXY(x, y);
+        }
+
+    }
+
+    endEvent(id, x, y) {
+        // for mouse, start is unique, end is not
+        // for touch, start is unique, end is not
+
+        // find the stroke
+        //let stroke;
+        if (id in this.openStrokes) {
+            let stroke = this.openStrokes[id];
+
+            // remove it from open strokes
+            delete this.openStrokes[id];
+
+            // NOPE don't do this. end duplicates the last point
+            // add the new x, y Point to the stroke
+            //stroke.addXY(x, y);
+        }
+
+        // move the stroke from one screen to the next if needed
+    }
+
     clearScreen() {
-        this.hasUpdates = true;
-        this.drawables.length = 0;
-        this.drawdones.length = 0;
+        this.strokeOrder.length = 0;
         this.tCtx.clearRect(0, 0, this.width, this.height);
         this.greenScreen();
         // TODO: implement undo for clear
-        //this.undoStack.push(JSON.parse(JSON.stringify(this.drawables)));
-
-        //this.fCtx.clearRect(0, 0, this.width, this.height);
-        //this.sCtx.clearRect(0, 0, this.width, this.height);
-        //this.sCtx.clearRect(0, 0, this.width, this.height);
-    }
-
-    logStart(id, point, e) {
-        //this.eventCount = 0;
-        //this.eventStart = Date.now();
-
-        this.undoStack.length = 0;
-        this.pointerIsActive = this.pointerIsActive || id;
-        this.currentPoint = point;
-
-
-        //this.stroke = new Path(id, 5, 0.25, Browser.resolution, "#000000");
-        this.stroke = new Path(id, 5, 0.0, Browser.resolution, "#000000");
-        this.stroke.push(point);
-        this.drawables.push(this.stroke);
-
-    }
-
-    logMove(id, point, pressure, tilt, e) {
-        if (this.pointerIsActive === id) {
-            //this.eventCount++;
-
-            //this.hasUpdates = true;
-            //if (this.drawables[this.drawables.length-1] != null) {
-                //this.drawables[this.drawables.length-1].push(point);
-            //}
-
-            this.bCtx.beginPath();
-            this.bCtx.stroke
-            this.bCtx.lineWidth = 2;
-            this.bCtx.lineCap = "round";
-            this.bCtx.strokeStyle = "black";
-            this.bCtx.moveTo(...this.currentPoint);
-            this.bCtx.lineTo(...point);
-            this.bCtx.stroke();
-            this.currentPoint = point;
-        }
-    }
-
-    logEnd(id, e) {
-        //this.eventCount++;
-        //let timeDelta = (Date.now()-this.eventStart);
-        //console.log("average time per draw: ", timeDelta/this.eventCount);
-
-        this.pointerIsActive = false;
-        if (this.drawables.length > 0) {
-            let inked = this.drawables.shift();
-
-            this.drawdones.push(inked);
-            //this.hasUpdates = true;
-            //this.fCtx.clearRect(0, 0, this.width, this.height);
-
-            //Draw.curves(this.tCtx, inked, 5, "#000000");
-        }
-    }
-
-    erase(id, point) {
-        //this.pen.id = id;
-        //this.pen.erase(this.fCtx, point);
-    }
-
-    strokeDraw() {
-        //for (let drawable of this.drawables) {
-            //Draw.lines(this.fCtx, drawable, 5, "#000000");
-        //}
-    }
-
-    penDraw(id, point, pressure, tilt) {
-        //this.pen.id = id;
-        //this.pen.draw(this.fCtx, point, this.tip.width);
-    }
-
-    mouseDraw(id, point) {
-        //this.pen.id = id;
-        //this.pen.type = "pen";
-        //this.pen.pressure = 1;
-        //this.pen.draw(this.fCtx, point, this.tip.width);
     }
 
     greenScreen() {
@@ -199,62 +203,14 @@ export class Surface {
     }
 }
 
-function buildCopyScreens(surface) {
-    return function(e) {
-        // Only draw if there are updates to draw
-        if (this.hasUpdates) {
-            this.hasUpdates = false;
-
-            // Draw all of the drawables to the foreground
-            for (let drawable of this.drawables) {
-                Draw.lines(this.fCtx, drawable, 5, "#000000");
-            }
-
-            // draw the background paper on the background canvas
-            this.greenScreen();
-
-            // Copy the foreground to the background
-            this.bCtx.drawImage(this.tCtx.canvas, 0, 0);
-            this.bCtx.drawImage(this.fCtx.canvas, 0, 0);
-
-            // clear the foreground
-            this.fCtx.clearRect(0, 0, this.width, this.height);
-        }
-    }.bind(surface);
-}
-
 function buildResizeCanvas(surface) {
     return function (event) {
         this.width  = Browser.width;
         this.height = Browser.height;
 
-        let minWidth = this.width;
-        minWidth = Math.max(minWidth, this.width);
-        minWidth = Math.max(minWidth, this.width);
-        minWidth = Math.max(minWidth, this.width);
-
-        let minHeight = this.height;
-        minHeight = Math.max(minHeight, this.height);
-        minHeight = Math.max(minHeight, this.height);
-        minHeight = Math.max(minHeight, this.height);
-
-        this.hasUpdates = true;
-
-        this.sCtx.drawImage(this.fgBoard, 0, 0);
-
         this.bgBoard.width = this.width;
         this.bgBoard.height = this.height;
-        this.bCtx.clearRect(0, 0, this.width, this.height);
-        this.bCtx.drawImage(this.bsBoard, 0, 0);
 
-        this.fgBoard.width = minWidth;
-        this.fgBoard.height = minHeight;
-        this.fCtx.clearRect(0, 0, this.width, this.height);
-
-        this.fCtx.drawImage(this.bsBoard, 0, 0);
-
-        this.bsBoard.width = minWidth;
-        this.bsBoard.height = minHeight;
-        this.sCtx.drawImage(this.fgBoard, 0, 0);
+        this.update();
     }.bind(surface);
 }

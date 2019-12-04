@@ -28,22 +28,15 @@ export class PointerInput {
         // Check the type reported by the browser for this event
         if (e.pointerType=="pen") {
             let tilt = [e.tiltX, e.tiltY];
-            this.surface.logMove(e.pointerId, n3, e.pressure, tilt, e);
+            this.surface.moveEvent(e.pointerId, e.clientX, e.clientY);
 
             if (e.buttons == "2") {
                 // This is for "right click" or the surface pen button
                 // OPEN the radial menu here
             } else if (e.buttons == "1") {
-                this.surface.penDraw(e.pointerId, n3, e.pressure, e.tilt);
             }
         } else if (e.pointerType=="mouse") {
-            this.surface.logMove(e.pointerId, n3, 1, [0.1, 0.1], e);
-
-            if (e.buttons == "1") {
-                this.surface.mouseDraw(e.pointerId, n3);
-            } else if (e.buttons == "4") {
-                this.surface.erase(e.pointerId, n3);
-            }
+            this.surface.moveEvent(e.pointerId, e.clientX, e.clientY);
         } else if (this.penId == e.pointerId && e.pointerType == "touch") {
             // legacy/default pen support
         } else if (e.pointerType=="touch" && this.touchEnabled && e.buttons=="1") {
@@ -57,10 +50,7 @@ export class PointerInput {
             let activeSubMenu = null;
             Radial.start(e, this.surface.pen);
 
-            this.surface.logStart(e.pointerId, [
-                Browser.resolution*e.clientX,
-                Browser.resolution*e.clientY
-            ], e);
+            this.surface.startEvent(e.pointerId, e.clientX, e.clientY);
         }
     }
 
@@ -72,8 +62,7 @@ export class PointerInput {
                 return;
             }
 
-            this.surface.logEnd(e.pointerId, e);
-            //this.surface.strokeDraw();
+            this.surface.endEvent(e.pointerId, e.clientX, e.clientY);
 
             let current = [
                 Browser.resolution*e.clientX,
