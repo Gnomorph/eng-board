@@ -30,6 +30,7 @@ export class TouchInput {
         for (let action of TOUCH_ACTIONS) {
             window.addEventListener(action, (e) => {
             //target.addEventListener(action, (e) => {
+                //e.originalTarget.focus();
                 e.preventDefault()
             }, {passive: false});
         }
@@ -48,8 +49,7 @@ export class TouchInput {
                 pen.clientY
             ];
 
-            this.surface.startEvent(pen.identifier, ...pt);
-            //this.surface.logStart(pen.identifier, pt, e);
+            this.surface.penStart(pen.identifier, "pen", ...pt);
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -58,7 +58,9 @@ export class TouchInput {
                     eraser.clientX,
                     eraser.clientY
                 ];
-                this.surface.pen.erase(this.surface.fCtx, pt);
+
+                //this.surface.pen.erase(this.surface.fCtx, pt);
+                    this.surface.penStart(eraser.identifier, "eraser", ...pt);
             }
         }
     }
@@ -76,8 +78,7 @@ export class TouchInput {
                 pen.clientY
             ];
 
-            this.surface.moveEvent(pen.identifier, ...pt);
-            //this.surface.logMove(pen.identifier, pt, 1, [0.1, 0.1], e);
+            this.surface.penMove(pen.identifier, ...pt);
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -87,7 +88,7 @@ export class TouchInput {
                     eraser.clientY
                 ];
 
-                this.surface.pen.erase(this.surface.fCtx, pt);
+                this.surface.penMove(eraser.identifier, ...pt);
             }
         }
     }
@@ -96,8 +97,7 @@ export class TouchInput {
         let pens = this.getPens(e.touches);
         let erasers = this.getErasers(e.touches);
 
-        this.surface.endEvent(pen.identifier, ...pt);
-        //this.surface.logEnd(pen.identifier, e);
+        this.surface.penEnd(pen.identifier, ...pt);
         if (pens.length > 0) {
             let pen = pens[0];
             let pt = [
@@ -107,7 +107,6 @@ export class TouchInput {
                 pen.clientY
             ];
 
-            //this.surface.logEnd(pen.identifier, e);
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -116,45 +115,12 @@ export class TouchInput {
                     eraser.clientX,
                     eraser.clientY
                 ];
-                this.surface.pen.erase(this.surface.fCtx, pt);
+                this.surface.penEnd(eraser.identifier, ...pt);
             }
         }
     }
 
     handleCancel(e) {
-    }
-
-    handleAll(e) {
-        //console.log("touch handler", e.pointerType);
-
-        let pens = this.getPens(e.touches);
-        let erasers = this.getErasers(e.touches);
-
-        if (pens.length > 0) {
-            let pen = pens[0];
-            let pt = [
-                //Browser.resolution*pen.clientX,
-                //Browser.resolution*pen.clientY
-                pen.clientX,
-                pen.clientY
-            ];
-
-            //this.surface.pen.id = pen.identifier;
-            //this.surface.pen.pressure = pen.force;
-            //console.log("comes from touchinput");
-            //this.surface.logMove(pen.identifier, pt, 1, [0.1, 0.1]);
-            this.surface.mouseDraw(pen.identifier, pt);
-        } else if (erasers.length > 0){
-            for (let eraser of erasers) {
-                let pt = [
-                    //Browser.resolution*eraser.clientX,
-                    //Browser.resolution*eraser.clientY
-                    eraser.clientX,
-                    eraser.clientY
-                ];
-                this.surface.pen.erase(this.surface.fCtx, pt);
-            }
-        }
     }
 
     getPens(touchList) {

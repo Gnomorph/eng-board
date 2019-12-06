@@ -46,7 +46,6 @@ async function curves(context, path, width, color) {
         }
     }
 
-
     context.lineTo(...points[points.length-1]);
 
     /*buffer.push(points[0]);

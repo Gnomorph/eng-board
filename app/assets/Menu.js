@@ -52,9 +52,11 @@ export class Menu {
         this.penWidth = document.getElementById('pen-width-slider');
         this.penWidthOut = document.getElementById('pen-width-value');
 
-        this.penWidth.addEventListener('input', this.updateWidthDisplay.bind(this));
+        this.penWidth.addEventListener(
+            'input', this.updateWidthDisplay.bind(this));
 
-        this.penWidth.addEventListener('change', this.updatePenWidth.bind(this));
+        this.penWidth.addEventListener(
+            'change', this.updatePenWidth.bind(this));
 
         this.penWidthOut.innerHTML = 5;
         this.penWidth.value = 5;
@@ -67,30 +69,44 @@ export class Menu {
             colorButton.style.width = "50px";
             colorButton.style.height = "50px";
 
-            colorButton.addEventListener('touchstart', this.makeSetPenColor(color[1]).bind(this));
-            colorButton.addEventListener('click', this.makeSetPenColor(color[1]).bind(this));
+            colorButton.addEventListener(
+                'touchstart', this.makeSetPenColor(color[1]).bind(this));
+            colorButton.addEventListener(
+                'click', this.makeSetPenColor(color[1]).bind(this));
 
             this.penColors.appendChild(colorButton);
         }
 
         this.activeSubMenu = null;
-        document.body.addEventListener('touchstart', this.deactivateMenu.bind(this));
-        document.body.addEventListener('click', this.deactivateMenu.bind(this));
+        document.body.addEventListener(
+            'touchstart', this.deactivateMenu.bind(this));
+        document.body.addEventListener(
+            'click', this.deactivateMenu.bind(this));
 
-        document.getElementById("save").addEventListener('click', this.myFullscreen.bind(this));
-        document.getElementById("save").addEventListener('touchstart', this.myFullscreen.bind(this));
-        document.getElementById("undo").addEventListener('click', this.myUndo.bind(this));
-        document.getElementById("undo").addEventListener('touchstart', this.myUndo.bind(this));
-        document.getElementById("redo").addEventListener('click', this.myRedo.bind(this));
-        document.getElementById("redo").addEventListener('touchstart', this.myRedo.bind(this));
+        document.getElementById("save").addEventListener(
+            'click', this.myFullscreen.bind(this));
+        document.getElementById("save").addEventListener(
+            'touchstart', this.myFullscreen.bind(this));
+        document.getElementById("undo").addEventListener(
+            'click', this.myUndo.bind(this));
+        document.getElementById("undo").addEventListener(
+            'touchstart', this.myUndo.bind(this));
+        document.getElementById("redo").addEventListener(
+            'click', this.myRedo.bind(this));
+        document.getElementById("redo").addEventListener(
+            'touchstart', this.myRedo.bind(this));
 
         for (let menu of menuMap) {
-            menu[0].addEventListener('touchstart', this.makeShowSubMenu(...menu).bind(this));
-            menu[0].addEventListener('click', this.makeShowSubMenu(...menu).bind(this));
+            menu[0].addEventListener(
+                'touchstart', this.makeShowSubMenu(...menu).bind(this));
+            menu[0].addEventListener(
+                'click', this.makeShowSubMenu(...menu).bind(this));
         }
 
-        document.getElementById('trash').addEventListener('touchstart', surface.clearScreen.bind(surface), false);
-        document.getElementById('trash').addEventListener('click', surface.clearScreen.bind(surface), false);
+        document.getElementById('trash').addEventListener(
+            'touchstart', surface.clearScreen.bind(surface), false);
+        document.getElementById('trash').addEventListener(
+            'click', surface.clearScreen.bind(surface), false);
     }
 
     deactivateMenu(e) {

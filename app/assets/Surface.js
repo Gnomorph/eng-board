@@ -19,7 +19,6 @@ export class Surface {
         this.openStrokes = {};
         this.strokeOrder = [];
 
-
         this.tip = null;
         this.pointerIsActive = false;
         this.stroke = null;
@@ -31,17 +30,14 @@ export class Surface {
 
         this.bgBoard = canvas;
         this.fgBoard = makeBoard();
-        this.bsBoard = makeBoard();
-        this.tpBoard = makeBoard();
+        this.biBoard = makeBoard();
 
         this.fCtx = this.fgBoard.getContext("2d", {desynchronized: true});
         this.fCtx.imageSmoothingEnabled = false;
         this.bCtx = this.bgBoard.getContext("2d", {desynchronized: true});
         this.bCtx.imageSmoothingEnabled = false;
-        this.sCtx = this.bsBoard.getContext("2d", {desynchronized: true});
-        this.sCtx.imageSmoothingEnabled = false;
-        this.tCtx = this.bsBoard.getContext("2d", {desynchronized: true});
-        this.tCtx.imageSmoothingEnabled = false;
+        this.biCtx = this.biBoard.getContext("2d", {desynchronized: true});
+        this.biCtx.imageSmoothingEnabled = false;
 
         this.width = Browser.width;
         this.height = Browser.height;
@@ -50,13 +46,12 @@ export class Surface {
         this.bCtx.canvas.height = this.height;
         this.fCtx.canvas.width = this.width;
         this.fCtx.canvas.height = this.height;
-        this.bsBoard.width = this.width;
-        this.bsBoard.height = this.height;
-        this.tCtx.canvas.width = this.width;
-        this.tCtx.canvas.height = this.height;
+        this.biCtx.canvas.width = this.width;
+        this.biCtx.canvas.height = this.height;
         this.clearScreen();
 
-        this.greenScreen();
+        this.buildGreenScreen();
+        this.copyGreenScreen();
 
         window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
 
@@ -69,11 +64,11 @@ export class Surface {
         // this may require agressive path smoothing for older paths
 
         // you need one foregraound board for the active pen
-            // only draw the active pen on here
-            // draw with only straight lines
-            // but actually, also draw the last 10 paths
-            // redraw this completely every time the pen is lifted
-            // do a screen dump every 1/60's sec
+        // only draw the active pen on here
+        // draw with only straight lines
+        // but actually, also draw the last 10 paths
+        // redraw this completely every time the pen is lifted
+        // do a screen dump every 1/60's sec
         // you need one background board that will be displayed
         // you can have one history board for long term history
         // you can have one history board for short term history
@@ -92,41 +87,47 @@ export class Surface {
     }
 
     update() {
-        this.greenScreen();
+        this.copyGreenScreen();
         let i = 0;
         for (let path of this.strokeOrder) {
-            let last = null;
-            for (let point of path) {
-                if (last) {
-                    this.tempDraw(last.x, last.y, point.x, point.y);
-                }
-
-                last = point;
+            if (path.type == "pen") {
+                this.drawStroke(path);
+            } else if (path.type == "eraser") {
+                this.eraseStroke(path);
             }
 
             i++;
         }
     }
 
-    startEvent(id, x, y) {
-        // for mouse, start is unique, end is not
-        // for touch, start is unique, end is not
+    drawStroke(stroke) {
+        let last = null;
+        for (let point of stroke) {
+            if (last) {
+                this.tempDraw(last.x, last.y, point.x, point.y);
+            }
 
-        // get undo ready
-        this.undoStack.length = 0;
+            last = point;
+        }
+    }
 
-        // create a new stroke
-        let stroke = new Stroke(id);
+    eraseStroke(stroke) {
+        let last = null;
+        for (let point of stroke) {
+            if (last) {
+                this.tempErase(last.x, last.y, point.x, point.y);
+            }
 
-        // add current point to the new stroke
-        stroke.addXY(x, y);
+            last = point;
+        }
+    }
 
-        // add to stroke openStrokes
-        // add to stroke strokeOrder
-        this.openStrokes[id] = stroke;
-        this.strokeOrder.push(stroke);
-
-        // draw the stroke to the screen???
+    tempErase(xi, yi, xf, yf) {
+        let size = 25
+        //this.bCtx.clearRect(xf-size, yf-size, 2*size, 2*size);
+        this.bCtx.drawImage(this.biCtx.canvas,
+            xf-size, yf-size, 2*size, 2*size,
+            xf-size, yf-size, 2*size, 2*size);
     }
 
     tempDraw(xi, yi, xf, yf) {
@@ -142,64 +143,115 @@ export class Surface {
         }
     }
 
-    moveEvent(id, x, y) {
+    penStart(id, type, x, y, tiltX, tiltY) {
+        // for mouse, start is unique, end is not
+        // for touch, start is unique, end is not
+
+        // get undo ready
         if (id in this.openStrokes) {
-            let initial = this.openStrokes[id].last;
+            this.openStrokes[id].addXY(x, y, tiltX, tiltY);
+            this.openStrokes[id].kill(null, null);
+        } else {
+            this.undoStack.length = 0;
+
+            // create a new stroke
+            let stroke = new Stroke(id, type);
+
+            // add current point to the new stroke
+            stroke.addXY(x, y, tiltX, tiltY);
+
+            // add to stroke openStrokes
+            // add to stroke strokeOrder
+            this.openStrokes[id] = stroke;
+            this.strokeOrder.push(stroke);
+        }
+    }
+
+    penMove(id, x, y, tiltX, tiltY) {
+        if (id in this.openStrokes) {
+            let stroke = this.openStrokes[id];
+            let initial = stroke.last;
 
             // draw the stroke to the screen
-            let current = new StrokePoint(x, y);
-            this.tempDraw(initial.x, initial.y, current.x, current.y);
+            let current = new StrokePoint(x, y, tiltX, tiltY);
+            if(stroke.type == "pen") {
+                this.tempDraw(initial.x, initial.y, current.x, current.y);
+            } else if (stroke.type == "eraser") {
+                this.tempErase(initial.x, initial.y, current.x, current.y);
+            } else {
+                console.log(stroke);
+            }
 
-            this.openStrokes[id].addXY(x, y);
+            stroke.addXY(x, y, tiltX, tiltY);
         }
 
     }
 
-    endEvent(id, x, y) {
+    penEnd(id, x, y, tiltX, tiltY) {
         // for mouse, start is unique, end is not
         // for touch, start is unique, end is not
 
-        // find the stroke
-        //let stroke;
         if (id in this.openStrokes) {
             let stroke = this.openStrokes[id];
-
-            // remove it from open strokes
-            delete this.openStrokes[id];
-
-            // NOPE don't do this. end duplicates the last point
-            // add the new x, y Point to the stroke
-            //stroke.addXY(x, y);
+            stroke.kill(id, this.terminateStroke.bind(this));
         }
+    }
 
-        // move the stroke from one screen to the next if needed
+    terminateStroke(id) {
+        delete this.openStrokes[id];
     }
 
     clearScreen() {
         this.strokeOrder.length = 0;
-        this.tCtx.clearRect(0, 0, this.width, this.height);
-        this.greenScreen();
+        this.copyGreenScreen();
         // TODO: implement undo for clear
     }
 
-    greenScreen() {
-        this.bCtx.clearRect(0, 0, this.width, this.height);
-        this.bCtx.fillStyle = "#ccddcc";
-        this.bCtx.rect(0, 0, this.width, this.height);
-        this.bCtx.fill();
+    buildGreenScreen() {
+        this.biCtx.clearRect(0, 0, this.width, this.height);
+        this.biCtx.fillStyle = "#ccddcc";
+        this.biCtx.rect(0, 0, this.width, this.height);
+        this.biCtx.fill();
 
-        this.bCtx.beginPath();
-        this.bCtx.strokeStyle = "#99bbaa";
-        this.bCtx.lineWidth = 1;
+        this.biCtx.beginPath();
+        this.biCtx.strokeStyle = "#99bbaa";
+        this.biCtx.lineWidth = 1;
         for (let i=50*Browser.resolution; i<this.width; i+=50*Browser.resolution) {
-            this.bCtx.moveTo(i, 0);
-            this.bCtx.lineTo(i, this.height);
+            this.biCtx.moveTo(i, 0);
+            this.biCtx.lineTo(i, this.height);
         }
         for (let i=50*Browser.resolution; i<this.height; i+=50*Browser.resolution) {
-            this.bCtx.moveTo(0, i);
-            this.bCtx.lineTo(this.width, i);
+            this.biCtx.moveTo(0, i);
+            this.biCtx.lineTo(this.width, i);
         }
-        this.bCtx.stroke();
+        this.biCtx.stroke();
+    }
+
+    copyGreenScreen() {
+        this.bCtx.drawImage(this.biCtx.canvas, 0, 0, this.width, this.height);
+    }
+
+    greenScreen() {
+        this.copyGreenScreen();
+        /*
+    this.bCtx.clearRect(0, 0, this.width, this.height);
+    this.bCtx.fillStyle = "#ccddcc";
+    this.bCtx.rect(0, 0, this.width, this.height);
+    this.bCtx.fill();
+
+    this.bCtx.beginPath();
+    this.bCtx.strokeStyle = "#99bbaa";
+    this.bCtx.lineWidth = 1;
+    for (let i=50*Browser.resolution; i<this.width; i+=50*Browser.resolution) {
+        this.bCtx.moveTo(i, 0);
+        this.bCtx.lineTo(i, this.height);
+    }
+    for (let i=50*Browser.resolution; i<this.height; i+=50*Browser.resolution) {
+        this.bCtx.moveTo(0, i);
+        this.bCtx.lineTo(this.width, i);
+    }
+    this.bCtx.stroke();
+    */
     }
 }
 

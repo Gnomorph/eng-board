@@ -28,7 +28,7 @@ export class PointerInput {
         // Check the type reported by the browser for this event
         if (e.pointerType=="pen") {
             let tilt = [e.tiltX, e.tiltY];
-            this.surface.moveEvent(e.pointerId, e.clientX, e.clientY);
+            this.surface.penMove(e.pointerId, e.clientX, e.clientY);
 
             if (e.buttons == "2") {
                 // This is for "right click" or the surface pen button
@@ -36,7 +36,7 @@ export class PointerInput {
             } else if (e.buttons == "1") {
             }
         } else if (e.pointerType=="mouse") {
-            this.surface.moveEvent(e.pointerId, e.clientX, e.clientY);
+            this.surface.penMove(e.pointerId, e.clientX, e.clientY);
         } else if (this.penId == e.pointerId && e.pointerType == "touch") {
             // legacy/default pen support
         } else if (e.pointerType=="touch" && this.touchEnabled && e.buttons=="1") {
@@ -46,11 +46,20 @@ export class PointerInput {
 
     startPoint(e) {
         e.preventDefault();
-        if (e.pointerType=="pen" || e.pointerType == "mouse") {
+        if (e.pointerType=="pen") {
             let activeSubMenu = null;
-            Radial.start(e, this.surface.pen);
+            //Radial.start(e, this.surface.pen);
 
-            this.surface.startEvent(e.pointerId, e.clientX, e.clientY);
+            let type = (e.tiltX || e.tiltY) ? "pen" : "eraser";
+            this.surface.penStart(e.pointerId, type,
+                e.clientX, e.clientY, e.tiltX, e.tiltY);
+        } else if (e.pointerType == "mouse") {
+            let activeSubMenu = null;
+            //Radial.start(e, this.surface.pen);
+
+            let type = (e.buttons == 4) ? "eraser" : "pen";
+            this.surface.penStart(e.pointerId, type,
+                e.clientX, e.clientY, e.tiltX, e.tiltY);
         }
     }
 
@@ -62,7 +71,7 @@ export class PointerInput {
                 return;
             }
 
-            this.surface.endEvent(e.pointerId, e.clientX, e.clientY);
+            this.surface.penEnd(e.pointerId, e.clientX, e.clientY);
 
             let current = [
                 Browser.resolution*e.clientX,
