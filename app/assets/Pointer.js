@@ -1,3 +1,5 @@
+'use strict'
+
 import * as Bezier from "./Bezier.js";
 import { CircularBuffer } from "./CircularBuffer.js";
 
