@@ -31,7 +31,7 @@ export class TouchInput {
             window.addEventListener(action, (e) => {
             //target.addEventListener(action, (e) => {
                 //e.originalTarget.focus();
-                e.preventDefault()
+                //e.preventDefault()
             }, {passive: false});
         }
     }

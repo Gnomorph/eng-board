@@ -28,8 +28,6 @@ const menuMap = [
         document.getElementById('eraser-submenu') ],
 ];
 
-let settingsButton = document.getElementById("settings-button");
-
 export class Menu {
     updateWidthDisplay(e) {
         this.penWidthOut.innerHTML = this.penWidth.value;
@@ -84,17 +82,21 @@ export class Menu {
             'click', this.deactivateMenu.bind(this));
 
         document.getElementById("save").addEventListener(
-            'click', this.myFullscreen.bind(this));
+            'touchstart', this.mySave.bind(this));
         document.getElementById("save").addEventListener(
+            'click', this.mySave.bind(this));
+        document.getElementById("fullscreen").addEventListener(
             'touchstart', this.myFullscreen.bind(this));
-        document.getElementById("undo").addEventListener(
-            'click', this.myUndo.bind(this));
+        document.getElementById("fullscreen").addEventListener(
+            'click', this.myFullscreen.bind(this));
         document.getElementById("undo").addEventListener(
             'touchstart', this.myUndo.bind(this));
-        document.getElementById("redo").addEventListener(
-            'click', this.myRedo.bind(this));
+        document.getElementById("undo").addEventListener(
+            'click', this.myUndo.bind(this));
         document.getElementById("redo").addEventListener(
             'touchstart', this.myRedo.bind(this));
+        document.getElementById("redo").addEventListener(
+            'click', this.myRedo.bind(this));
 
         for (let menu of menuMap) {
             menu[0].addEventListener(
@@ -103,10 +105,35 @@ export class Menu {
                 'click', this.makeShowSubMenu(...menu).bind(this));
         }
 
-        document.getElementById('trash').addEventListener(
-            'touchstart', surface.clearScreen.bind(surface), false);
-        document.getElementById('trash').addEventListener(
-            'click', surface.clearScreen.bind(surface), false);
+        document.getElementById('trash').addEventListener('touchstart',
+            this.clearSurface.bind(this), false);
+        document.getElementById('trash').addEventListener('click',
+            this.clearSurface.bind(this), false);
+
+        document.addEventListener('fullscreenchange', (event) => {
+            // document.fullscreenElement will point to the element that
+            // is in fullscreen mode if there is one. If there isn't one,
+            // the value of the property is null.
+            if (document.fullscreenElement) {
+                document.getElementById("expand").style.display = "none";
+                document.getElementById("compress").style.display = "initial";
+
+                this.fullscreen = true;
+            } else {
+                document.getElementById("expand").style.display = "initial";
+                document.getElementById("compress").style.display = "none";
+
+                this.fullscreen = false;
+            }
+
+            // TODO call resize
+        });
+
+    }
+
+    clearSurface(e) {
+        e.preventDefault();
+        this.surface.clearScreen();
     }
 
     deactivateMenu(e) {
@@ -116,6 +143,7 @@ export class Menu {
     }
 
     myUndo(e) {
+        e.preventDefault();
         if (this.surface.strokeOrder.length > 0) {
             //this.surface.hasUpdates = true;
             this.surface.undoStack.push(this.surface.strokeOrder.pop());
@@ -124,6 +152,7 @@ export class Menu {
     }
 
     myRedo(e) {
+        e.preventDefault();
         if (this.surface.undoStack.length > 0) {
             //this.surface.hasUpdates = true;
             this.surface.strokeOrder.push(this.surface.undoStack.pop());
@@ -131,22 +160,48 @@ export class Menu {
         }
     }
 
+    mySave(e) {
+        e.preventDefault();
+        // TODO
+    }
+
     myFullscreen(e) {
-        var elem = document.getElementById("bg-board");
-        elem = document.body;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
+        e.preventDefault();
+        //var btn = document.getElementById("fullscreen");
+        //btn.focus();
+        //var elem = document.getElementById("bg-board");
+        //elem.focus();
+        let elem = document.body;
+
+        if (!this.fullscreen) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+        } else {
+            /* Close fullscreen */
+
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { /* Firefox */
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE/Edge */
+                document.msExitFullscreen();
+            }
+
         }
     }
 
     makeShowSubMenu(tip, menu) {
         return function(e) {
+            e.preventDefault();
             if (this.activeSubMenu) {
                 this.activeSubMenu.style.display = "none";
             }

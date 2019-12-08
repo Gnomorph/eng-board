@@ -51,9 +51,10 @@ export class Surface {
         this.clearScreen();
 
         this.buildGreenScreen();
-        this.copyGreenScreen();
+        this.greenScreen();
 
-        window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
+        //window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
+        window.addEventListener('resize', this.resize.bind(this), 100);
 
         // active
         // display
@@ -74,8 +75,29 @@ export class Surface {
         // you can have one history board for short term history
     }
 
+    resize() {
+        setTimeout(() => {
+            this.width  = Browser.width;
+            this.height = Browser.height;
+
+            this.bCtx.canvas.width = this.width;
+            this.bCtx.canvas.height = this.height;
+            this.fCtx.canvas.width = this.width;
+            this.fCtx.canvas.height = this.height;
+            this.biCtx.canvas.width = this.width;
+            this.biCtx.canvas.height = this.height;
+
+            this.buildGreenScreen();
+            this.update();
+        }, 100);
+    }
+
     addEventListener(trigger, callback) {
         this.bgBoard.addEventListener(trigger, callback);
+    }
+
+    removeEventListener(trigger, callback) {
+        this.bgBoard.removeEventListener(trigger, callback);
     }
 
     get tip() {
@@ -87,7 +109,7 @@ export class Surface {
     }
 
     update() {
-        this.copyGreenScreen();
+        this.greenScreen();
         let i = 0;
         for (let path of this.strokeOrder) {
             if (path.type == "pen") {
@@ -203,7 +225,7 @@ export class Surface {
 
     clearScreen() {
         this.strokeOrder.length = 0;
-        this.copyGreenScreen();
+        this.greenScreen();
         // TODO: implement undo for clear
     }
 
@@ -227,31 +249,8 @@ export class Surface {
         this.biCtx.stroke();
     }
 
-    copyGreenScreen() {
-        this.bCtx.drawImage(this.biCtx.canvas, 0, 0, this.width, this.height);
-    }
-
     greenScreen() {
-        this.copyGreenScreen();
-        /*
-    this.bCtx.clearRect(0, 0, this.width, this.height);
-    this.bCtx.fillStyle = "#ccddcc";
-    this.bCtx.rect(0, 0, this.width, this.height);
-    this.bCtx.fill();
-
-    this.bCtx.beginPath();
-    this.bCtx.strokeStyle = "#99bbaa";
-    this.bCtx.lineWidth = 1;
-    for (let i=50*Browser.resolution; i<this.width; i+=50*Browser.resolution) {
-        this.bCtx.moveTo(i, 0);
-        this.bCtx.lineTo(i, this.height);
-    }
-    for (let i=50*Browser.resolution; i<this.height; i+=50*Browser.resolution) {
-        this.bCtx.moveTo(0, i);
-        this.bCtx.lineTo(this.width, i);
-    }
-    this.bCtx.stroke();
-    */
+        this.bCtx.drawImage(this.biCtx.canvas, 0, 0, this.width, this.height);
     }
 }
 
@@ -263,6 +262,7 @@ function buildResizeCanvas(surface) {
         this.bgBoard.width = this.width;
         this.bgBoard.height = this.height;
 
+        this.
         this.update();
     }.bind(surface);
 }

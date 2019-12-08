@@ -18,9 +18,12 @@ export class Debug {
         this.settingsButton = document.getElementById("settings-button");
         this.settingsButton.addEventListener(
             'click', this.toggleDebug.bind(this));
+        this.settingsButton.addEventListener(
+            'touchstart', this.toggleDebug.bind(this));
     }
 
     toggleDebug(e) {
+        e.preventDefault();
         if (this.debugState) {
             this.disableDebug();
         } else {
