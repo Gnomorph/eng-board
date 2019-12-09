@@ -10,6 +10,13 @@ html, body {
     height: 144px;
 }
 
+#debug-output {
+   overflow-x:wrap;
+   overflow-y:scroll;
+   height:400px;
+   width:750px;
+}
+
 .show-me {
     //border-color: black;
     //border-width: 1px;

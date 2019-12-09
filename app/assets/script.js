@@ -22,7 +22,7 @@ surface.tip = penTip;
 let menu = new Menu(surface);
 
 Radial.init();
-let debug = new Debug(surface);
+document.debug = new Debug(surface);
 
 let pointerInput = new PointerInput(surface);
 let touchInput = new TouchInput(surface);

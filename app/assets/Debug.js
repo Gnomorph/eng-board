@@ -2,6 +2,9 @@ import { Browser } from "./Browser.js";
 
 export class Debug {
     constructor(surface) {
+        this.debugOutput = document.getElementById("debug-output");
+        window.onerror = this.globalErrorLog.bind(this);
+
         this.surface = surface;
 
         this.debugState = false;
@@ -20,6 +23,24 @@ export class Debug {
             'click', this.toggleDebug.bind(this));
         this.settingsButton.addEventListener(
             'touchstart', this.toggleDebug.bind(this));
+    }
+
+    log(...messages) {
+        let output = document.createElement('div');
+        output.innerHTML = messages.join(" ");
+
+        this.debugOutput.appendChild(output);
+        this.debugOutput.scrollTo(0, this.debugOutput.scrollHeight);
+    }
+
+    globalErrorLog(errorMsg, url, lineNumber) {
+        // any action you want goes here
+        // errorMsg is the error message itself.
+        // url should be the file presenting the error, though i have
+        //    found that it only presents to me the address of the site.
+        // lineNumber is the line number the error occoured on.
+        // here is an example of what you could do with it:
+        this.log("Error in " + url + " at " + lineNumber + ":\n" + errorMsg);
     }
 
     toggleDebug(e) {
@@ -58,24 +79,26 @@ export class Debug {
 
         let touch = e.touches[0];
 
-        let output = document.getElementById("debug-output");
-        //output.innerHTML = ("hello world 2");
-        //output.innerHTML = JSON.stringify(JSON.parse(touch));
-        //output.innerHTML = JSON.stringify(touch);
-        output.innerHTML = touch.touchType;
+        if (touch) {
+            //this.debugOutput.innerHTML = ("hello world 2");
+            //this.debugOutput.innerHTML = JSON.stringify(JSON.parse(touch));
+            //this.debugOutput.innerHTML = JSON.stringify(touch);
+            //this.debugOutput.innerHTML = touch.touchType;
+            //this.log(touch.touchType);
 
-        //let type = document.getElementById(e.pointerType + "-debug");
-        let type = document.getElementById("touch-debug");
+            //let type = document.getElementById(e.pointerType + "-debug");
+            let type = document.getElementById("touch-debug");
 
-        type.querySelector('#x').innerHTML =
-            parseInt(Browser.resolution*touch.clientX);
-        type.querySelector('#y').innerHTML =
-            parseInt(Browser.resolution*touch.clientY);
-        type.querySelector('#buttons').innerHTML = touch.rotationAngle;
-        type.querySelector('#pressure').innerHTML = touch.force.toFixed(3);
-        type.querySelector('#tiltx').innerHTML = touch.radiusX;
-        type.querySelector('#tilty').innerHTML = touch.radiusY;
-        type.querySelector('#id').innerHTML = touch.identifier;
+            type.querySelector('#x').innerHTML =
+                parseInt(Browser.resolution*touch.clientX);
+            type.querySelector('#y').innerHTML =
+                parseInt(Browser.resolution*touch.clientY);
+            type.querySelector('#buttons').innerHTML = touch.rotationAngle;
+            type.querySelector('#pressure').innerHTML = touch.force.toFixed(3);
+            type.querySelector('#tiltx').innerHTML = touch.azimuthAngle.toFixed(3);
+            type.querySelector('#tilty').innerHTML = touch.altitudeAngle.toFixed(3);
+            type.querySelector('#id').innerHTML = touch.identifier;
+        }
     }
 
     disableDebug() {
@@ -100,6 +123,7 @@ export class Debug {
 
     testMove(e) {
         let type = document.getElementById(e.pointerType + "-debug");
+        //document.debug.log("hi", e.clientX);
 
         type.querySelector('#x').innerHTML =
             parseInt(Browser.resolution*e.clientX);

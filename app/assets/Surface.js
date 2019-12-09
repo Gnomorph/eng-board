@@ -144,8 +144,13 @@ export class Surface {
         }
     }
 
-    tempErase(xi, yi, xf, yf) {
-        let size = 25
+    tempErase(xi, yi, xf, yf, size) {
+        if (size >= 0) {
+            size = size*Browser.resolution/2;
+        } else {
+            size = 50*Browser.resolution/2;
+        }
+
         //this.bCtx.clearRect(xf-size, yf-size, 2*size, 2*size);
         this.bCtx.drawImage(this.biCtx.canvas,
             xf-size, yf-size, 2*size, 2*size,
@@ -155,14 +160,22 @@ export class Surface {
     tempDraw(xi, yi, xf, yf) {
         if (xi && yi && xf && yf) {
             this.bCtx.beginPath();
-            this.bCtx.stroke
-            this.bCtx.lineWidth = 3;
+            //this.bCtx.stroke
+            this.bCtx.lineWidth = 2*Browser.resolution;
             this.bCtx.lineCap = "round";
             this.bCtx.strokeStyle = "black";
             this.bCtx.moveTo(xi, yi);
             this.bCtx.lineTo(xf, yf);
             this.bCtx.stroke();
         }
+    }
+
+    tempDot(x, y) {
+        Draw.point(this.bCtx, x, y, 2*Browser.resolution);
+    }
+
+    tempBlot(x, y) {
+        this.tempErase(x, y, x, y, 25);
     }
 
     penStart(id, type, x, y, tiltX, tiltY) {
@@ -186,6 +199,12 @@ export class Surface {
             // add to stroke strokeOrder
             this.openStrokes[id] = stroke;
             this.strokeOrder.push(stroke);
+
+            if (stroke.type == "pen") {
+                this.tempDot(stroke.last.x, stroke.last.y);
+            } else if (stroke.type == "eraser") {
+                this.tempBlot(stroke.last.x, stroke.last.y);
+            }
         }
     }
 
@@ -197,6 +216,7 @@ export class Surface {
             // draw the stroke to the screen
             let current = new StrokePoint(x, y, tiltX, tiltY);
             if(stroke.type == "pen") {
+                //document.debug.log("draw:", current.x, current.y, tiltX, tiltY);
                 this.tempDraw(initial.x, initial.y, current.x, current.y);
             } else if (stroke.type == "eraser") {
                 this.tempErase(initial.x, initial.y, current.x, current.y);

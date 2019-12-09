@@ -9,11 +9,9 @@ export class TouchInput {
         let menu = document.getElementById("menu-container");
 
         if ('ontouchstart' in window) {
-            let output = document.getElementById("debug-output");
-
             this.surface = surface;
-            this.width = 25;
-            this.height = 25;
+            this.width = Browser.width;
+            this.height = Browser.height;
 
             surface.addEventListener(
                 "touchstart", this.handleStart.bind(this), false);
@@ -30,9 +28,15 @@ export class TouchInput {
         for (let action of TOUCH_ACTIONS) {
             window.addEventListener(action, (e) => {
             //target.addEventListener(action, (e) => {
-                //e.originalTarget.focus();
-                //e.preventDefault()
+                //e.target.focus();
+                e.preventDefault();
             }, {passive: false});
+
+            document.getElementById("fullscreen").addEventListener(action, (e) => {
+                //document.debug.log("" + e.target.id);
+                e.target.focus();
+            }, {passive: false});
+
         }
     }
 
@@ -78,6 +82,8 @@ export class TouchInput {
                 pen.clientY
             ];
 
+            //document.debug.log("force", pen.force, "tilt", pen.altitudeAngle, pen.azimuthAngle, "done");
+
             this.surface.penMove(pen.identifier, ...pt);
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
@@ -96,6 +102,13 @@ export class TouchInput {
     handleEnd(e) {
         let pens = this.getPens(e.touches);
         let erasers = this.getErasers(e.touches);
+
+        let pt = [
+            //Browser.resolution*pen.clientX,
+            //Browser.resolution*pen.clientY
+            pen.clientX,
+            pen.clientY
+        ];
 
         this.surface.penEnd(pen.identifier, ...pt);
         if (pens.length > 0) {
@@ -145,10 +158,11 @@ export class TouchInput {
     }
 
     testEraser(touch) {
-        let x = touch.clientX;
-        let y = touch.clientY;
+        let x = touch.clientX*Browser.resolution;
+        let y = touch.clientY*Browser.resolution;
         //let x = Browser.resolution*touch.clientX;
         //let y = Browser.resolution*touch.clientY;
+
         return (x > this.width - Browser.resolution*100) &&
             (y > this.height - Browser.resolution*100);
     }
