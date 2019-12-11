@@ -9,6 +9,9 @@ import { TouchInput } from "./TouchInput.js";
 let surface = new Surface(document.getElementById("bg-board"));
 document.debug = new Debug(surface);
 
+console.warn("test warn");
+console.log("test log");
+
 function buildSetSurfaceTip(surface) {
     return function (tip) { surface.tip = tip; }
 }

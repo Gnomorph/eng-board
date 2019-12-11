@@ -6,17 +6,28 @@ function buildLog(debug, debugOutput) {
     let oldLog = console.log.bind(console);
 
     return function(...messages) {
-        oldLog(...messages);
-        debug.log.apply(debug, messages);
+        let lineOnly = getErrorObject().stack.split("\n")[2].split('/');
+        lineOnly = lineOnly[lineOnly.length-1];
+
+        oldLog(lineOnly, ...messages);
+        debug.log.call(debug, lineOnly, ...messages);
     }
+}
+
+function getErrorObject(){
+    try { throw Error('') } catch(err) { return err; }
 }
 
 function buildWarn(debug, debugOutput) {
     let oldLog = console.warn.bind(console);
 
     return function(...messages) {
-        oldLog("WARN", ...messages);
-        debug.log.call(debug, "WARN:", ...messages);
+        let lineOnly = getErrorObject().stack.split("\n")[2].split('/');
+        lineOnly = lineOnly[lineOnly.length-1];
+
+        oldLog(lineOnly, "WARN:", ...messages);
+        console.trace();
+        debug.log.call(debug, lineOnly, "WARN:", ...messages);
     }
 }
 
