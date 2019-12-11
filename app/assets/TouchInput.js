@@ -33,7 +33,6 @@ export class TouchInput {
             }, {passive: false});
 
             document.getElementById("fullscreen").addEventListener(action, (e) => {
-                //document.debug.log("" + e.target.id);
                 e.target.focus();
             }, {passive: false});
 
@@ -81,8 +80,6 @@ export class TouchInput {
                 pen.clientX,
                 pen.clientY
             ];
-
-            //document.debug.log("force", pen.force, "tilt", pen.altitudeAngle, pen.azimuthAngle, "done");
 
             this.surface.penMove(pen.identifier, ...pt);
         } else if (erasers.length > 0){

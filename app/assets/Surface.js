@@ -216,7 +216,6 @@ export class Surface {
             // draw the stroke to the screen
             let current = new StrokePoint(x, y, tiltX, tiltY);
             if(stroke.type == "pen") {
-                //document.debug.log("draw:", current.x, current.y, tiltX, tiltY);
                 this.tempDraw(initial.x, initial.y, current.x, current.y);
             } else if (stroke.type == "eraser") {
                 this.tempErase(initial.x, initial.y, current.x, current.y);

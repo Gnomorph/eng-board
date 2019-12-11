@@ -1,8 +1,31 @@
+'use strict';
+
 import { Browser } from "./Browser.js";
+
+function buildLog(debug, debugOutput) {
+    let oldLog = console.log.bind(console);
+
+    return function(...messages) {
+        oldLog(...messages);
+        debug.log.apply(debug, messages);
+    }
+}
+
+function buildWarn(debug, debugOutput) {
+    let oldLog = console.warn.bind(console);
+
+    return function(...messages) {
+        oldLog("WARN", ...messages);
+        debug.log.call(debug, "WARN:", ...messages);
+    }
+}
 
 export class Debug {
     constructor(surface) {
-        this.debugOutput = document.getElementById("debug-output");
+        this.debugOutput = document.getElementById("debug-output")
+        console.log = buildLog(this, this.debugOutput);
+        console.warn = buildWarn(this, this.debugOutput);
+
         window.onerror = this.globalErrorLog.bind(this);
 
         this.surface = surface;
@@ -80,12 +103,6 @@ export class Debug {
         let touch = e.touches[0];
 
         if (touch) {
-            //this.debugOutput.innerHTML = ("hello world 2");
-            //this.debugOutput.innerHTML = JSON.stringify(JSON.parse(touch));
-            //this.debugOutput.innerHTML = JSON.stringify(touch);
-            //this.debugOutput.innerHTML = touch.touchType;
-            //this.log(touch.touchType);
-
             //let type = document.getElementById(e.pointerType + "-debug");
             let type = document.getElementById("touch-debug");
 
@@ -123,7 +140,6 @@ export class Debug {
 
     testMove(e) {
         let type = document.getElementById(e.pointerType + "-debug");
-        //document.debug.log("hi", e.clientX);
 
         type.querySelector('#x').innerHTML =
             parseInt(Browser.resolution*e.clientX);

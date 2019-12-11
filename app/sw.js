@@ -1,15 +1,13 @@
 const CACHE = "WORKER-CACHE";
+
 self.addEventListener('install', function(evt) {
     evt.waitUntil(precache());
 });
 
 self.addEventListener('fetch', function(evt) {
-    //console.log('The service worker is serving the asset.', evt.request.url);
-    evt.respondWith(fromCache(evt.request));
-    evt.waitUntil(
-        update(evt.request)
-        .then(refresh)
-    );
+    update(evt.request).then(function() {
+        evt.respondWith(fromCache(evt.request));
+    });
 });
 
 function precache() {
@@ -63,18 +61,4 @@ function update(request) {
             });
         });
     });
-}
-
-function refresh(response) {
-    return self.clients.matchAll().then(function (clients) {
-        clients.forEach(function (client) {
-            var message = {
-                type: 'refresh',
-                url: response.url,
-                eTag: response.headers.get('ETag')
-            };
-
-            client.postMessage(JSON.stringify(message));
-    });
-  });
 }

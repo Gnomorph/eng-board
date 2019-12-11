@@ -163,8 +163,6 @@ export class Menu {
 
     myFullscreen(e) {
         e.preventDefault();
-        //document.debug.log("fullscreen function");
-        //document.debug.log("" + document.webkitFullscreenEnabled);
         //var btn = document.getElementById("fullscreen");
         //btn.focus();
         //var elem = document.getElementById("bg-board");
@@ -172,36 +170,24 @@ export class Menu {
         let elem = document.body;
 
         if (!document.fullscreenElement) {
-            //document.debug.log("fullscreen request");
-
             if (elem.requestFullscreen) {
-                //document.debug.log("fullscreen request 1");
                 elem.requestFullscreen();
             } else if (elem.msRequestFullscreen) {
-                //document.debug.log("fullscreen request 2");
                 elem.msRequestFullscreen();
             } else if (elem.mozRequestFullScreen) {
-                //document.debug.log("fullscreen request 3");
                 elem.mozRequestFullScreen();
             } else if (elem.webkitRequestFullscreen) {
-                //document.debug.log("fullscreen request 4");
                 elem.webkitRequestFullscreen();
             }
         } else {
             /* Close fullscreen */
-            //document.debug.log("fullscreen exit");
-
             if (document.exitFullscreen) {
-                //document.debug.log("fullscreen exit 1");
                 document.exitFullscreen();
             } else if (document.mozCancelFullScreen) { /* Firefox */
-                //document.debug.log("fullscreen exit 2");
                 document.mozCancelFullScreen();
             } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
-                //document.debug.log("fullscreen exit 3");
                 document.webkitExitFullscreen();
             } else if (document.msExitFullscreen) { /* IE/Edge */
-                //document.debug.log("fullscreen exit 4");
                 document.msExitFullscreen();
             }
 
