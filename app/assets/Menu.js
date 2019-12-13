@@ -34,12 +34,14 @@ export class Menu {
     }
 
     updatePenWidth(e) {
-        this.surface.tip.width = this.penWidth.value;
+        //TODO change pen width
+        //this.surface.tip.width = this.penWidth.value;
     }
 
     makeSetPenColor(color) {
         return function(e) {
-            this.surface.pen.color = color;
+            //TODO change the pen color
+            //this.surface.pen.color = color;
         }
     }
 
@@ -82,9 +84,11 @@ export class Menu {
             'click', this.deactivateMenu.bind(this));
 
         document.getElementById("save").addEventListener(
-            'touchstart', this.mySave.bind(this));
+            'touchstart', this.mySave);
+            //'touchstart', this.mySave.bind(this));
         document.getElementById("save").addEventListener(
-            'click', this.mySave.bind(this));
+            'click', this.mySave);
+            //'click', this.mySave.bind(this));
         document.getElementById("fullscreen").addEventListener(
             'touchstart', this.myFullscreen.bind(this));
         document.getElementById("fullscreen").addEventListener(
@@ -158,7 +162,11 @@ export class Menu {
 
     mySave(e) {
         e.preventDefault();
+
         // TODO
+        let canvas = document.getElementById("bg-board");
+        let link = document.getElementById("dl-link");
+        link.href = canvas.toDataURL('image/jpeg');
     }
 
     myFullscreen(e) {
@@ -183,11 +191,11 @@ export class Menu {
             /* Close fullscreen */
             if (document.exitFullscreen) {
                 document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) { /* Firefox */
+            } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+            } else if (document.webkitExitFullscreen) {
                 document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) { /* IE/Edge */
+            } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
 
@@ -201,7 +209,7 @@ export class Menu {
                 this.activeSubMenu.style.display = "none";
             }
 
-            this.surface.pen.tip = tip.id;
+            //this.surface.pen.tip = tip.id;
             this.activeSubMenu = menu;
             this.activeSubMenu.style.display = "flex";
             e.cancelBubble = true;

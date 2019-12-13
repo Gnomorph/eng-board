@@ -126,7 +126,7 @@ export class Surface {
         let last = null;
         for (let point of stroke) {
             if (last) {
-                this.tempDraw(last.x, last.y, point.x, point.y);
+                Draw.line(this.bCtx, last.x, last.y, point.x, point.y, 2);
             }
 
             last = point;
@@ -137,45 +137,11 @@ export class Surface {
         let last = null;
         for (let point of stroke) {
             if (last) {
-                this.tempErase(last.x, last.y, point.x, point.y);
+                Draw.erase(this.bCtx, this.biCtx, last.x, last.y, point.x, point.y);
             }
 
             last = point;
         }
-    }
-
-    tempErase(xi, yi, xf, yf, size) {
-        if (size >= 0) {
-            size = size*Browser.resolution/2;
-        } else {
-            size = 50*Browser.resolution/2;
-        }
-
-        //this.bCtx.clearRect(xf-size, yf-size, 2*size, 2*size);
-        this.bCtx.drawImage(this.biCtx.canvas,
-            xf-size, yf-size, 2*size, 2*size,
-            xf-size, yf-size, 2*size, 2*size);
-    }
-
-    tempDraw(xi, yi, xf, yf) {
-        if (xi && yi && xf && yf) {
-            this.bCtx.beginPath();
-            //this.bCtx.stroke
-            this.bCtx.lineWidth = 2*Browser.resolution;
-            this.bCtx.lineCap = "round";
-            this.bCtx.strokeStyle = "black";
-            this.bCtx.moveTo(xi, yi);
-            this.bCtx.lineTo(xf, yf);
-            this.bCtx.stroke();
-        }
-    }
-
-    tempDot(x, y) {
-        Draw.point(this.bCtx, x, y, 2*Browser.resolution);
-    }
-
-    tempBlot(x, y) {
-        this.tempErase(x, y, x, y, 25);
     }
 
     penStart(id, type, x, y, tiltX, tiltY) {
@@ -201,9 +167,9 @@ export class Surface {
             this.strokeOrder.push(stroke);
 
             if (stroke.type == "pen") {
-                this.tempDot(stroke.last.x, stroke.last.y);
+                Draw.dot(this.bCtx, stroke.last.x, stroke.last.y, 2);
             } else if (stroke.type == "eraser") {
-                this.tempBlot(stroke.last.x, stroke.last.y);
+                Draw.blot(this.bCtx, this.biCtx, stroke.last.x, stroke.last.y, 25);
             }
         }
     }
@@ -216,11 +182,9 @@ export class Surface {
             // draw the stroke to the screen
             let current = new StrokePoint(x, y, tiltX, tiltY);
             if(stroke.type == "pen") {
-                this.tempDraw(initial.x, initial.y, current.x, current.y);
+                Draw.line(this.bCtx, initial.x, initial.y, current.x, current.y, 2);
             } else if (stroke.type == "eraser") {
-                this.tempErase(initial.x, initial.y, current.x, current.y);
-            } else {
-                console.log(stroke);
+                Draw.erase(this.bCtx, this.biCtx, initial.x, initial.y, current.x, current.y);
             }
 
             stroke.addXY(x, y, tiltX, tiltY);

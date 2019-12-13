@@ -1,7 +1,8 @@
-export { arc, point, line, lines, curves }
+export { arc, point, line, lines, curves, dot, blot, erase }
 
 import * as Bezier from "./Bezier.js";
 import { CircularBuffer } from "./CircularBuffer.js";
+import { Browser } from "./Browser.js";
 
 async function arc(context, point, width, style) {
     context.beginPath();
@@ -19,6 +20,28 @@ async function point(context, x, y, width, style) {
     context.arc(x, y, width/2, 0, 2 * Math.PI, false);
     context.fillStyle = style || "rgb(0, 0, 0)";
     context.fill();
+}
+
+async function dot(ctx, x, y, width) {
+    width = width || 2;
+    this.point(ctx, x, y, width*Browser.resolution);
+}
+
+async function blot(dCtx, sCtx, x, y, width) {
+    width = width || 25;
+    this.erase(dCtx, sCtx, y, x, y, width);
+}
+
+async function erase(dCtx, sCtx, xi, yi, xf, yf, size) {
+    if (size >= 0) {
+        size = size*Browser.resolution/2;
+    } else {
+        size = 50*Browser.resolution/2;
+    }
+
+    dCtx.drawImage(sCtx.canvas,
+        xf-size, yf-size, 2*size, 2*size,
+        xf-size, yf-size, 2*size, 2*size);
 }
 
 async function curves(context, path, width, color) {
@@ -88,6 +111,19 @@ async function lines(context, path, width, color) {
     context.stroke();
 }
 
+async function line(ctx, xi, yi, xf, yf, width) {
+    if (xi && yi && xf && yf) {
+        ctx.beginPath();
+        ctx.lineWidth = width*Browser.resolution;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "black";
+        ctx.moveTo(xi, yi);
+        ctx.lineTo(xf, yf);
+        ctx.stroke();
+    }
+}
+
+/*
 async function line(pen, context, from, to, pressure, style, interpolate) {
     if (!from) { return; }
 
@@ -131,3 +167,4 @@ async function line(pen, context, from, to, pressure, style, interpolate) {
         context.stroke();
     }
 }
+*/
