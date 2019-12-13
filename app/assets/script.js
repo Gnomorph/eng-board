@@ -9,9 +9,6 @@ import { TouchInput } from "./TouchInput.js";
 let surface = new Surface(document.getElementById("bg-board"));
 document.debug = new Debug(surface);
 
-console.warn("test warn");
-console.log("test log");
-
 function buildSetSurfaceTip(surface) {
     return function (tip) { surface.tip = tip; }
 }
@@ -25,7 +22,7 @@ surface.tip = penTip;
 
 let menu = new Menu(surface);
 
-Radial.init();
+//Radial.init();
 
 let pointerInput = new PointerInput(surface);
 let touchInput = new TouchInput(surface);
