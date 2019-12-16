@@ -1,4 +1,4 @@
-export { arc, point, line, lines, curves, dot, blot, erase }
+export { box, arc, point, line, lines, curves, dot, blot, erase }
 
 import * as Bezier from "./Bezier.js";
 import { CircularBuffer } from "./CircularBuffer.js";
@@ -111,14 +111,25 @@ async function lines(context, path, width, color) {
     context.stroke();
 }
 
-async function line(ctx, xi, yi, xf, yf, width) {
+function line(ctx, xi, yi, xf, yf, width, style) {
     if (xi && yi && xf && yf) {
         ctx.beginPath();
         ctx.lineWidth = width*Browser.resolution;
         ctx.lineCap = "round";
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = style || "black";
         ctx.moveTo(xi, yi);
         ctx.lineTo(xf, yf);
+        ctx.stroke();
+    }
+}
+
+function box(ctx, left, right, top, bot, width, style) {
+    if (left && right && top && bot) {
+        ctx.beginPath();
+        ctx.lineWidth = width*Browser.resolution;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = style || "black";
+        ctx.rect(left, top, right-left, bot-top);
         ctx.stroke();
     }
 }

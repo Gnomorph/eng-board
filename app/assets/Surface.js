@@ -2,6 +2,8 @@
 
 import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
+import { QuadNode } from "./QuadNode.js";
+import { QuadData } from "./QuadData.js";
 import * as Draw from "./Draw.js";
 
 import { Stroke } from "./Stroke.js";
@@ -145,6 +147,7 @@ export class Surface {
     }
 
     penStart(id, type, x, y, tiltX, tiltY) {
+        this.testQuad = null;
         // for mouse, start is unique, end is not
         // for touch, start is unique, end is not
 
@@ -188,8 +191,24 @@ export class Surface {
             }
 
             stroke.addXY(x, y, tiltX, tiltY);
-        }
+        } else if (this.testQuad) {
+            let scaleX = x*Browser.resolution;
+            let scaleY = y*Browser.resolution;
 
+            this.update();
+
+            let nearest = this.testQuad.getValues(scaleX, scaleY);
+            let bounds = this.testQuad.getBounds(scaleX, scaleY);
+
+            for (let data of nearest) {
+                Draw.line(this.bCtx, ...data._data, 1, "red");
+            }
+
+            for (let data of bounds) {
+                Draw.box(this.bCtx, ...data, 1, "red");
+            }
+            //console.log(this.testQuad.getValues(x,y));
+        }
     }
 
     penEnd(id, x, y, tiltX, tiltY) {
@@ -199,6 +218,28 @@ export class Surface {
         if (id in this.openStrokes) {
             let stroke = this.openStrokes[id];
             stroke.kill(id, this.terminateStroke.bind(this));
+
+
+            this.debugQuadTree(stroke);
+        }
+    }
+
+    debugQuadTree(stroke) {
+        this.testQuad = new QuadNode(0, this.width, 0, this.height);
+
+        let prev;
+        for (let current of stroke) {
+            if (prev) {
+                let l = Math.min(prev.x, current.x);
+                let r = Math.max(prev.x, current.x);
+                let t = Math.min(prev.y, current.y);
+                let b = Math.max(prev.y, current.y);
+
+                let line = [prev.x, prev.y, current.x, current.y];
+                this.testQuad.add(new QuadData(line, l, r, t, b));
+            }
+
+            prev = current;
         }
     }
 
@@ -245,7 +286,7 @@ function buildResizeCanvas(surface) {
         this.bgBoard.width = this.width;
         this.bgBoard.height = this.height;
 
-        this.
+        //this.
         this.update();
     }.bind(surface);
 }
