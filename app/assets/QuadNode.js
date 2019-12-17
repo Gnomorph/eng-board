@@ -2,7 +2,7 @@
 
 export class QuadNode {
     constructor(left, right, top, bot) {
-        this.maxLength = 1;
+        this.maxLength = 10;
 
         this._values = [];
         this._childValues = [];
@@ -71,7 +71,7 @@ export class QuadNode {
      **
      */
 
-    // 
+    //
     // Add data to this node (or children) and handle splitting if needed
     //
     add(data) {
@@ -87,7 +87,7 @@ export class QuadNode {
         return this.length;
     }
 
-    // 
+    //
     // Remove data from this node (or children) and handle combining if needed
     //
     del(region) {
@@ -96,6 +96,7 @@ export class QuadNode {
     getAll() {
         let output = []
         output = output.concat(this._values);
+        output = output.concat(this._childValues);
 
         if (this._nw) { output = output.concat(this._nw.getAll()); }
         if (this._ne) { output = output.concat(this._ne.getAll()); }
@@ -110,13 +111,14 @@ export class QuadNode {
 
         if (this._containsPoint(x, y)) {
             output = output.concat(this._values);
+            output = output.concat(this._childValues);
 
             if (this._nw) { output = output.concat(this._nw.getValues(x, y)); }
             if (this._ne) { output = output.concat(this._ne.getValues(x, y)); }
             if (this._sw) { output = output.concat(this._sw.getValues(x, y)); }
             if (this._se) { output = output.concat(this._se.getValues(x, y)); }
         }
-        
+
         return output;
     }
 
@@ -131,7 +133,7 @@ export class QuadNode {
             if (this._sw) { output = output.concat(this._sw.getBounds(x, y)); }
             if (this._se) { output = output.concat(this._se.getBounds(x, y)); }
         }
-        
+
         return output;
     }
 
@@ -141,7 +143,7 @@ export class QuadNode {
      **
      */
 
-    // 
+    //
     // convert all data from child arrays into child nodes
     //
     _split() {
@@ -157,7 +159,7 @@ export class QuadNode {
         }
     }
 
-    // 
+    //
     // convert all data from child nodes into child array
     //
     _combine() {
@@ -168,12 +170,12 @@ export class QuadNode {
     }
 
     _containsData(area) {
-        return (this.xi < area.xi) && (this.xf > area.xf) &&
-        (this.yi < area.yi) && (this.yf > area.yf);
+        return (this.xi <= area.xi) && (this.xf >= area.xf) &&
+        (this.yi <= area.yi) && (this.yf >= area.yf);
     }
 
     _containsPoint(x, y) {
-        return x > this.xi && x < this.xf && y > this.yi && y < this.yf;
+        return this.xi <= x && this.xf > x && this.yi <= y && this.yf > y;
     }
 
     _rootContains(area) {
