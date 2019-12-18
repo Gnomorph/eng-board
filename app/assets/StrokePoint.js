@@ -29,8 +29,4 @@ export class StrokePoint {
     toString() {
         return "(" + this._x + ", " + this._y + ")";
     }
-
-    //stringify() {
-        //return "(" + this._x + ", " + this._y + ")";
-    //}
 }

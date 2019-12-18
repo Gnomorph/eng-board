@@ -122,6 +122,19 @@ export class QuadNode {
         return output;
     }
 
+    getAllBounds(x, y) {
+        let output = []
+
+        output.push([this.xi, this.xf, this.yi, this.yf]);
+
+        if (this._nw) { output = output.concat(this._nw.getAllBounds(x, y)); }
+        if (this._ne) { output = output.concat(this._ne.getAllBounds(x, y)); }
+        if (this._sw) { output = output.concat(this._sw.getAllBounds(x, y)); }
+        if (this._se) { output = output.concat(this._se.getAllBounds(x, y)); }
+
+        return output;
+    }
+
     getBounds(x, y) {
         let output = []
 
@@ -147,7 +160,7 @@ export class QuadNode {
     // convert all data from child arrays into child nodes
     //
     _split() {
-        if (this.childLength > this.maxLength) {
+        if (this.childLength > this.maxLength && this.xf-this.xi > 10 && this.yf-this.yi > 10) {
             for (let value of this._childValues) {
                 this._nwCount = this.NW.add(value);
                 this._neCount = this.NE.add(value);

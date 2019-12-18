@@ -156,6 +156,7 @@ export class Surface {
             this.openStrokes[id].addXY(x, y, tiltX, tiltY);
             this.openStrokes[id].kill(null, null);
         } else {
+            this.clearScreen();
             this.undoStack.length = 0;
 
             // create a new stroke
@@ -198,14 +199,18 @@ export class Surface {
             this.update();
 
             let nearest = this.testQuad.getValues(scaleX, scaleY);
-            let bounds = this.testQuad.getBounds(scaleX, scaleY);
+            let bounds = this.testQuad.getAllBounds(scaleX, scaleY);
 
             for (let data of nearest) {
-                Draw.line(this.bCtx, ...data._data, 1, "red");
+                Draw.line(this.bCtx, ...data._data, 3, "red");
             }
 
             for (let data of bounds) {
-                Draw.box(this.bCtx, ...data, 1, "red");
+                data[0] += 1;
+                data[1] -= 2;
+                data[2] += 1;
+                data[3] -= 2;
+                Draw.box(this.bCtx, ...data, 2, "green");
             }
             //console.log(this.testQuad.getValues(x,y));
         }
@@ -219,8 +224,18 @@ export class Surface {
             let stroke = this.openStrokes[id];
             stroke.kill(id, this.terminateStroke.bind(this));
 
-
             this.debugQuadTree(stroke);
+
+            let scaleX = x*Browser.resolution;
+            let scaleY = y*Browser.resolution;
+            let bounds = this.testQuad.getAllBounds(scaleX, scaleY);
+            for (let data of bounds) {
+                data[0] += 1;
+                data[1] -= 2;
+                data[2] += 1;
+                data[3] -= 2;
+                Draw.box(this.bCtx, ...data, 2, "green");
+            }
         }
     }
 
