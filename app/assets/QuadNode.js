@@ -33,7 +33,7 @@ export class QuadNode {
     }
 
     get childLength() {
-        return this._childValues.length ||
+        return this._childValues.length +
             this._nwCount + this._neCount + this._swCount + this._seCount;
     }
 
@@ -55,13 +55,13 @@ export class QuadNode {
             new QuadNode(this._xm, this._xf, this._yi, this._ym, this._ne);
     }
 
-    get SE() {
-        return this._se = this._se ||
+    get SW() {
+        return this._sw = this._sw ||
             new QuadNode(this._xi, this._xm, this._ym, this._yf, this._sw);
     }
 
-    get SW() {
-        return this._sw = this._sw ||
+    get SE() {
+        return this._se = this._se ||
             new QuadNode(this._xm, this._xf, this._ym, this._yf, this._se);
     }
 
@@ -91,63 +91,75 @@ export class QuadNode {
     // Remove data from this node (or children) and handle combining if needed
     //
     del(region) {
+
+    }
+
+    purge() {
+        this._values.length = 0;
+        this._childValues.length = 0;
+
+        if (this._nw) { this._nw.purge(); }
+        if (this._ne) { this._ne.purge(); }
+        if (this._sw) { this._sw.purge(); }
+        if (this._se) { this._se.purge(); }
+
+        this._nw = null
+        this._ne = null
+        this._sw = null
+        this._se = null
+
+        this._nwCount = null
+        this._neCount = null
+        this._swCount = null
+        this._seCount = null
     }
 
     getAll() {
-        let output = []
-        output = output.concat(this._values);
-        output = output.concat(this._childValues);
+        let data = []
+        data = data.concat(this._values);
+        data = data.concat(this._childValues);
 
-        if (this._nw) { output = output.concat(this._nw.getAll()); }
-        if (this._ne) { output = output.concat(this._ne.getAll()); }
-        if (this._sw) { output = output.concat(this._sw.getAll()); }
-        if (this._se) { output = output.concat(this._se.getAll()); }
+        getChildOutputs(data, this.getAll);
 
-        return output;
+        return data;
     }
 
     getValues(x, y) {
-        let output = []
+        let data = []
 
         if (this._containsPoint(x, y)) {
-            output = output.concat(this._values);
-            output = output.concat(this._childValues);
+            data = data.concat(this._values);
+            data = data.concat(this._childValues);
 
-            if (this._nw) { output = output.concat(this._nw.getValues(x, y)); }
-            if (this._ne) { output = output.concat(this._ne.getValues(x, y)); }
-            if (this._sw) { output = output.concat(this._sw.getValues(x, y)); }
-            if (this._se) { output = output.concat(this._se.getValues(x, y)); }
+            data = this._addChildOutputs(this.getValues, data, x, y);
         }
 
-        return output;
+        return data;
     }
 
+
     getAllBounds(x, y) {
-        let output = []
+        let data = []
 
-        output.push([this.xi, this.xf, this.yi, this.yf]);
+        if (this.length > 0) {
+            data.push([this.xi, this.xf, this.yi, this.yf]);
 
-        if (this._nw) { output = output.concat(this._nw.getAllBounds(x, y)); }
-        if (this._ne) { output = output.concat(this._ne.getAllBounds(x, y)); }
-        if (this._sw) { output = output.concat(this._sw.getAllBounds(x, y)); }
-        if (this._se) { output = output.concat(this._se.getAllBounds(x, y)); }
+            data = this._addChildOutputs(this.getAllBounds, data, x, y);
+        }
 
-        return output;
+        return data;
     }
 
     getBounds(x, y) {
-        let output = []
+        let data = []
 
         if (this._containsPoint(x, y)) {
-            output.push([this.xi, this.xf, this.yi, this.yf]);
+            data.push([this.xi, this.xf, this.yi, this.yf]);
 
-            if (this._nw) { output = output.concat(this._nw.getBounds(x, y)); }
-            if (this._ne) { output = output.concat(this._ne.getBounds(x, y)); }
-            if (this._sw) { output = output.concat(this._sw.getBounds(x, y)); }
-            if (this._se) { output = output.concat(this._se.getBounds(x, y)); }
+            data = this._addChildOutputs(this.getBounds, data, x, y);
         }
 
-        return output;
+        return data;
     }
 
     /**
@@ -160,7 +172,8 @@ export class QuadNode {
     // convert all data from child arrays into child nodes
     //
     _split() {
-        if (this.childLength > this.maxLength && this.xf-this.xi > 10 && this.yf-this.yi > 10) {
+        if (this.childLength > this.maxLength &&
+            this.xf-this.xi > 10 && this.yf-this.yi > 10) {
             for (let value of this._childValues) {
                 this._nwCount = this.NW.add(value);
                 this._neCount = this.NE.add(value);
@@ -182,13 +195,26 @@ export class QuadNode {
         this._se = this._se.getChildren();
     }
 
+    _addChildOutputs(fn, data, ...args) {
+        data = this._addChildOutput(this._nw, fn, data, ...args);
+        data = this._addChildOutput(this._ne, fn, data, ...args);
+        data = this._addChildOutput(this._sw, fn, data, ...args);
+        data = this._addChildOutput(this._se, fn, data, ...args);
+
+        return data;
+    }
+
+    _addChildOutput(child, fn, data, ...args) {
+        return child ? data.concat(fn.apply(child, args)) : data;
+    }
+
     _containsData(area) {
         return (this.xi <= area.xi) && (this.xf >= area.xf) &&
         (this.yi <= area.yi) && (this.yf >= area.yf);
     }
 
     _containsPoint(x, y) {
-        return this.xi <= x && this.xf > x && this.yi <= y && this.yf > y;
+        return this.xi < x && this.xf > x && this.yi < y && this.yf > y;
     }
 
     _rootContains(area) {

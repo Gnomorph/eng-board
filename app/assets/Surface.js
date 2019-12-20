@@ -44,6 +44,9 @@ export class Surface {
         this.width = Browser.width;
         this.height = Browser.height;
 
+        this.testQuad = false;
+        this.strokeQuad = new QuadNode(0, this.width, 0, this.height);
+
         this.bCtx.canvas.width = this.width;
         this.bCtx.canvas.height = this.height;
         this.fCtx.canvas.width = this.width;
@@ -147,7 +150,6 @@ export class Surface {
     }
 
     penStart(id, type, x, y, tiltX, tiltY) {
-        this.testQuad = null;
         // for mouse, start is unique, end is not
         // for touch, start is unique, end is not
 
@@ -156,7 +158,7 @@ export class Surface {
             this.openStrokes[id].addXY(x, y, tiltX, tiltY);
             this.openStrokes[id].kill(null, null);
         } else {
-            this.clearScreen();
+            //this.clearScreen();
             this.undoStack.length = 0;
 
             // create a new stroke
@@ -198,8 +200,8 @@ export class Surface {
 
             this.update();
 
-            let nearest = this.testQuad.getValues(scaleX, scaleY);
-            let bounds = this.testQuad.getAllBounds(scaleX, scaleY);
+            let nearest = this.strokeQuad.getValues(scaleX, scaleY);
+            let bounds = this.strokeQuad.getBounds(scaleX, scaleY);
 
             for (let data of nearest) {
                 Draw.line(this.bCtx, ...data._data, 3, "red");
@@ -210,9 +212,8 @@ export class Surface {
                 data[1] -= 2;
                 data[2] += 1;
                 data[3] -= 2;
-                Draw.box(this.bCtx, ...data, 2, "green");
+                Draw.box(this.bCtx, ...data, 3, "green");
             }
-            //console.log(this.testQuad.getValues(x,y));
         }
     }
 
@@ -224,24 +225,25 @@ export class Surface {
             let stroke = this.openStrokes[id];
             stroke.kill(id, this.terminateStroke.bind(this));
 
-            this.debugQuadTree(stroke);
+            this.addToQuadTree(stroke);
 
-            let scaleX = x*Browser.resolution;
-            let scaleY = y*Browser.resolution;
-            let bounds = this.testQuad.getAllBounds(scaleX, scaleY);
-            for (let data of bounds) {
-                data[0] += 1;
-                data[1] -= 2;
-                data[2] += 1;
-                data[3] -= 2;
-                Draw.box(this.bCtx, ...data, 2, "green");
+            if (this.testQuad) {
+                let scaleX = x*Browser.resolution;
+                let scaleY = y*Browser.resolution;
+                let bounds = this.strokeQuad.getBounds(scaleX, scaleY);
+
+                for (let data of bounds) {
+                    data[0] += 1;
+                    data[1] -= 2;
+                    data[2] += 1;
+                    data[3] -= 2;
+                    Draw.box(this.bCtx, ...data, 2, "green");
+                }
             }
         }
     }
 
-    debugQuadTree(stroke) {
-        this.testQuad = new QuadNode(0, this.width, 0, this.height);
-
+    addToQuadTree(stroke) {
         let prev;
         for (let current of stroke) {
             if (prev) {
@@ -251,7 +253,7 @@ export class Surface {
                 let b = Math.max(prev.y, current.y);
 
                 let line = [prev.x, prev.y, current.x, current.y];
-                this.testQuad.add(new QuadData(line, l, r, t, b));
+                this.strokeQuad.add(new QuadData(line, l, r, t, b));
             }
 
             prev = current;
@@ -263,6 +265,8 @@ export class Surface {
     }
 
     clearScreen() {
+        //this.strokeQuad = new QuadNode(0, this.width, 0, this.height);
+        this.strokeQuad.purge();
         this.strokeOrder.length = 0;
         this.greenScreen();
         // TODO: implement undo for clear

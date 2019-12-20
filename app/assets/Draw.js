@@ -4,7 +4,7 @@ import * as Bezier from "./Bezier.js";
 import { CircularBuffer } from "./CircularBuffer.js";
 import { Browser } from "./Browser.js";
 
-async function arc(context, point, width, style) {
+function arc(context, point, width, style) {
     context.beginPath();
     context.lineWidth = 0;
     context.strokeStyle = style;
@@ -14,7 +14,7 @@ async function arc(context, point, width, style) {
     context.fill();
 }
 
-async function point(context, x, y, width, style) {
+function point(context, x, y, width, style) {
     context.beginPath();
     context.lineWidth = 0;
     context.arc(x, y, width/2, 0, 2 * Math.PI, false);
@@ -22,17 +22,17 @@ async function point(context, x, y, width, style) {
     context.fill();
 }
 
-async function dot(ctx, x, y, width) {
+function dot(ctx, x, y, width) {
     width = width || 2;
     this.point(ctx, x, y, width*Browser.resolution);
 }
 
-async function blot(dCtx, sCtx, x, y, width) {
+function blot(dCtx, sCtx, x, y, width) {
     width = width || 25;
     this.erase(dCtx, sCtx, y, x, y, width);
 }
 
-async function erase(dCtx, sCtx, xi, yi, xf, yf, size) {
+function erase(dCtx, sCtx, xi, yi, xf, yf, size) {
     if (size >= 0) {
         size = size*Browser.resolution/2;
     } else {
@@ -44,7 +44,7 @@ async function erase(dCtx, sCtx, xi, yi, xf, yf, size) {
         xf-size, yf-size, 2*size, 2*size);
 }
 
-async function curves(context, path, width, color) {
+function curves(context, path, width, color) {
     if (!path) { return; }
     let points = path._points;
 
@@ -89,7 +89,7 @@ async function curves(context, path, width, color) {
     //context.stroke();
 }
 
-async function lines(context, path, width, color) {
+function lines(context, path, width, color) {
     if (!path) { return; }
     let points = path._points;
 
@@ -103,7 +103,7 @@ async function lines(context, path, width, color) {
     let last;
     for(let point of points) {
         if (last) {
-            await context.lineTo(...point);
+            context.lineTo(...point);
         }
 
         last = point;
@@ -131,11 +131,13 @@ function box(ctx, left, right, top, bot, width, style) {
         ctx.strokeStyle = style || "black";
         ctx.rect(left, top, right-left, bot-top);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = style || "blue";
     }
 }
 
 /*
-async function line(pen, context, from, to, pressure, style, interpolate) {
+function line(pen, context, from, to, pressure, style, interpolate) {
     if (!from) { return; }
 
     pen.hasUpdates = true;
