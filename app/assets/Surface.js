@@ -2,8 +2,7 @@
 
 import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
-import { QuadNode } from "./QuadNode.js";
-import { QuadData } from "./QuadData.js";
+import { QuadTree } from "./QuadTree.js";
 import * as Draw from "./Draw.js";
 
 import { Stroke } from "./Stroke.js";
@@ -45,7 +44,7 @@ export class Surface {
         this.height = Browser.height;
 
         this.testQuad = false;
-        this.strokeQuad = new QuadNode(0, this.width, 0, this.height);
+        this.strokeQuad = new QuadTree(0, this.width, 0, this.height);
 
         this.bCtx.canvas.width = this.width;
         this.bCtx.canvas.height = this.height;
@@ -253,7 +252,7 @@ export class Surface {
                 let b = Math.max(prev.y, current.y);
 
                 let line = [prev.x, prev.y, current.x, current.y];
-                this.strokeQuad.add(new QuadData(line, l, r, t, b));
+                this.strokeQuad.add(line, l, r, t, b);
             }
 
             prev = current;
@@ -265,7 +264,7 @@ export class Surface {
     }
 
     clearScreen() {
-        //this.strokeQuad = new QuadNode(0, this.width, 0, this.height);
+        //this.strokeQuad = new QuadTree(0, this.width, 0, this.height);
         this.strokeQuad.purge();
         this.strokeOrder.length = 0;
         this.greenScreen();
