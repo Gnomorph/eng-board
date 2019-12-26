@@ -2,7 +2,7 @@ import { StrokePoint } from "./StrokePoint.js";
 
 export class StrokeSegment {
     constructor(stroke, p1, p2) {
-        this.stoke = stroke;
+        this.stroke = stroke;
         this.p1 = new StrokePoint(p1[0], p1[1], 0.001, 0.001);
         this.p2 = new StrokePoint(p2[0], p2[1], 0.001, 0.001);
     }
@@ -63,6 +63,7 @@ function orientation(p, q, r) {
 }
 
 function onSegment(p, q, r) {
+    return false;
     if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
         q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y))
         return true;

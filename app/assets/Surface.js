@@ -124,11 +124,12 @@ export class Surface {
         }
     }
 
-    drawStroke(stroke) {
+    drawStroke(stroke, color) {
+        color = color || "black"
         let last = null;
         for (let point of stroke) {
             if (last) {
-                Draw.line(this.bCtx, last.x, last.y, point.x, point.y, 2);
+                Draw.line(this.bCtx, last.x, last.y, point.x, point.y, 2, color);
             }
 
             last = point;
@@ -248,7 +249,7 @@ export class Surface {
 
                 for (let data of this.strokeQuad.getRect(...finalStroke)) {
                     if (finalStroke.intersects(data._data)) {
-                        Draw.line(this.bCtx, ...data._data, 3, "yellow");
+                        this.drawStroke(data._data.stroke, "yellow");
                     }
                 }
 
