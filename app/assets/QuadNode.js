@@ -124,6 +124,19 @@ export class QuadNode {
         return data;
     }
 
+    getRect(l, r, t, b) {
+        let data = [];
+
+        if (this._containsRect(l, r, t, b)) {
+            data = data.concat(this._values);
+            data = data.concat(this._childValues);
+
+            data = this._addChildOutputs(this.getRect, data, l, r, t, b);
+        }
+
+        return data;
+    }
+
     getValues(x, y) {
         let data = []
 
@@ -136,7 +149,6 @@ export class QuadNode {
 
         return data;
     }
-
 
     getAllBounds(x, y) {
         let data = []
@@ -214,13 +226,19 @@ export class QuadNode {
     }
 
     _containsPoint(x, y) {
-        return this.xi < x && this.xf > x && this.yi < y && this.yf > y;
+        return this.xi < x && x < this.xf && this.yi < y && y < this.yf;
+    }
+
+    _containsRect(l, r, t, b) {
+        let exclusive = r<this.xi || this.xf<l || b<this.yi || this.yf<t;
+        return !exclusive;
+        //return this.xi < l && r < this.xf && this.yi < t && b < this.yf;
     }
 
     _rootContains(area) {
         return  this._containsData &&
-            ((area.xi < this.xm) && (area.xf > this.xm) ||
-                (area.yi < this.ym) && (area.yf > this.ym));
+            ((area.xi < this.xm) && (this.xm < area.xf) ||
+                (area.yi < this.ym) && (this.ym < area.yf));
     }
 }
 

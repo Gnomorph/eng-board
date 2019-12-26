@@ -89,11 +89,11 @@ export class Debug {
     enableDebug() {
         this.debugState = true;
         this.debugMenu.style.display = "flex";
-        this.surface.bgBoard.addEventListener(
+        this.surface.board.addEventListener(
             'pointermove', this.testMove.bind(this));
-        this.surface.bgBoard.addEventListener(
+        this.surface.board.addEventListener(
             'pointerdown', this.testDown.bind(this));
-        this.surface.bgBoard.addEventListener(
+        this.surface.board.addEventListener(
             'pointerup', this.testUp.bind(this));
 
         if ('ontouchstart' in window) {
@@ -132,11 +132,11 @@ export class Debug {
     disableDebug() {
         this.debugState = false;
         this.debugMenu.style.display = "none";
-        this.surface.bgBoard.removeEventListener(
+        this.surface.board.removeEventListener(
             'pointermove', this.testMove.bind(this));
-        this.surface.bgBoard.removeEventListener(
+        this.surface.board.removeEventListener(
             'pointerdown', this.testDown.bind(this));
-        this.surface.bgBoard.removeEventListener(
+        this.surface.board.removeEventListener(
             'pointerup', this.testUp.bind(this));
 
         this.surface.removeEventListener(

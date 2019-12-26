@@ -4,8 +4,10 @@ import { Browser } from "./Browser.js";
 
 export class StrokePoint {
     constructor(x, y, pressure, tiltx, tilty) {
-        this._x = x * Browser.resolution;
-        this._y = y * Browser.resolution;
+        this._x = x;
+        this._y = y;
+        //this._x = x * Browser.resolution;
+        //this._y = y * Browser.resolution;
 
         // what about if pressure is 0?
         this._pressure = pressure || 1;

@@ -1,6 +1,5 @@
 'use strict'
 
-//import { Browser } from "./Browser.js";
 import { StrokePoint } from "./StrokePoint.js";
 
 export class Stroke {

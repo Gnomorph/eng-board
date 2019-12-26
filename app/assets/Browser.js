@@ -22,9 +22,14 @@ class _Browser {
     get isSafari() {
         return SafariMatcher.test(navigator.userAgent);
     }
+
+    scale(value) {
+        return value * this.resolution;
+    }
 }
 
 let Browser = new _Browser();
+
 export {
     Browser
 }

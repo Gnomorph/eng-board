@@ -7,57 +7,54 @@ import * as Draw from "./Draw.js";
 
 import { Stroke } from "./Stroke.js";
 import { StrokePoint } from "./StrokePoint.js";
+import { StrokeSegment } from "./StrokeSegment.js";
 
-function makeBoard() {
+function makeBoard(width, height) {
     let board = document.createElement('canvas');
     board.class = "offscreen";
+    board.width = width;
+    board.height = height;
     document.body.appendChild(board);
     return board;
 }
 
+function getMinimalContext (canvas) {
+    let ctx = canvas.getContext("2d", {desynchronized: true});
+    ctx.imageSmoothingEnabled = false;
+    return ctx;
+}
+
 export class Surface {
     constructor(canvas) {
+        // History and Undo Setup
         this.openStrokes = {};
         this.strokeOrder = [];
-
-        this.tip = null;
-        this.pointerIsActive = false;
-        this.stroke = null;
-        this.drawables = [];
-        this.drawdones = [];
-        this.hasUpdates = false;
-
         this.undoStack = [];
+        this.eraserStroke = [];
+        this.eraserStrokeStart = null;
+        this.eraserStrokeEnd = null;
 
-        this.bgBoard = canvas;
-        this.fgBoard = makeBoard();
-        this.biBoard = makeBoard();
-
-        this.fCtx = this.fgBoard.getContext("2d", {desynchronized: true});
-        this.fCtx.imageSmoothingEnabled = false;
-        this.bCtx = this.bgBoard.getContext("2d", {desynchronized: true});
-        this.bCtx.imageSmoothingEnabled = false;
-        this.biCtx = this.biBoard.getContext("2d", {desynchronized: true});
-        this.biCtx.imageSmoothingEnabled = false;
-
-        this.width = Browser.width;
-        this.height = Browser.height;
-
+        // Quad Tree Setup
         this.testQuad = false;
         this.strokeQuad = new QuadTree(0, this.width, 0, this.height);
 
-        this.bCtx.canvas.width = this.width;
-        this.bCtx.canvas.height = this.height;
-        this.fCtx.canvas.width = this.width;
-        this.fCtx.canvas.height = this.height;
-        this.biCtx.canvas.width = this.width;
-        this.biCtx.canvas.height = this.height;
+        // Canvas and Context Setup
+        this.board = canvas;
+        this.board.width = this.width;
+        this.board.height = this.height;
+
+        // Make Offscreen Canvases
+        this.sheet = makeBoard(this.width, this.height);
+
+        // Setup Each Context
+        this.bCtx = getMinimalContext(this.board);
+        this.sheetCtx = getMinimalContext(this.sheet);
+
         this.clearScreen();
 
         this.buildGreenScreen();
         this.greenScreen();
 
-        //window.addEventListener('resize', (e) => setTimeout(buildResizeCanvas(this), 100));
         window.addEventListener('resize', this.resize.bind(this), 100);
 
         // active
@@ -79,17 +76,17 @@ export class Surface {
         // you can have one history board for short term history
     }
 
+    get width() { return Browser.width; }
+
+    get height() { return Browser.height; }
+
     resize() {
         setTimeout(() => {
-            this.width  = Browser.width;
-            this.height = Browser.height;
+            this.board.width = this.width;
+            this.board.height = this.height;
 
-            this.bCtx.canvas.width = this.width;
-            this.bCtx.canvas.height = this.height;
-            this.fCtx.canvas.width = this.width;
-            this.fCtx.canvas.height = this.height;
-            this.biCtx.canvas.width = this.width;
-            this.biCtx.canvas.height = this.height;
+            this.sheet.width = this.width;
+            this.sheet.height = this.height;
 
             this.buildGreenScreen();
             this.update();
@@ -97,11 +94,11 @@ export class Surface {
     }
 
     addEventListener(trigger, callback) {
-        this.bgBoard.addEventListener(trigger, callback);
+        this.board.addEventListener(trigger, callback);
     }
 
     removeEventListener(trigger, callback) {
-        this.bgBoard.removeEventListener(trigger, callback);
+        this.board.removeEventListener(trigger, callback);
     }
 
     get tip() {
@@ -119,7 +116,8 @@ export class Surface {
             if (path.type == "pen") {
                 this.drawStroke(path);
             } else if (path.type == "eraser") {
-                this.eraseStroke(path);
+                //TODO Stroke Eraser Test
+                //this.eraseStroke(path);
             }
 
             i++;
@@ -141,7 +139,7 @@ export class Surface {
         let last = null;
         for (let point of stroke) {
             if (last) {
-                Draw.erase(this.bCtx, this.biCtx, last.x, last.y, point.x, point.y);
+                Draw.erase(this.bCtx, this.sheetCtx, last.x, last.y, point.x, point.y);
             }
 
             last = point;
@@ -174,7 +172,17 @@ export class Surface {
             if (stroke.type == "pen") {
                 Draw.dot(this.bCtx, stroke.last.x, stroke.last.y, 2);
             } else if (stroke.type == "eraser") {
-                Draw.blot(this.bCtx, this.biCtx, stroke.last.x, stroke.last.y, 25);
+                //Draw.blot(this.bCtx, this.sheetCtx, stroke.last.x, stroke.last.y, 25);
+                //TODO - Stroke Eraser Test
+                this.eraserStroke.push([
+                    stroke.last.x,
+                    stroke.last.y
+                ]);
+
+                this.eraserStrokeStart = [
+                    stroke.last.x,
+                    stroke.last.y
+                ];
             }
         }
     }
@@ -182,25 +190,27 @@ export class Surface {
     penMove(id, x, y, tiltX, tiltY) {
         if (id in this.openStrokes) {
             let stroke = this.openStrokes[id];
-            let initial = stroke.last;
+            let prev = stroke.last;
 
             // draw the stroke to the screen
-            let current = new StrokePoint(x, y, tiltX, tiltY);
+            let cur = new StrokePoint(x, y, tiltX, tiltY);
             if(stroke.type == "pen") {
-                Draw.line(this.bCtx, initial.x, initial.y, current.x, current.y, 2);
-            } else if (stroke.type == "eraser") {
-                Draw.erase(this.bCtx, this.biCtx, initial.x, initial.y, current.x, current.y);
+                Draw.line(this.bCtx, prev.x, prev.y, cur.x, cur.y, 2);
+            } else if (stroke.type == "eraser" && this.eraserStrokeStart) {
+                //Draw.erase(this.bCtx, this.sheetCtx, prev.x, prev.y, cur.x, cur.y);
+                //TODO Stroke Eraser Test
+                //this.eraserStroke.push( [cur.x, cur.y] );
+
+                this.update();
+                Draw.line(this.bCtx, this.eraserStrokeStart[0], this.eraserStrokeStart[1], x, y, 1);
             }
 
             stroke.addXY(x, y, tiltX, tiltY);
         } else if (this.testQuad) {
-            let scaleX = x*Browser.resolution;
-            let scaleY = y*Browser.resolution;
-
             this.update();
 
-            let nearest = this.strokeQuad.getValues(scaleX, scaleY);
-            let bounds = this.strokeQuad.getBounds(scaleX, scaleY);
+            let nearest = this.strokeQuad.getValues(x, y);
+            let bounds = this.strokeQuad.getBounds(x, y);
 
             for (let data of nearest) {
                 Draw.line(this.bCtx, ...data._data, 3, "red");
@@ -224,12 +234,27 @@ export class Surface {
             let stroke = this.openStrokes[id];
             stroke.kill(id, this.terminateStroke.bind(this));
 
-            this.addToQuadTree(stroke);
+            if (stroke.type == "pen") {
+                this.addToQuadTree(stroke);
+            } else if (stroke.type == "eraser") {
+                // TODO now you can erase stuff
+                // Check all the strokes to see if they cross anything in the quadtree
+                let finalStroke = new StrokeSegment(null,
+                    [ this.eraserStrokeStart[0], this.eraserStrokeStart[1] ],
+                    [ x, y ]
+                );
 
-            if (this.testQuad) {
-                let scaleX = x*Browser.resolution;
-                let scaleY = y*Browser.resolution;
-                let bounds = this.strokeQuad.getBounds(scaleX, scaleY);
+                Draw.line(this.bCtx, ...finalStroke, 4, "red");
+
+                for (let data of this.strokeQuad.getRect(...finalStroke)) {
+                    if (finalStroke.intersects(data._data)) {
+                        Draw.line(this.bCtx, ...data._data, 3, "yellow");
+                    }
+                }
+
+                this.eraserStrokeStart = null;
+            } else if (this.testQuad) {
+                let bounds = this.strokeQuad.getBounds(x, y);
 
                 for (let data of bounds) {
                     data[0] += 1;
@@ -251,8 +276,11 @@ export class Surface {
                 let t = Math.min(prev.y, current.y);
                 let b = Math.max(prev.y, current.y);
 
-                let line = [prev.x, prev.y, current.x, current.y];
-                this.strokeQuad.add(line, l, r, t, b);
+                let p1 = [prev.x, prev.y];
+                let p2 = [current.x, current.y];
+
+                let segment = new StrokeSegment(stroke, p1, p2);
+                this.strokeQuad.add(segment, l, r, t, b);
             }
 
             prev = current;
@@ -264,7 +292,6 @@ export class Surface {
     }
 
     clearScreen() {
-        //this.strokeQuad = new QuadTree(0, this.width, 0, this.height);
         this.strokeQuad.purge();
         this.strokeOrder.length = 0;
         this.greenScreen();
@@ -272,39 +299,26 @@ export class Surface {
     }
 
     buildGreenScreen() {
-        this.biCtx.clearRect(0, 0, this.width, this.height);
-        this.biCtx.fillStyle = "#ccddcc";
-        this.biCtx.rect(0, 0, this.width, this.height);
-        this.biCtx.fill();
+        this.sheetCtx.clearRect(0, 0, this.width, this.height);
+        this.sheetCtx.fillStyle = "#ccddcc";
+        this.sheetCtx.rect(0, 0, this.width, this.height);
+        this.sheetCtx.fill();
 
-        this.biCtx.beginPath();
-        this.biCtx.strokeStyle = "#99bbaa";
-        this.biCtx.lineWidth = 1;
-        for (let i=50*Browser.resolution; i<this.width; i+=50*Browser.resolution) {
-            this.biCtx.moveTo(i, 0);
-            this.biCtx.lineTo(i, this.height);
+        this.sheetCtx.beginPath();
+        this.sheetCtx.strokeStyle = "#99bbaa";
+        this.sheetCtx.lineWidth = 1;
+        for (let i=Browser.scale(50); i<this.width; i+=Browser.scale(50)) {
+            this.sheetCtx.moveTo(i, 0);
+            this.sheetCtx.lineTo(i, this.height);
         }
-        for (let i=50*Browser.resolution; i<this.height; i+=50*Browser.resolution) {
-            this.biCtx.moveTo(0, i);
-            this.biCtx.lineTo(this.width, i);
+        for (let i=Browser.scale(50); i<this.height; i+=Browser.scale(50)) {
+            this.sheetCtx.moveTo(0, i);
+            this.sheetCtx.lineTo(this.width, i);
         }
-        this.biCtx.stroke();
+        this.sheetCtx.stroke();
     }
 
     greenScreen() {
-        this.bCtx.drawImage(this.biCtx.canvas, 0, 0, this.width, this.height);
+        this.bCtx.drawImage(this.sheet, 0, 0, this.width, this.height);
     }
-}
-
-function buildResizeCanvas(surface) {
-    return function (event) {
-        this.width  = Browser.width;
-        this.height = Browser.height;
-
-        this.bgBoard.width = this.width;
-        this.bgBoard.height = this.height;
-
-        //this.
-        this.update();
-    }.bind(surface);
 }

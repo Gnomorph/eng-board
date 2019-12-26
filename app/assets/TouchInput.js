@@ -46,24 +46,19 @@ export class TouchInput {
         if (pens.length > 0) {
             let pen = pens[0];
             let pt = [
-                //Browser.resolution*pen.clientX,
-                //Browser.resolution*pen.clientY
-                pen.clientX,
-                pen.clientY
+                Browser.scale(pen.clientX),
+                Browser.scale(pen.clientY)
             ];
 
             this.surface.penStart(pen.identifier, "pen", ...pt);
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
-                    //Browser.resolution*eraser.clientX,
-                    //Browser.resolution*eraser.clientY
-                    eraser.clientX,
-                    eraser.clientY
+                    Browser.scale(eraser.clientX),
+                    Browser.scale(eraser.clientY)
                 ];
 
-                //this.surface.pen.erase(this.surface.fCtx, pt);
-                    this.surface.penStart(eraser.identifier, "eraser", ...pt);
+                this.surface.penStart(eraser.identifier, "eraser", ...pt);
             }
         }
     }
@@ -75,20 +70,16 @@ export class TouchInput {
         if (pens.length > 0) {
             let pen = pens[0];
             let pt = [
-                //Browser.resolution*pen.clientX,
-                //Browser.resolution*pen.clientY
-                pen.clientX,
-                pen.clientY
+                Browser.scale(pen.clientX),
+                Browser.scale(pen.clientY)
             ];
 
             this.surface.penMove(pen.identifier, ...pt);
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
-                    //Browser.resolution*eraser.clientX,
-                    //Browser.resolution*eraser.clientY
-                    eraser.clientX,
-                    eraser.clientY
+                    Browser.scale(eraser.clientX),
+                    Browser.scale(eraser.clientY)
                 ];
 
                 this.surface.penMove(eraser.identifier, ...pt);
@@ -97,33 +88,33 @@ export class TouchInput {
     }
 
     handleEnd(e) {
+        for (let touch of e.changedTouches) {
+            let pt = [
+                Browser.scale(touch.clientX),
+                Browser.scale(touch.clientY)
+            ];
+
+            this.surface.penEnd(touch.identifier, ...pt);
+        }
+
+        return;
+
         let pens = this.getPens(e.touches);
         let erasers = this.getErasers(e.touches);
-
-        let pt = [
-            //Browser.resolution*pen.clientX,
-            //Browser.resolution*pen.clientY
-            pen.clientX,
-            pen.clientY
-        ];
 
         this.surface.penEnd(pen.identifier, ...pt);
         if (pens.length > 0) {
             let pen = pens[0];
             let pt = [
-                //Browser.resolution*pen.clientX,
-                //Browser.resolution*pen.clientY
-                pen.clientX,
-                pen.clientY
+                Browser.scale(pen.clientX),
+                Browser.scale(pen.clientY)
             ];
 
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
-                    //Browser.resolution*eraser.clientX,
-                    //Browser.resolution*eraser.clientY
-                    eraser.clientX,
-                    eraser.clientY
+                    Browser.scale(eraser.clientX),
+                    Browser.scale(eraser.clientY)
                 ];
                 this.surface.penEnd(eraser.identifier, ...pt);
             }
@@ -155,10 +146,8 @@ export class TouchInput {
     }
 
     testEraser(touch) {
-        let x = touch.clientX*Browser.resolution;
-        let y = touch.clientY*Browser.resolution;
-        //let x = Browser.resolution*touch.clientX;
-        //let y = Browser.resolution*touch.clientY;
+        let x = Browser.scale(touch.clientX);
+        let y = Browser.scale(touch.clientY);
 
         return (x > this.width - Browser.resolution*100) &&
             (y > this.height - Browser.resolution*100);
@@ -183,10 +172,8 @@ export class TouchInput {
     touchHere(tp) {
         if (tp.touchType=="stylus") {
             let t3 = [
-                //Browser.resolution*tp.clientX,
-                //Browser.resolution*tp.clientY
-                eraser.clientX,
-                eraser.clientY
+                Browser.scale(eraser.clientX),
+                Browser.scale(eraser.clientY)
             ];
             this.surface.pen.id = tp.identifier;
             this.surface.pen.type = "pen";
