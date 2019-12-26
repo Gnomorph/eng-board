@@ -4,6 +4,7 @@ import { StrokePoint } from "./StrokePoint.js";
 
 export class Stroke {
     constructor(id, type) {
+        this._deleted = false;
         this._id = id;
         this._type = type || "pen";
 
@@ -19,6 +20,8 @@ export class Stroke {
     get id() { return this._id }
 
     get type() { return this._type }
+
+    get deleted() { return this._deleted }
 
     get path() {
         // return a copy of the path

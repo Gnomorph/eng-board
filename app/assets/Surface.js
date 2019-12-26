@@ -113,11 +113,13 @@ export class Surface {
         this.greenScreen();
         let i = 0;
         for (let path of this.strokeOrder) {
-            if (path.type == "pen") {
-                this.drawStroke(path);
-            } else if (path.type == "eraser") {
-                //TODO Stroke Eraser Test
-                //this.eraseStroke(path);
+            if (!path.deleted) {
+                if (path.type == "pen") {
+                    this.drawStroke(path);
+                } else if (path.type == "eraser") {
+                    //TODO Stroke Eraser Test
+                    //this.eraseStroke(path);
+                }
             }
 
             i++;
@@ -245,15 +247,17 @@ export class Surface {
                     [ x, y ]
                 );
 
-                Draw.line(this.bCtx, ...finalStroke, 4, "red");
+                //Draw.line(this.bCtx, ...finalStroke, 4, "red");
 
                 for (let data of this.strokeQuad.getRect(...finalStroke)) {
                     if (finalStroke.intersects(data._data)) {
-                        this.drawStroke(data._data.stroke, "yellow");
+                        data._data.stroke._deleted = true;
+                        //this.drawStroke(data._data.stroke, "yellow");
                     }
                 }
 
                 this.eraserStrokeStart = null;
+                this.update();
             } else if (this.testQuad) {
                 let bounds = this.strokeQuad.getBounds(x, y);
 
