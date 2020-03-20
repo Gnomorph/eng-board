@@ -30,13 +30,10 @@ export class Surface {
         this.openStrokes = {};
         this.strokeOrder = [];
         this.undoStack = [];
-        this.eraserStroke = [];
-        this.eraserStrokeStart = null;
-        this.eraserStrokeEnd = null;
+        this.eraserStrokeLast = [];
 
         // Quad Tree Setup
-        this.testQuad = false;
-        this.strokeQuad = new QuadTree(0, this.width, 0, this.height);
+        this.strokeQuad = new QuadTree(0, 2*this.width, 0, 2*this.height);
 
         // Canvas and Context Setup
         this.board = canvas;
@@ -177,12 +174,7 @@ export class Surface {
             } else if (stroke.type == "eraser") {
                 //Draw.blot(this.bCtx, this.sheetCtx, stroke.last.x, stroke.last.y, 25);
                 //TODO - Stroke Eraser Test
-                this.eraserStroke.push([
-                    stroke.last.x,
-                    stroke.last.y
-                ]);
-
-                this.eraserStrokeStart = [
+                this.eraserStrokeLast = [
                     stroke.last.x,
                     stroke.last.y
                 ];
@@ -199,33 +191,23 @@ export class Surface {
             let cur = new StrokePoint(x, y, tiltX, tiltY);
             if(stroke.type == "pen") {
                 Draw.line(this.bCtx, prev.x, prev.y, cur.x, cur.y, 2);
-            } else if (stroke.type == "eraser" && this.eraserStrokeStart) {
+            } else if (stroke.type == "eraser") {
                 //Draw.erase(this.bCtx, this.sheetCtx, prev.x, prev.y, cur.x, cur.y);
                 //TODO Stroke Eraser Test
                 //this.eraserStroke.push( [cur.x, cur.y] );
 
                 this.update();
-                Draw.line(this.bCtx, this.eraserStrokeStart[0], this.eraserStrokeStart[1], x, y, 1);
+                if (this.eraserStrokeLast) {
+                    this.strokeErase(
+                        this.eraserStrokeLast[0], this.eraserStrokeLast[1],
+                        x, y);
+                }
+
+                this.eraserStrokeLast[0] = x;
+                this.eraserStrokeLast[1] = y;
             }
 
             stroke.addXY(x, y, tiltX, tiltY);
-        } else if (this.testQuad) {
-            this.update();
-
-            let nearest = this.strokeQuad.getValues(x, y);
-            let bounds = this.strokeQuad.getBounds(x, y);
-
-            for (let data of nearest) {
-                Draw.line(this.bCtx, ...data._data, 3, "red");
-            }
-
-            for (let data of bounds) {
-                data[0] += 1;
-                data[1] -= 2;
-                data[2] += 1;
-                data[3] -= 2;
-                Draw.box(this.bCtx, ...data, 3, "green");
-            }
         }
     }
 
@@ -240,34 +222,30 @@ export class Surface {
             if (stroke.type == "pen") {
                 this.addToQuadTree(stroke);
             } else if (stroke.type == "eraser") {
-                // TODO now you can erase stuff
-                // Check all the strokes to see if they cross anything in the quadtree
-                let finalStroke = new StrokeSegment(null,
-                    [ this.eraserStrokeStart[0], this.eraserStrokeStart[1] ],
-                    [ x, y ]
-                );
-
-                //Draw.line(this.bCtx, ...finalStroke, 4, "red");
-
-                for (let data of this.strokeQuad.getRect(...finalStroke)) {
-                    if (finalStroke.intersects(data._data)) {
-                        data._data.stroke._deleted = true;
-                        //this.drawStroke(data._data.stroke, "yellow");
-                    }
+                if (this.eraserStrokeLast) {
+                    this.strokeErase(
+                        this.eraserStrokeLast[0], this.eraserStrokeLast[1],
+                        x, y);
                 }
-
-                this.eraserStrokeStart = null;
+                this.eraserStrokeLast = [];
                 this.update();
-            } else if (this.testQuad) {
-                let bounds = this.strokeQuad.getBounds(x, y);
+            }
+        }
+    }
 
-                for (let data of bounds) {
-                    data[0] += 1;
-                    data[1] -= 2;
-                    data[2] += 1;
-                    data[3] -= 2;
-                    Draw.box(this.bCtx, ...data, 2, "green");
-                }
+    strokeErase(x1, y1, x2, y2) {
+        let stroke = new StrokeSegment(null, [x1, y1], [x2, y2]);
+
+        //console.log("Erase:", this.strokeQuad.getRect(...stroke));
+        // TODO now you can erase stuff
+        // Check all the strokes to see if they cross anything in the quadtree
+
+        Draw.line(this.bCtx, x1, y1, x2, y2, 1, "red");
+
+        for (let data of this.strokeQuad.getRect(...stroke)) {
+            //console.log(data);
+            if (stroke.intersects(data._data)) {
+                data._data.stroke._deleted = true;
             }
         }
     }
