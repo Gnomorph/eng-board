@@ -8,6 +8,7 @@ import { StrokeSegment } from "./StrokeSegment.js";
 // locally created input. It will also manage the state of the surface
 // by redrawing the history onto a clean board when necessary.
 class StateManager {
+    clearStack = [];
     undoStack = [];
     strokeOrder = [];
     openStrokes = {};
@@ -97,7 +98,11 @@ class StateManager {
     // TODO: this needs to be more advanced
     undo(data) {
         // FROM SURFACE'S OLD LOGIC
-        if (this.strokeOrder.length > 0) {
+        if (this.strokeOrder.length == 0 && this.clearStack.length > 0) {
+            this.strokeOrder = this.clearStack.pop();
+            this.undoStack.push("clear");
+            this.redraw();
+        } else if (this.strokeOrder.length > 0) {
             this.undoStack.push(this.strokeOrder.pop());
             this.redraw();
         }
@@ -119,17 +124,30 @@ class StateManager {
     }
 
     redo(data) {
-        // FROM SURFACE'S OLD LOGIC
-        if (this.undoStack.length > 0) {
-            this.strokeOrder.push(this.undoStack.pop());
-            this.redraw();
-        }
-
-
-
         // shuttle the most recent future command onto the current stack
         // replay the reverse-reverse action for this command
         // this could get confusing, so be careful
+
+        if (this.undoStack.length > 0) {
+            let action = this.undoStack.pop();
+
+            if (action === "clear") {
+                // Handle a clear action redo
+                this.clearStack.push(this.strokeOrder);
+                this.strokeOrder = [];
+
+                this.strokeQuad.purge();
+
+                // tell the surface to clear it's contents
+                this.bus.publish('draw', { action: 'clearScreen' });
+            } else {
+                this.strokeOrder.push(action);
+
+                // TODO: you also probably need to add this to the quad tree
+            }
+
+            this.redraw();
+        }
     }
 
     setTipWidth(data) {
@@ -141,18 +159,17 @@ class StateManager {
     }
 
     clearScreen(data) {
-        // FROM SURFACE
-        //this.strokeQuad.purge();
-        //this.strokeOrder.length = 0;
+        this.undoStack.length = 0;
 
-        // add this action into the event list history
-        // TODO: we need to track this in history
+        // store the list of strokes into a list of clears
+        this.clearStack.push(this.strokeOrder);
+        this.strokeOrder = [];
 
-        // bundle up all the recent actions into a list
-        // store the bundle into a list of clear action bundles
+        this.strokeQuad.purge();
 
         // tell the surface to clear it's contents
         this.bus.publish('draw', { action: 'clearScreen' });
+        console.log("clearScreen", this.clearStack);
     }
 
     deleteStroke(data) {
@@ -211,6 +228,8 @@ class StateManager {
 
     // finalize the given stroke (remove it from openStrokes)
     endStroke(data) {
+        this.undoStack.length = 0;
+
         let stroke = this.openStrokes[data.id];
 
         // add this stroke to the quadtree
