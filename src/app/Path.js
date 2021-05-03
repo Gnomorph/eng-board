@@ -1,5 +1,3 @@
-import * as Bezier from "./Bezier.js";
-
 export class Path {
     constructor(id, width, pressureThreashold, resolution, color) {
         this.index = null;
