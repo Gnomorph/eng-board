@@ -25,7 +25,6 @@ function precache() {
             '/assets/Path.js',
             '/assets/Pointer.js',
             '/assets/PointerInput.js',
-            '/assets/Radial.js',
             '/assets/Stroke.js',
             '/assets/StrokePoint.js',
             '/assets/Surface.js',

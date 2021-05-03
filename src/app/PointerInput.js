@@ -2,7 +2,6 @@
 
 import { Browser } from "./Browser.js";
 import * as Draw from "./Draw.js";
-import * as Radial from "./Radial.js";
 const touchEnabled = false;
 
 export class PointerInput {
@@ -52,16 +51,12 @@ export class PointerInput {
     startPoint(e) {
         e.preventDefault();
         if (e.pointerType=="pen") {
-            //Radial.start(e, this.surface.pen);
-
             let type = (e.tiltX || e.tiltY) ? "pen" : "eraser";
             this.surface.penStart(e.pointerId, type,
                 Browser.scale(e.clientX),
                 Browser.scale(e.clientY),
                 e.tiltX, e.tiltY);
         } else if (e.pointerType == "mouse") {
-            //Radial.start(e, this.surface.pen);
-
             let type = (e.buttons == 2) ? "eraser" : "pen";
             //let type = (e.buttons == 4) ? "eraser" : "pen";
             this.surface.penStart(e.pointerId, type,
@@ -74,7 +69,6 @@ export class PointerInput {
     stopPoint(e) {
         e.preventDefault();
         if (e.pointerType=="pen" || e.pointerType == "mouse") {
-            // This should be handled by Radial somehow
             if (e.buttons == "2") {
                 return;
             }

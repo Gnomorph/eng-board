@@ -28,23 +28,38 @@ export class QuadNode {
      **
      */
 
+    /*
+     * get the number of data points contained in this subtree
+     */
     get length() {
         return this._values.length + this.childLength;
     }
 
+    /*
+     * get the number of dat points contined below this node
+     */
     get childLength() {
         return this._childValues.length +
             this._nwCount + this._neCount + this._swCount + this._seCount;
     }
 
+    /*
+     * get the center of the node's bounds (compute or used cached)
+     */
     get xm() { return this._xm = this._xm || (this._xi + this.xf)/2 }
     get ym() { return this._ym = this._ym || (this._yi + this.yf)/2 }
 
+    /*
+     * get the bounding coordinates (initial and final, horizonal and vertical)
+     */
     get xi() { return this._xi; }
     get xf() { return this._xf; }
     get yi() { return this._yi; }
     get yf() { return this._yf; }
 
+    /*
+     * Accessors for each child node. Lazy load the nodes to conserve space.
+     */
     get NW() {
         return this._nw = this._nw ||
             new QuadNode(this._xi, this._xm, this._yi, this._ym, this._nw);
@@ -241,26 +256,3 @@ export class QuadNode {
                 (area.yi < this.ym) && (this.ym < area.yf));
     }
 }
-
-    /*get isLeaf() {
-        if (checkArrays(this._nw, this._ne, this._sw, this._se)) {
-            return true;
-        } else if (checkNodes(this._nw, this._ne, this._sw, this._se)) {
-            return false;
-        } else {
-            throw "inconsistent state"
-        }
-    }*/
-
-/*function checkArrays(...inputs) {
-    return inputs.reduce((a, c) => { a = a && Array.isArray(c); }, true);
-}
-
-function checkNodes(...inputs) {
-    return inputs.reduce((a, c) => { a = a && c instanceof QuadNode; }, true);
-}*/
-
-/*function checkContains(area, left, right, top, bot) {
-    return (left < area.xi) && (right > area.xf) &&
-        (top < area.yi) && (bot > area.yf);
-}*/
