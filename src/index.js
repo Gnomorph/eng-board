@@ -1,4 +1,3 @@
-import * as Radial from "./app/Radial.js";
 import { Debug } from "./app/Debug.js";
 import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
@@ -23,8 +22,6 @@ let eraserTip = new DrawTip("eraser", 25, null, setSurfaceTip);
 surface.tip = penTip;
 
 let menu = new Menu(surface);
-
-//Radial.init();
 
 let pointerInput = new PointerInput(surface);
 let touchInput = new TouchInput(surface);
