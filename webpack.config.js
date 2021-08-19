@@ -1,5 +1,3 @@
-const path = require('path');
-
 module.exports = {
     entry: {
         main: "./src/index.js",
@@ -15,16 +13,17 @@ module.exports = {
                 test: /\.html$/,
                 use: ["html-loader"],
             },
-            {
-                test: /\.(svg|png|jpg|gif)$/,
-                use: {
-                    loader: "file-loader",
-                    options: {
-                        name: "[name].[hash].[ext]",
-                        outputPath: "imgs",
-                    }
-                }
-            },
+            //{
+                //test: /\.(svg|png|jpg|gif)$/,
+                //use: {
+                    //loader: "file-loader",
+                    //options: {
+                        //limit: 8,
+                        //name: "[name].[hash].[ext]",
+                        //outputPath: "imgs",
+                    //}
+                //}
+            //},
         ]
     },
     plugins: [
