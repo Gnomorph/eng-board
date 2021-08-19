@@ -25,7 +25,8 @@ function getMinimalContext (canvas) {
 }
 
 export class Surface {
-    constructor(canvas) {
+    constructor(bus, canvas) {
+        bus.subscribe('draw', this.handleBusMessage.bind(this));
         // History and Undo Setup
         this.openStrokes = {};
         this.strokeOrder = [];
@@ -106,6 +107,36 @@ export class Surface {
         this._tip = newTip;
     }
 
+    handleBusMessage(data) {
+        if (true || data.tip === "pen") {
+            if (data.type === "newStroke") {
+                if (data.data.tilt) {
+                    this.penStart(data.data.id, data.data.tip, ...data.data.point, ...data.data.tilt);
+                } else {
+                    console.log(data);
+                    this.penStart(data.data.id, data.data.tip, ...data.data.point);
+                }
+            } else if (data.type === "addStroke") {
+                if (data.data.tilt) {
+                    this.penMove(data.data.id, ...data.data.point, ...data.data.tilt);
+                } else {
+                    this.penMove(data.data.id, ...data.data.point);
+                }
+            } else if (data.type === "endStroke") {
+                if (data.data.tilt) {
+                    this.penEnd(data.data.id, ...data.data.point, ...data.data.tilt);
+                } else {
+                    this.penEnd(data.data.id, ...data.data.point);
+                }
+            }
+        } else if ( data.tip === "eraser") {
+            if (data.type === "newStroke") {
+            } else if (data.type === "addStroke") {
+            } else if (data.type === "endStroke") {
+            }
+        }
+    }
+
     update() {
         this.greenScreen();
         let i = 0;
@@ -147,6 +178,7 @@ export class Surface {
     }
 
     penStart(id, type, x, y, tiltX, tiltY) {
+        console.log("start");
         // for mouse, start is unique, end is not
         // for touch, start is unique, end is not
 
@@ -159,6 +191,7 @@ export class Surface {
             this.undoStack.length = 0;
 
             // create a new stroke
+            console.log(type);
             let stroke = new Stroke(id, type);
 
             // add current point to the new stroke
@@ -190,6 +223,7 @@ export class Surface {
             // draw the stroke to the screen
             let cur = new StrokePoint(x, y, tiltX, tiltY);
             if(stroke.type == "pen") {
+                console.log("move");
                 Draw.line(this.bCtx, prev.x, prev.y, cur.x, cur.y, 2);
             } else if (stroke.type == "eraser") {
                 //Draw.erase(this.bCtx, this.sheetCtx, prev.x, prev.y, cur.x, cur.y);
@@ -214,6 +248,7 @@ export class Surface {
     penEnd(id, x, y, tiltX, tiltY) {
         // for mouse, start is unique, end is not
         // for touch, start is unique, end is not
+        console.log("end");
 
         if (id in this.openStrokes) {
             let stroke = this.openStrokes[id];

@@ -1,3 +1,5 @@
+import "./main.scss";
+
 import { Debug } from "./app/Debug.js";
 import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
@@ -5,23 +7,19 @@ import { DrawTip } from "./app/DrawTip.js";
 import { PointerInput } from "./app/PointerInput.js";
 import { TouchInput } from "./app/TouchInput.js";
 
-import "./main.scss";
+import { MessageBus } from "./app/MessageBus.js";
 
-let surface = new Surface(document.getElementById("bg-board"));
-document.debug = new Debug(surface);
+// All modules interact through a Message Bus
+let bus = new MessageBus();
 
-function buildSetSurfaceTip(surface) {
-    return function (tip) { surface.tip = tip; }
-}
+let surface = new Surface(bus, document.getElementById("bg-board"));
+new Menu(bus);
+new TouchInput(bus, surface);
+new PointerInput(bus, surface);
 
-let setSurfaceTip = buildSetSurfaceTip(surface);
-let penTip = new DrawTip("pen", 5, "#000000", setSurfaceTip);
-let pencilTip = new DrawTip("pencil", 5, "#000000", setSurfaceTip);
-let eraserTip = new DrawTip("eraser", 25, null, setSurfaceTip);
+new Debug(bus);
 
-surface.tip = penTip;
-
-let menu = new Menu(surface);
-
-let pointerInput = new PointerInput(surface);
-let touchInput = new TouchInput(surface);
+bus.publish('draw', {
+    type: 'DrawTip',
+    data: new DrawTip("pen", 5, "#000000", ()=>{}),
+});

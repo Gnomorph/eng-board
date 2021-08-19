@@ -35,18 +35,27 @@ export class Menu {
 
     updatePenWidth(e) {
         //TODO change pen width
-        //this.surface.tip.width = this.penWidth.value;
+        this.bus.publish({
+            channel: 'draw',
+            type: 'setTipWidth',
+            value: e.value,
+            //value: this.penWidth.value,
+        });
     }
 
     makeSetPenColor(color) {
         return function(e) {
             //TODO change the pen color
-            //this.surface.pen.color = color;
+            this.bus.publish({
+                channel: 'draw',
+                type: 'setTipColor',
+                value: "purple",
+            });
         }
     }
 
-    constructor(surface) {
-        this.surface = surface;
+    constructor(bus) {
+        this.bus = bus;
 
         this.penColors = document.getElementById('color-container');
         this.penWidth = document.getElementById('pen-width-slider');
@@ -85,10 +94,10 @@ export class Menu {
 
         document.getElementById("save").addEventListener(
             'touchstart', this.mySave);
-            //'touchstart', this.mySave.bind(this));
+        //'touchstart', this.mySave.bind(this));
         document.getElementById("save").addEventListener(
             'click', this.mySave);
-            //'click', this.mySave.bind(this));
+        //'click', this.mySave.bind(this));
         document.getElementById("fullscreen").addEventListener(
             'touchstart', this.myFullscreen.bind(this));
         document.getElementById("fullscreen").addEventListener(
@@ -133,7 +142,10 @@ export class Menu {
 
     clearSurface(e) {
         e.preventDefault();
-        this.surface.clearScreen();
+        this.bus.publish({
+            channel: 'draw',
+            type: 'clear',
+        });
     }
 
     deactivateMenu(e) {
@@ -144,20 +156,31 @@ export class Menu {
 
     myUndo(e) {
         e.preventDefault();
-        if (this.surface.strokeOrder.length > 0) {
-            //this.surface.hasUpdates = true;
+
+        this.bus.publish({
+            channel: 'draw',
+            type: 'undo',
+        });
+
+        /*if (this.surface.strokeOrder.length > 0) {
+        //this.surface.hasUpdates = true;
             this.surface.undoStack.push(this.surface.strokeOrder.pop());
             this.surface.update();
-        }
+        }*/
     }
 
     myRedo(e) {
         e.preventDefault();
-        if (this.surface.undoStack.length > 0) {
-            //this.surface.hasUpdates = true;
+        this.bus.publish({
+            channel: 'draw',
+            type: 'redo',
+        });
+
+        /*if (this.surface.undoStack.length > 0) {
+        //this.surface.hasUpdates = true;
             this.surface.strokeOrder.push(this.surface.undoStack.pop());
             this.surface.update();
-        }
+        }*/
     }
 
     mySave(e) {
@@ -209,7 +232,6 @@ export class Menu {
                 this.activeSubMenu.style.display = "none";
             }
 
-            //this.surface.pen.tip = tip.id;
             this.activeSubMenu = menu;
             this.activeSubMenu.style.display = "flex";
             e.cancelBubble = true;

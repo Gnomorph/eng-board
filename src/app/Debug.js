@@ -1,5 +1,9 @@
 'use strict';
 
+document.debug = function() {
+    alert("hello");
+}
+
 import { Browser } from "./Browser.js";
 
 function buildLog(debug, debugOutput) {
@@ -32,7 +36,9 @@ function buildWarn(debug, debugOutput) {
 }
 
 export class Debug {
-    constructor(surface) {
+    constructor(bus, surface) {
+        bus.subscribe("debug", (x) => { console.log("DEBUG:", x); });
+
         this.debugOutput = document.getElementById("debug-output")
         console.log = buildLog(this, this.debugOutput);
         console.warn = buildWarn(this, this.debugOutput);

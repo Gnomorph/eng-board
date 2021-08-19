@@ -1,36 +1,71 @@
 'use strict'
 
 import { Browser } from "./Browser.js";
+import { MouseInput } from "./MouseInput.js";
 import * as Draw from "./Draw.js";
 const touchEnabled = false;
 
 export class PointerInput {
-    constructor(surface) {
-        this.penId;
-        this.surface = surface;
+    constructor(bus, surface) {
+        this.bus = bus;
+        this.penId; // TODO: remove, unused 
 
-        surface.addEventListener('pointermove', this.pointHere.bind(this));
         surface.addEventListener('pointerdown', this.startPoint.bind(this));
+        surface.addEventListener('pointermove', this.pointHere.bind(this));
         surface.addEventListener('pointerup', this.stopPoint.bind(this));
+
+        // turn off context menues
         surface.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    startPoint(e) {
+        e.preventDefault();
+        if (e.pointerType=="pen") {
+            let type = (e.tiltX || e.tiltY) ? "pen" : "eraser";
+
+            let pt = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+            let tilt = [ e.tiltX, e.tiltY ];
+
+            /*this.surface.penStart(e.pointerId, type, ..point, ..tilt);*/
+            this.bus.publish('draw', {
+                type: 'newStroke',
+                data: {id: e.pointerId, point: pt, tilt: tilt, tip: type },
+            });
+        } else if (e.pointerType == "mouse") {
+            // button 2 is the right click, button 4 is the wheel???
+            let type = (e.buttons == 2) ? "eraser" : "pen";
+
+            this.mouseInput = new MouseInput(type);
+
+            let pt = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+
+            this.bus.publish('draw', {
+                type: 'newStroke',
+                data: this.mouseInput.pointData(...pt),
+            });
+        }
     }
 
     pointHere(e) {
         if (typeof e === 'undefined') {
-            console.log("event is undefined, stopping it from adding");
+            this.bus.publish('debug', "event is undefined, stopping it from adding");
             return;
         }
 
-        //if (e.pointerType == "touch") { return };
         e.preventDefault();
+
+        // TODO: Do we want to turn off "touch" type inputs???
+        //if (e.pointerType == "touch") { return };
 
         // Check the type reported by the browser for this event
         if (e.pointerType=="pen") {
+            let pt = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
             let tilt = [e.tiltX, e.tiltY];
-            this.surface.penMove(e.pointerId,
-                Browser.scale(e.clientX),
-                Browser.scale(e.clientY)
-            );
+
+            this.bus.publish('draw', {
+                type: 'addStroke',
+                data: {id: e.pointerId, point: pt, tilt: tilt, tip: 'pen' },
+            });
 
             if (e.buttons == "2") {
                 // This is for "right click" or the surface pen button
@@ -38,60 +73,48 @@ export class PointerInput {
             } else if (e.buttons == "1") {
             }
         } else if (e.pointerType=="mouse") {
-            this.surface.penMove(e.pointerId,
-                Browser.scale(e.clientX),
-                Browser.scale(e.clientY));
+            // We need to make sure we only send events if the mouse is down
+            if (this.mouseInput) {
+                let pt = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+                this.bus.publish('draw', {
+                    type: 'addStroke',
+                    data: this.mouseInput.pointData(...pt),
+                });
+            }
         } else if (this.penId == e.pointerId && e.pointerType == "touch") {
+            // TODO: remove, unused
             // legacy/default pen support
         } else if (e.pointerType=="touch" && this.touchEnabled && e.buttons=="1") {
             // touch support
         }
     }
 
-    startPoint(e) {
-        e.preventDefault();
-        if (e.pointerType=="pen") {
-            let type = (e.tiltX || e.tiltY) ? "pen" : "eraser";
-            this.surface.penStart(e.pointerId, type,
-                Browser.scale(e.clientX),
-                Browser.scale(e.clientY),
-                e.tiltX, e.tiltY);
-        } else if (e.pointerType == "mouse") {
-            let type = (e.buttons == 2) ? "eraser" : "pen";
-            //let type = (e.buttons == 4) ? "eraser" : "pen";
-            this.surface.penStart(e.pointerId, type,
-                Browser.scale(e.clientX),
-                Browser.scale(e.clientY),
-                e.tiltX, e.tiltY);
-        }
-    }
-
     stopPoint(e) {
         e.preventDefault();
-        if (e.pointerType=="pen" || e.pointerType == "mouse") {
+        if (e.pointerType == "mouse") {
+            let pt = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+            this.bus.publish('draw', {
+                type: 'addStroke',
+                data: this.mouseInput.pointData(...pt),
+            });
+
+            this.bus.publish('draw', {
+                type: 'endStroke',
+                data: this.mouseInput.pointData(...pt),
+            });
+            this.mouseInput = undefined;
+        }
+
+        if (e.pointerType=="pen") {
             if (e.buttons == "2") {
                 return;
             }
 
-            this.surface.penEnd(e.pointerId,
-                Browser.scale(e.clientX),
-                Browser.scale(e.clientY));
-
-            let current = [
-                Browser.resolution*e.clientX,
-                Browser.resolution*e.clientY,
-            ];
-
-            current = [
-                Browser.scale(e.clientX),
-                Browser.scale(e.clientY)
-            ];
-            //if (e.mozInputSource == 2 && this.surface.pen.type=="pen" && this.surface.pen.tip=="pen") {
-                // TODO THIS LINE CAUSES THE STREAK ERROR
-                //Draw.line(this.surface.pen, this.surface.fCtx,
-                //    this.surface.pen.history[3], current, 0,
-                //    this.surface.pen.color, 10);
-            //}
+            let pt = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+            this.bus.publish('draw', {
+                type: 'endStroke',
+                data: {id: e.pointerId, point: pt },
+            });
         }
     }
 }

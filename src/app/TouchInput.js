@@ -3,13 +3,14 @@ import { Browser } from "./Browser.js";
 const TOUCH_ACTIONS = ["touchstart", "touchmove", "touchend", "touchcancel"];
 
 export class TouchInput {
-    constructor(surface) {
+    constructor(bus, surface) {
+        this.bus = bus;
+
         this.disableTouches(surface);
 
         let menu = document.getElementById("menu-container");
 
         if ('ontouchstart' in window) {
-            this.surface = surface;
             this.width = Browser.width;
             this.height = Browser.height;
 
@@ -50,7 +51,11 @@ export class TouchInput {
                 Browser.scale(pen.clientY)
             ];
 
-            this.surface.penStart(pen.identifier, "pen", ...pt);
+            /*this.surface.penStart(pen.identifier, "pen", ...pt);*/
+            this.bus.publish('draw', {
+                type: 'newStroke',
+                data: { id: pen.identifier, point: pt, tip: "pen" },
+            });
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -58,7 +63,11 @@ export class TouchInput {
                     Browser.scale(eraser.clientY)
                 ];
 
-                this.surface.penStart(eraser.identifier, "eraser", ...pt);
+                /*this.surface.penStart(eraser.identifier, "eraser", ...pt);*/
+                this.bus.publish('draw', {
+                    type: 'newStroke',
+                    data: { id: eraser.identifier, point: pt, tip: "eraser" },
+                });
             }
         }
     }
@@ -74,7 +83,11 @@ export class TouchInput {
                 Browser.scale(pen.clientY)
             ];
 
-            this.surface.penMove(pen.identifier, ...pt);
+            /*this.surface.penMove(pen.identifier, ...pt);*/
+            this.bus.publish('draw', {
+                type: 'addStroke',
+                data: { id: pen.identifier, point: pt, tip: "pen" },
+            });
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -82,7 +95,11 @@ export class TouchInput {
                     Browser.scale(eraser.clientY)
                 ];
 
-                this.surface.penMove(eraser.identifier, ...pt);
+                /*this.surface.penMove(eraser.identifier, ...pt);*/
+                this.bus.publish('draw', {
+                    type: 'addStroke',
+                    data: { id: eraser.identifier, point: pt, tip: "eraser" },
+                });
             }
         }
     }
@@ -94,7 +111,11 @@ export class TouchInput {
                 Browser.scale(touch.clientY)
             ];
 
-            this.surface.penEnd(touch.identifier, ...pt);
+            /*this.surface.penEnd(touch.identifier, ...pt);*/
+            this.bus.publish('draw', {
+                type: 'endStroke',
+                data: { id: pen.identifier, point: pt, tip: "pen" },
+            });
         }
 
         return;
@@ -102,7 +123,11 @@ export class TouchInput {
         let pens = this.getPens(e.touches);
         let erasers = this.getErasers(e.touches);
 
-        this.surface.penEnd(pen.identifier, ...pt);
+        /*this.surface.penEnd(pen.identifier, ...pt);*/
+        this.bus.publish('draw', {
+            type: 'endStroke',
+            data: { id: pen.identifier, point: pt, tip: "pen" },
+        });
         if (pens.length > 0) {
             let pen = pens[0];
             let pt = [
@@ -116,7 +141,11 @@ export class TouchInput {
                     Browser.scale(eraser.clientX),
                     Browser.scale(eraser.clientY)
                 ];
-                this.surface.penEnd(eraser.identifier, ...pt);
+                /*this.surface.penEnd(eraser.identifier, ...pt);*/
+                this.bus.publish('draw', {
+                    type: 'endStroke',
+                    data: { id: eraser.identifier, point: pt, tip: "eraser" },
+                });
             }
         }
     }
@@ -167,23 +196,5 @@ export class TouchInput {
         }
 
         return erasers;
-    }
-
-    touchHere(tp) {
-        if (tp.touchType=="stylus") {
-            let t3 = [
-                Browser.scale(eraser.clientX),
-                Browser.scale(eraser.clientY)
-            ];
-            this.surface.pen.id = tp.identifier;
-            this.surface.pen.type = "pen";
-            this.surface.pen.tip = "pen";
-
-            this.surface.pen.pressure = tp.force;
-            // TODO fix width
-            this.surface.pen.draw(fCtx, t3, 5);
-        } else if (tp.touchType=="touch" && touchEnabled) {
-            // touch support
-        }
     }
 }
