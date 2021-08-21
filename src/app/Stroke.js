@@ -3,10 +3,11 @@
 import { StrokePoint } from "./StrokePoint.js";
 
 export class Stroke {
-    constructor(id, type) {
-        this._deleted = false;
+    constructor(id, type, tip) {
         this._id = id;
         this._type = type || "pen";
+        this._tip = tip;
+        this._deleted = false;
 
         this._path = [];
     }
@@ -21,12 +22,22 @@ export class Stroke {
 
     get type() { return this._type }
 
+    get tip() { return this._tip }
+
     get deleted() { return this._deleted }
 
     get path() {
         // return a copy of the path
         console.log("warning, we made a copy of the path!");
         return JSON.parse(this.toString());
+    }
+
+    get current() {
+        return this._path[this._path.length-1];
+    }
+
+    get previous() {
+        return this._path[this._path.length-2];
     }
 
     get last() {

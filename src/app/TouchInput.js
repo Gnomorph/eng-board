@@ -52,9 +52,13 @@ export class TouchInput {
             ];
 
             /*this.surface.penStart(pen.identifier, "pen", ...pt);*/
-            this.bus.publish('draw', {
+            this.bus.publish('input', {
                 type: 'newStroke',
-                data: { id: pen.identifier, point: pt, tip: "pen" },
+                data: {
+                    id: pen.identifier,
+                    point: pt,
+                    tip: "pen"
+                },
             });
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
@@ -64,7 +68,7 @@ export class TouchInput {
                 ];
 
                 /*this.surface.penStart(eraser.identifier, "eraser", ...pt);*/
-                this.bus.publish('draw', {
+                this.bus.publish('input', {
                     type: 'newStroke',
                     data: { id: eraser.identifier, point: pt, tip: "eraser" },
                 });
@@ -84,7 +88,7 @@ export class TouchInput {
             ];
 
             /*this.surface.penMove(pen.identifier, ...pt);*/
-            this.bus.publish('draw', {
+            this.bus.publish('input', {
                 type: 'addStroke',
                 data: { id: pen.identifier, point: pt, tip: "pen" },
             });
@@ -96,7 +100,7 @@ export class TouchInput {
                 ];
 
                 /*this.surface.penMove(eraser.identifier, ...pt);*/
-                this.bus.publish('draw', {
+                this.bus.publish('input', {
                     type: 'addStroke',
                     data: { id: eraser.identifier, point: pt, tip: "eraser" },
                 });
@@ -112,7 +116,7 @@ export class TouchInput {
             ];
 
             /*this.surface.penEnd(touch.identifier, ...pt);*/
-            this.bus.publish('draw', {
+            this.bus.publish('input', {
                 type: 'endStroke',
                 data: { id: pen.identifier, point: pt, tip: "pen" },
             });
@@ -124,7 +128,7 @@ export class TouchInput {
         let erasers = this.getErasers(e.touches);
 
         /*this.surface.penEnd(pen.identifier, ...pt);*/
-        this.bus.publish('draw', {
+        this.bus.publish('input', {
             type: 'endStroke',
             data: { id: pen.identifier, point: pt, tip: "pen" },
         });
@@ -142,7 +146,7 @@ export class TouchInput {
                     Browser.scale(eraser.clientY)
                 ];
                 /*this.surface.penEnd(eraser.identifier, ...pt);*/
-                this.bus.publish('draw', {
+                this.bus.publish('input', {
                     type: 'endStroke',
                     data: { id: eraser.identifier, point: pt, tip: "eraser" },
                 });
