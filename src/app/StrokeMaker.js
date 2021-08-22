@@ -7,11 +7,12 @@ class StrokeMaker {
     width = 2;
     color = "black";
     actions = {
-        "newInput": this.newInput.bind(this),
-        "addInput": this.addInput.bind(this),
-        "endInput": this.endInput.bind(this),
-        "setTipColor": this.setTipColor.bind(this),
-        "setTipWidth": this.setTipWidth.bind(this),
+        "newInput": this.newInput,
+        "addInput": this.addInput,
+        "endInput": this.endInput,
+
+        "setTipColor": this.setTipColor,
+        "setTipWidth": this.setTipWidth,
     };
 
     constructor(bus) {
@@ -23,7 +24,9 @@ class StrokeMaker {
 
     // Route the actions coming in from the message bus
     handleBusMessage(data) {
-        if (data.action in this.actions) { this.actions[data.action](data); }
+        if (data.action in this.actions) {
+            this.actions[data.action].call(this, data);
+        }
     }
 
     // Update the current color when a message is received.
