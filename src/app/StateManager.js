@@ -14,6 +14,8 @@ export class StateManager {
     strokeQuad = new QuadTree(0, 2*Browser.width, 0, 2*Browser.height);
 
     actions = {
+        "tryErase": this.findErasedStrokes,
+
         "setTipWidth": this.setTipWidth,
         "setTipColor": this.setTipColor,
 
@@ -47,7 +49,9 @@ export class StateManager {
                 return a;
             }, []).join(', ')
 
-            svg.push(`<polyline fill="none" stroke="${stroke.tip.color}" stroke-width="${stroke.tip.width}" points="${pairs}"></polyline>`);
+            svg.push(`<polyline fill="none" stroke="${stroke.tip.color}"
+                stroke-width="${stroke.tip.width}" points="${pairs}">
+                </polyline>`);
         })
         svg.push("</svg>");
         svg = svg.join('');
@@ -94,7 +98,8 @@ export class StateManager {
             .map(x => x.stroke)
             .filter(stroke => !(stroke._deleted))
             .forEach(stroke => {
-                this.bus.publish('draw', { action: 'drawStroke', stroke:stroke });
+                this.bus.publish('draw',
+                    { action: 'drawStroke', stroke:stroke });
             });
     }
 
@@ -105,7 +110,13 @@ export class StateManager {
             this.strokeOrder = this.clearStack.pop();
             this.undoStack.push({ action: "clear" });
         } else if (this.strokeOrder.length > 0) {
-            this.undoStack.push(this.strokeOrder.pop());
+            let action = this.strokeOrder.pop();
+
+            if (action.action === "delete") {
+                action.stroke._deleted = false;
+            }
+
+            this.undoStack.push(action);
         }
 
         // TODO: We need to handle undelete
@@ -134,7 +145,7 @@ export class StateManager {
                 // handle the delete action
                 let stroke = action.stroke;
 
-                stroke._deleted = false;
+                stroke._deleted = true;
                 this.strokeOrder.push(action);
             } else if (action?.action === 'stroke') {
                 this.strokeOrder.push(action);
@@ -227,21 +238,22 @@ export class StateManager {
         }
     }
 
-    findErasedStrokes(eraser) {
-        let [x1, y1] = eraser.previous;
-        let [x2, y2] = eraser.current;
+    findErasedStrokes(data) {
+        let [x1, y1] = data.stroke.previous.point;
+        let [x2, y2] = data.stroke.current.point;
 
         let strokeSegment = new StrokeSegment(null, [x1, y1], [x2, y2]);
 
-        for (let data of this.strokeQuad.getRect(...strokeSegment)) {
-            if (strokeSegment.intersects(data._data)) {
-                this.deleteStroke(data._data.strokeSegment);
+        for (let item of this.strokeQuad.getRect(...strokeSegment)) {
+            if (strokeSegment.intersects(item._data)) {
+                this.deleteStroke(item._data.stroke);
+                this.undoStack.length = 0;
             }
         }
     }
 
     deleteStroke(stroke) {
-        data._data.strokeSegment._deleted = true;
+        stroke._deleted = true;
 
         // add this action into the event list history
         this.strokeOrder.push({ action: "delete", stroke: stroke });
@@ -251,10 +263,14 @@ export class StateManager {
     }
 
     rebuildStrokeQuad() {
+        this.strokeQuad.purge();
+
         let strokes = this.strokeOrder
             .filter(x => x.action === 'stroke')
-            .map(x => x.stroke);
-        this.strokeQuad.rebuild(this.strokeOrder);
+            .map(x => x.stroke)
+            .forEach(stroke => {
+                this.addToQuadTree(stroke);
+            });
     }
 
     addToQuadTree(stroke) {
@@ -276,5 +292,4 @@ export class StateManager {
             prev = current;
         }
     }
-
 }

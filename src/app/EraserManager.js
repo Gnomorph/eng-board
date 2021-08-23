@@ -19,8 +19,9 @@ export class EraserManager {
             .map(eraser => {
                 let tip = new DrawTip('pen', 1, 'red');
                 let stroke = new Stroke(eraser.id, 'pen', tip);
-                stroke.addXY(eraser.previous[0], eraser.previous[1]);
-                stroke.addXY(eraser.current[0], eraser.current[1]);
+
+                stroke.add(eraser.previous);
+                stroke.add(eraser.current);
 
                 return stroke;
             })
@@ -34,7 +35,7 @@ export class EraserManager {
             let stroke = data.stroke;
 
             let eraser = new EraserStroke(stroke.id, 'standard');
-            eraser.addXY();
+            eraser.add(data.stroke.last);
             this.openErasers[stroke.id] = eraser;
         }
     }
@@ -42,8 +43,10 @@ export class EraserManager {
     addStroke(data) {
         if (data.id in this.openErasers) {
             let eraser = this.openErasers[data.id];
-            eraser.add(data.point);
 
+            eraser.addXY(...data.point);
+
+            this.bus.publish('stroke', { action: 'tryErase', stroke: eraser });
             this.bus.publish('draw', { action: 'requestRedraw' });
         }
     }
@@ -54,7 +57,6 @@ export class EraserManager {
             this.bus.publish('draw', { action: 'requestRedraw' });
         }
     }
-
 }
 
 function makeHandler() {

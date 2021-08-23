@@ -7,6 +7,8 @@ export class EraserStroke {
 
         this._curr;
         this._prev;
+
+        this.addXY(x, y);
     }
 
     get id() { return this._id }
@@ -27,8 +29,13 @@ export class EraserStroke {
     }
 
     add(point) {
-        this._prev = this._curr;
-        this._curr = point;
+        if (point instanceof StrokePoint) {
+            this._prev = this._curr;
+            this._curr = point;
+
+        } else {
+            throw ("not StrokePoint");
+        }
     }
 
     // TODO: UPDATE THIS OR REMOVE

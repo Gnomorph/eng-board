@@ -16,7 +16,7 @@ export class StrokePoint {
         this._tilty = tilty || 0;
     }
 
-    //get point() { return [] }
+    get point() { return [ this.x, this.y ] }
 
     get x() { return this._x; }
     //set x(value) { return this._x = value; }
