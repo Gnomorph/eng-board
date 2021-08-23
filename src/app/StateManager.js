@@ -1,5 +1,7 @@
 import { Browser } from "./Browser.js";
+import { DrawTip } from "./DrawTip.js";
 import { Stroke } from "./Stroke.js";
+import { Eraser } from "./Eraser.js";
 import { QuadTree } from "./QuadTree.js";
 import { StrokeSegment } from "./StrokeSegment.js";
 
@@ -12,6 +14,7 @@ class StateManager {
     undoStack = [];
     strokeOrder = [];
     openStrokes = {};
+    openErasers = {};
     strokeQuad = new QuadTree(0, 2*Browser.width, 0, 2*Browser.height);
 
     actions = {
@@ -87,11 +90,26 @@ class StateManager {
     // TODO: you need to purge the quadTree and rebuild it
     redraw() {
         this.bus.publish('draw', { action: 'clearScreen' });
-        for (let stroke of this.strokeOrder) {
-            if (!stroke.deleted) {
+
+        this.strokeOrder
+            .filter(stroke => !(stroke._deleted))
+            .forEach(stroke => {
                 this.bus.publish('draw', { action: 'drawStroke', stroke:stroke });
-            }
-        }
+            });
+
+        Object.keys(this.openErasers)
+            .map(x => this.openErasers[x])
+            .map(eraser => {
+                let tip = new DrawTip('pen', 1, 'red');
+                let stroke = new Stroke(eraser.id, 'pen', tip);
+                stroke.addXY(eraser.previous[0], eraser.previous[1]);
+                stroke.addXY(eraser.current[0], eraser.current[1]);
+
+                return stroke;
+            })
+            .forEach(stroke => {
+                this.bus.publish('draw', { action: 'drawStroke', stroke:stroke });
+            });
     }
 
     // actions
@@ -106,8 +124,6 @@ class StateManager {
             this.undoStack.push(this.strokeOrder.pop());
             this.redraw();
         }
-
-
 
         // shuttle the last command into a temporary future stack
         // clear the surface, then repeat all commands since the last clear
@@ -169,7 +185,6 @@ class StateManager {
 
         // tell the surface to clear it's contents
         this.bus.publish('draw', { action: 'clearScreen' });
-        console.log("clearScreen", this.clearStack);
     }
 
     deleteStroke(data) {
@@ -190,7 +205,15 @@ class StateManager {
         //this.undoStack.length = 0;
 
         let stroke = data.stroke;
-        if (stroke instanceof Stroke) {
+        //if (stroke && stroke.tip && stroke.tip.type === "eraser") {
+        if (stroke && stroke.type === "eraser") {
+            let eraser = new Eraser(stroke.id, 'standard');
+            eraser.addXY();
+            this.openErasers[stroke.id] = eraser;
+
+            // TODO: Send off a message to the module that will look for quad tree colissions
+
+        } else if (stroke instanceof Stroke) {
             // create an entry for this stroke in openStrokes
             this.openStrokes[stroke.id] = stroke;
 
@@ -204,19 +227,27 @@ class StateManager {
     }
 
     addStroke(data) {
-        let stroke = this.openStrokes[data.id];
+        if (data.id in this.openErasers) {
+            let eraser = this.openErasers[data.id];
+            eraser.add(data.point);
 
-        // add a point into the stroke's list of points
-        let [ x, y ] = data.point;
-        let [ tiltX, tiltY ] = data.tilt || [undefined, undefined];
-        stroke.addXY(x, y, tiltX, tiltY);
+            this.redraw();
+        } else if (data.id in this.openStrokes) {
 
-        // draw a stroke segment onto the surface
-        //this.surface.drawLine(stroke);
-        this.bus.publish('draw', { action: 'drawLine', stroke: stroke });
+            let stroke = this.openStrokes[data.id];
 
-        // optionally, add this segment into the quad tree (or all on end)
-        // TODO: in order to make drawing fast, don't add.
+            // add a point into the stroke's list of points
+            let [ x, y ] = data.point;
+            let [ tiltX, tiltY ] = data.tilt || [undefined, undefined];
+            stroke.addXY(x, y, tiltX, tiltY);
+
+            // draw a stroke segment onto the surface
+            //this.surface.drawLine(stroke);
+            this.bus.publish('draw', { action: 'drawLine', stroke: stroke });
+
+            // optionally, add this segment into the quad tree (or all on end)
+            // TODO: in order to make drawing fast, don't add.
+        }
     }
 
     // add this action into the event list history
@@ -228,14 +259,19 @@ class StateManager {
 
     // finalize the given stroke (remove it from openStrokes)
     endStroke(data) {
-        this.undoStack.length = 0;
+        if (data.id in this.openErasers) {
+            delete  this.openErasers[data.id];
+            this.redraw();
+        } else if (data.id in this.openStrokes) {
+            this.undoStack.length = 0;
 
-        let stroke = this.openStrokes[data.id];
+            let stroke = this.openStrokes[data.id];
 
-        // add this stroke to the quadtree
-        this.addToQuadTree(stroke);
+            // add this stroke to the quadtree
+            this.addToQuadTree(stroke);
 
-        delete  this.openStrokes[data.id];
+            delete  this.openStrokes[data.id];
+        }
     }
 
     addToQuadTree(stroke) {
