@@ -1,6 +1,6 @@
 import { StrokePoint } from "./StrokePoint.js"
 
-export class Eraser {
+export class EraserStroke {
     constructor(id, eraserType, x, y) {
         this._id = id;
         this._type = eraserType || 'standard';

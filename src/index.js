@@ -9,6 +9,7 @@ import { TouchInput } from "./app/TouchInput.js";
 import { MessageBus } from "./app/MessageBus.js";
 import { NetworkBridge } from "./app/NetworkBridge.js";
 import { StateManager } from "./app/StateManager.js";
+import { EraserManager } from "./app/EraserManager.js";
 import { StrokeMaker } from "./app/StrokeMaker.js";
 
 // All modules interact through a Message Bus
@@ -19,6 +20,7 @@ let surface = new Surface(bus, document.getElementById("bg-board"));
 
 new NetworkBridge(bus);
 new StateManager(bus, surface);
+new EraserManager(bus);
 new StrokeMaker(bus);
 
 new Menu(bus);

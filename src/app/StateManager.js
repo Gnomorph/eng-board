@@ -1,7 +1,4 @@
 import { Browser } from "./Browser.js";
-import { DrawTip } from "./DrawTip.js";
-import { Stroke } from "./Stroke.js";
-import { Eraser } from "./Eraser.js";
 import { QuadTree } from "./QuadTree.js";
 import { StrokeSegment } from "./StrokeSegment.js";
 
@@ -9,12 +6,11 @@ import { StrokeSegment } from "./StrokeSegment.js";
 // It will be responsible for mediating messages from the network and
 // locally created input. It will also manage the state of the surface
 // by redrawing the history onto a clean board when necessary.
-class StateManager {
+export class StateManager {
     clearStack = [];
     undoStack = [];
     strokeOrder = [];
     openStrokes = {};
-    openErasers = {};
     strokeQuad = new QuadTree(0, 2*Browser.width, 0, 2*Browser.height);
 
     actions = {
@@ -29,7 +25,8 @@ class StateManager {
         "undo": this.undo,
         "redo": this.redo,
 
-        "resize": this.redraw,
+        //"resize": this.redraw,
+        "redraw": this.redraw,
         "saveSVG": this.saveSVG,
     };
 
@@ -41,7 +38,10 @@ class StateManager {
 
         svg.push(`<svg ${header} width="${width}" height="${height}">`);
 
-        this.strokeOrder.forEach(stroke => {
+        this.strokeOrder
+            .filter(x => x.action==='stroke')
+            .map(x => x.stroke)
+            .forEach(stroke => {
             let pairs = stroke._path.reduce((a, c) => {
                 a.push(`${c._x} ${c._y}`) 
                 return a;
@@ -78,6 +78,7 @@ class StateManager {
         bus.subscribe("receive", this.handleBusMessage.bind(this));
         bus.subscribe("timeline", this.handleBusMessage.bind(this));
         bus.subscribe("events", this.handleBusMessage.bind(this));
+        bus.subscribe("draw", this.handleBusMessage.bind(this));
     }
 
     handleBusMessage(data) {
@@ -87,56 +88,34 @@ class StateManager {
         }
     }
 
-    // TODO: you need to purge the quadTree and rebuild it
     redraw() {
-        this.bus.publish('draw', { action: 'clearScreen' });
-
         this.strokeOrder
+            .filter(action => action.action === 'stroke')
+            .map(x => x.stroke)
             .filter(stroke => !(stroke._deleted))
-            .forEach(stroke => {
-                this.bus.publish('draw', { action: 'drawStroke', stroke:stroke });
-            });
-
-        Object.keys(this.openErasers)
-            .map(x => this.openErasers[x])
-            .map(eraser => {
-                let tip = new DrawTip('pen', 1, 'red');
-                let stroke = new Stroke(eraser.id, 'pen', tip);
-                stroke.addXY(eraser.previous[0], eraser.previous[1]);
-                stroke.addXY(eraser.current[0], eraser.current[1]);
-
-                return stroke;
-            })
             .forEach(stroke => {
                 this.bus.publish('draw', { action: 'drawStroke', stroke:stroke });
             });
     }
 
-    // actions
     // TODO: this needs to be more advanced
     undo(data) {
         // FROM SURFACE'S OLD LOGIC
         if (this.strokeOrder.length == 0 && this.clearStack.length > 0) {
             this.strokeOrder = this.clearStack.pop();
-            this.undoStack.push("clear");
-            this.redraw();
+            this.undoStack.push({ action: "clear" });
         } else if (this.strokeOrder.length > 0) {
             this.undoStack.push(this.strokeOrder.pop());
-            this.redraw();
         }
 
-        // shuttle the last command into a temporary future stack
-        // clear the surface, then repeat all commands since the last clear
-
-        // if there isn't an actions in the most recent commands
-        // then pop a clear bundle from it's stack and unpack it
-        // replay all commands onto the current screen
-        // don't forget to log a clear action into the future stack
-
+        // TODO: We need to handle undelete
         // every undo should log an appropriate "reverse" action to be
         //   able to redo this action.
         // actually, every action itself may need to have some information
         //   about how to undo it: setTipWidth => what was the last width?
+
+        this.rebuildStrokeQuad();
+        this.bus.publish('draw', { action: 'requestRedraw' });
     }
 
     redo(data) {
@@ -147,22 +126,24 @@ class StateManager {
         if (this.undoStack.length > 0) {
             let action = this.undoStack.pop();
 
-            if (action === "clear") {
+            if (action?.action === 'clear') {
                 // Handle a clear action redo
                 this.clearStack.push(this.strokeOrder);
                 this.strokeOrder = [];
+            } else if (action?.action === 'delete') {
+                // handle the delete action
+                let stroke = action.stroke;
 
-                this.strokeQuad.purge();
-
-                // tell the surface to clear it's contents
-                this.bus.publish('draw', { action: 'clearScreen' });
-            } else {
+                stroke._deleted = false;
                 this.strokeOrder.push(action);
-
-                // TODO: you also probably need to add this to the quad tree
+            } else if (action?.action === 'stroke') {
+                this.strokeOrder.push(action);
+            } else {
+                console.log("OOPS, we missed an action");
             }
 
-            this.redraw();
+            this.bus.publish('draw', { action: 'requestRedraw' });
+            this.rebuildStrokeQuad();
         }
     }
 
@@ -177,18 +158,11 @@ class StateManager {
     clearScreen(data) {
         this.undoStack.length = 0;
 
-        // store the list of strokes into a list of clears
         this.clearStack.push(this.strokeOrder);
         this.strokeOrder = [];
 
-        this.strokeQuad.purge();
-
-        // tell the surface to clear it's contents
-        this.bus.publish('draw', { action: 'clearScreen' });
-    }
-
-    deleteStroke(data) {
-        // add this action into the event list history
+        this.rebuildStrokeQuad();
+        this.bus.publish('draw', { action: 'requestRedraw' });
     }
 
     drawStroke(data) {
@@ -201,39 +175,23 @@ class StateManager {
     // assume that all start points must have an origin x, y for the stoke
     newStroke(data) {
         // Maybe you want to destory the undo stack early?
-
         //this.undoStack.length = 0;
 
-        let stroke = data.stroke;
-        //if (stroke && stroke.tip && stroke.tip.type === "eraser") {
-        if (stroke && stroke.type === "eraser") {
-            let eraser = new Eraser(stroke.id, 'standard');
-            eraser.addXY();
-            this.openErasers[stroke.id] = eraser;
+        if (data?.stroke?.type == 'pen') {
+            let stroke = data.stroke;
 
-            // TODO: Send off a message to the module that will look for quad tree colissions
-
-        } else if (stroke instanceof Stroke) {
             // create an entry for this stroke in openStrokes
             this.openStrokes[stroke.id] = stroke;
 
             // we probably want to do this at the end?
-            this.strokeOrder.push(stroke);
+            this.strokeOrder.push({ action: 'stroke', stroke: stroke});
 
-            //this.surface.drawPoint(stroke);
             this.bus.publish('draw', { action: 'drawPoint', stroke: stroke });
-            //Draw.dot(this.bCtx, stroke.last.x, stroke.last.y, 2);
         }
     }
 
     addStroke(data) {
-        if (data.id in this.openErasers) {
-            let eraser = this.openErasers[data.id];
-            eraser.add(data.point);
-
-            this.redraw();
-        } else if (data.id in this.openStrokes) {
-
+        if (data.id in this.openStrokes) {
             let stroke = this.openStrokes[data.id];
 
             // add a point into the stroke's list of points
@@ -259,19 +217,44 @@ class StateManager {
 
     // finalize the given stroke (remove it from openStrokes)
     endStroke(data) {
-        if (data.id in this.openErasers) {
-            delete  this.openErasers[data.id];
-            this.redraw();
-        } else if (data.id in this.openStrokes) {
+        if (data.id in this.openStrokes) {
             this.undoStack.length = 0;
 
-            let stroke = this.openStrokes[data.id];
-
             // add this stroke to the quadtree
-            this.addToQuadTree(stroke);
+            this.addToQuadTree(this.openStrokes[data.id]);
 
             delete  this.openStrokes[data.id];
         }
+    }
+
+    findErasedStrokes(eraser) {
+        let [x1, y1] = eraser.previous;
+        let [x2, y2] = eraser.current;
+
+        let strokeSegment = new StrokeSegment(null, [x1, y1], [x2, y2]);
+
+        for (let data of this.strokeQuad.getRect(...strokeSegment)) {
+            if (strokeSegment.intersects(data._data)) {
+                this.deleteStroke(data._data.strokeSegment);
+            }
+        }
+    }
+
+    deleteStroke(stroke) {
+        data._data.strokeSegment._deleted = true;
+
+        // add this action into the event list history
+        this.strokeOrder.push({ action: "delete", stroke: stroke });
+
+        this.rebuildStrokeQuad();
+        this.bus.publish('draw', { action: 'requestRedraw' });
+    }
+
+    rebuildStrokeQuad() {
+        let strokes = this.strokeOrder
+            .filter(x => x.action === 'stroke')
+            .map(x => x.stroke);
+        this.strokeQuad.rebuild(this.strokeOrder);
     }
 
     addToQuadTree(stroke) {
@@ -295,5 +278,3 @@ class StateManager {
     }
 
 }
-
-export { StateManager }

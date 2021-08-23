@@ -48,6 +48,11 @@ export class QuadTree {
         return this.root.getRect(left, right, top, bottom);
     }
 
+    // purge and rebuild with the given data
+    rebuild(lines) {
+        this.purge();
+    }
+
     // recursively delete all references to child nodes and data
     purge() {
         this.root.purge();

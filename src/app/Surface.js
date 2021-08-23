@@ -2,7 +2,6 @@
 
 import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
-import { QuadTree } from "./QuadTree.js";
 import * as Draw from "./Draw.js";
 import { DrawTip } from "./DrawTip.js";
 
@@ -11,10 +10,10 @@ import { StrokeSegment } from "./StrokeSegment.js";
 
 export class Surface {
     actions = {
-        "clearScreen": this.clearScreen,
         "drawStroke": this.drawStroke,
         "drawLine": this.drawLine,
         "drawPoint": this.drawPoint,
+        "requestRedraw": this.requestRedraw,
     }
 
     get width() { return Browser.width; }
@@ -115,8 +114,14 @@ export class Surface {
         }
     }
 
-    clearScreen(data) {
+    clearScreen() {
         this.greenScreen();
+    }
+
+    requestRedraw() {
+        this.clearScreen();
+
+        this.bus.publish('draw', { action: 'redraw' });
     }
 
     buildGreenScreen() {
@@ -158,93 +163,3 @@ function getMinimalContext (canvas) {
     ctx.imageSmoothingEnabled = false;
     return ctx;
 }
-
-/****************
- * OLD FUNCTIONS
- ****************/
-
-/*
-    penStart(id, type, x, y, tiltX, tiltY) {
-        // get undo ready
-        if (id in this.openStrokes) {
-            this.openStrokes[id].addXY(x, y, tiltX, tiltY);
-            this.openStrokes[id].kill(null, null);
-        } else {
-            if (stroke.type == "pen") {
-                Draw.dot(this.bCtx, stroke.last.x, stroke.last.y, 2);
-            } else if (stroke.type == "eraser") {
-                this.eraserStrokeLast = [
-                    stroke.last.x,
-                    stroke.last.y
-                ];
-            }
-        }
-    }
-    */
-
-
-                    /*
-
-                        // assume that the stroke will always have an initial point
-    penMove(id, x, y, tiltX, tiltY) {
-        if (!(id in this.openStrokes)) { return; }
-
-        let stroke = this.openStrokes[id];
-
-        // draw the stroke to the screen
-        if(stroke.type == "pen") {
-        } else if (stroke.type == "eraser") {
-            this.update();
-            if (this.eraserStrokeLast) {
-                this.strokeErase(
-                    this.eraserStrokeLast[0], this.eraserStrokeLast[1],
-                    x, y);
-            }
-
-            this.eraserStrokeLast[0] = x;
-            this.eraserStrokeLast[1] = y;
-        }
-
-        stroke.addXY(x, y, tiltX, tiltY);
-    }
-
-    penEnd(id) {
-        if (!(id in this.openStrokes)) { return; }
-
-        if (stroke.type == "pen") {
-        } else if (stroke.type == "eraser") {
-            this.eraserStrokeLast = [];
-            this.update();
-        }
-    }
-    */
-
-/*
-
-    eraseStroke(stroke) {
-        let last = null;
-        for (let point of stroke) {
-            if (last) {
-                Draw.erase(this.bCtx, this.sheetCtx, last.x, last.y, point.x, point.y);
-            }
-
-            last = point;
-        }
-    }
-
-    strokeErase(x1, y1, x2, y2) {
-        let stroke = new StrokeSegment(null, [x1, y1], [x2, y2]);
-
-        //console.log("Erase:", this.strokeQuad.getRect(...stroke));
-        // TODO now you can erase stuff
-        // Check all the strokes to see if they cross anything in the quadtree
-
-        Draw.line(this.bCtx, x1, y1, x2, y2, 1, "red");
-
-        for (let data of this.strokeQuad.getRect(...stroke)) {
-            if (stroke.intersects(data._data)) {
-                data._data.stroke._deleted = true;
-            }
-        }
-    }
-*/
