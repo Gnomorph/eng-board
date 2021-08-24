@@ -16,6 +16,28 @@ export class PointerInput {
         // turn off context menues
         surface.addEventListener('contextmenu', (e) => e.preventDefault());
     }
+
+    newInput(id, type, point, tilt, pressure) {
+        data = { action: 'newInput', id: id, type: type, point: point };
+
+        if (tilt) { data.tilt = tilt }
+        if (pressure) { data.pressure = pressure }
+
+        this.bus.publish('input', data);
+    }
+
+    addInput(id, point, tilt, pressure) {
+        data = { action: 'addInput', id: id, point: point };
+
+        if (tilt) { data.tilt = tilt }
+        if (pressure) { data.pressure = pressure }
+
+        this.bus.publish('input', data);
+    }
+
+    endInput(id) {
+        this.bus.publish('input', { action: 'endInput', id: id });
+    }
 }
 
 function start(e) {
@@ -25,12 +47,12 @@ function start(e) {
     let tilt = [ e.tiltX, e.tiltY ];
     if (e.pointerType=="pen") {
         let type = (tilt[0] || tilt[1]) ? "pen" : "eraser";
-        this.bus.newInput(e.pointerId, type, point, tilt);
+        this.newInput(e.pointerId, type, point, tilt);
     } else if (e.pointerType == "mouse") {
         // button 2 is the right click, button 4 is (?) the wheel
         let type = (e.buttons == 2) ? "eraser" : "pen";
         this.mouseInput = new MouseInput(type);
-        this.bus.newInput(this.mouseInput.id, type, point);
+        this.newInput(this.mouseInput.id, type, point);
     }
 }
 
@@ -49,9 +71,9 @@ function move(e) {
     let point = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
     let tilt = [e.tiltX, e.tiltY];
     if (e.pointerType == "pen") {
-        this.bus.addInput(e.pointerId, point, tilt);
+        this.addInput(e.pointerId, point, tilt);
     } else if (e.pointerType == "mouse" && this.mouseInput) {
-        this.bus.addInput(this.mouseInput.id, point, tilt);
+        this.addInput(this.mouseInput.id, point, tilt);
     }
 }
 
@@ -61,8 +83,8 @@ function stop(e) {
     let point = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
 
     if (e.pointerType == "mouse" && this.mouseInput) {
-        this.bus.addInput(this.mouseInput.id, point);
-        this.bus.endInput(this.mouseInput.id, point);
+        this.addInput(this.mouseInput.id, point);
+        this.endInput(this.mouseInput.id, point);
 
         this.mouseInput = undefined;
     } else if (e.pointerType=="pen") {
@@ -70,6 +92,6 @@ function stop(e) {
             return;
         }
 
-        this.bus.endInput(id);
+        this.endInput(id);
     }
 }

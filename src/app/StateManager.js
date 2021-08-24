@@ -77,12 +77,12 @@ export class StateManager {
         // listen to: pen, stroke, receive, timeline
         this.bus = bus;
 
-        bus.subscribe("pen", this.handleBusMessage.bind(this));
-        bus.subscribe("stroke", this.handleBusMessage.bind(this));
-        bus.subscribe("receive", this.handleBusMessage.bind(this));
-        bus.subscribe("timeline", this.handleBusMessage.bind(this));
-        bus.subscribe("events", this.handleBusMessage.bind(this));
-        bus.subscribe("draw", this.handleBusMessage.bind(this));
+        this.bus.subscribe("pen", this.handleBusMessage.bind(this));
+        this.bus.subscribe("stroke", this.handleBusMessage.bind(this));
+        this.bus.subscribe("receive", this.handleBusMessage.bind(this));
+        this.bus.subscribe("timeline", this.handleBusMessage.bind(this));
+        this.bus.subscribe("events", this.handleBusMessage.bind(this));
+        this.bus.subscribe("draw", this.handleBusMessage.bind(this));
     }
 
     handleBusMessage(data) {

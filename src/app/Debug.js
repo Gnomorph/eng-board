@@ -37,7 +37,8 @@ function buildWarn(debug, debugOutput) {
 
 export class Debug {
     constructor(bus, surface) {
-        bus.subscribe("debug", (x) => { console.log("DEBUG:", x); });
+        this.bus = bus;
+        this.bus.subscribe("debug", (x) => { console.log("DEBUG:", x); });
 
         this.debugOutput = document.getElementById("debug-output")
         console.log = buildLog(this, this.debugOutput);

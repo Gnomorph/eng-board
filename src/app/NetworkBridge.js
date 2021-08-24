@@ -8,8 +8,11 @@ class NetworkBridge {
         this.bus = bus;
 
         this.socket = io("localhost:3000");
+
+        // incoming packets from the network
         this.socket.on('draw', this.receive.bind(this));
 
+        // internal packets destined for the network
         this.bus.subscribe("send", this.send.bind(this));
 
     }

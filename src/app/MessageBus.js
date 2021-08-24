@@ -1,46 +1,40 @@
 'use strict'
 
 class MessageBus {
-
     constructor() {
         this.channels = {};
     }
 
-    subscribe(channel, callback) {
-        this.channels[channel] = this.channels[channel] || [];
-        this.channels[channel].push(callback);
+    _publish(src_id, channel, data) {
+        for (let [dst_id, callback] of this.channels[channel] || []) {
+            if (src_id != dst_id) { callback(data); }
+        }
     }
 
-    publish(channel, data) {
-        for (let callback of this.channels[channel] || []) {
-            callback(data);
-        }
+    _subscribe(id, channel, callback) {
+        this.channels[channel] = this.channels[channel] || [];
+        this.channels[channel].push([id, callback]);
     }
 
     /************************
      * Publish Action Methods
      ************************/
 
-    newInput(id, type, point, tilt, pressure) {
-        data = { action: 'newInput', id: id, type: type, point: point };
+    client() {
+        let id = Math.floor(Math.random()*2147483647);
 
-        if (tilt) { data.tilt = tilt }
-        if (pressure) { data.pressure = pressure }
+        let pub = function(channel, data) {
+            this._publish(id, channel, data);
+        };
 
-        this.publish('input', data);
-    }
+        let sub = function(channel, callback) {
+            this._subscribe(id, channel, callback);
+        };
 
-    addInput(id, point, tilt, pressure) {
-        data = { action: 'addInput', id: id, point: point };
-
-        if (tilt) { data.tilt = tilt }
-        if (pressure) { data.pressure = pressure }
-
-        this.publish('input', data);
-    }
-
-    endInput(id) {
-        this.publish('input', { action: 'endInput', id: id });
+        return {
+            publish: pub.bind(this),
+            subscribe: sub.bind(this),
+        };
     }
 }
 

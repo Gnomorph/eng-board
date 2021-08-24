@@ -14,22 +14,22 @@ import { StrokeMaker } from "./app/StrokeMaker.js";
 
 // All modules interact through a Message Bus
 let bus = new MessageBus();
-document.bus = bus;
+//document.bus = bus;
 
-let surface = new Surface(bus, document.getElementById("bg-board"));
+let surface = new Surface(bus.client(), document.getElementById("bg-board"));
 
-new NetworkBridge(bus);
-new StateManager(bus, surface);
-new EraserManager(bus);
-new StrokeMaker(bus);
+new NetworkBridge(bus.client());
+new StateManager(bus.client(), surface);
+new EraserManager(bus.client());
+new StrokeMaker(bus.client());
 
-new Menu(bus);
-new TouchInput(bus, surface);
-new PointerInput(bus, surface);
+new Menu(bus.client());
+new TouchInput(bus.client(), surface);
+new PointerInput(bus.client(), surface);
 
-new Debug(bus, surface);
+new Debug(bus.client(), surface);
 
-bus.publish('tools', {
-    type: 'DrawTip',
-    data: new DrawTip("pen", 5, "#000000", ()=>{}),
-});
+//bus.publish('tools', {
+    //type: 'DrawTip',
+    //data: new DrawTip("pen", 5, "#000000", ()=>{}),
+//});

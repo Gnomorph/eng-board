@@ -23,7 +23,7 @@ export class Surface {
         this.bus = bus;
 
         // All of these commands come from the StateManager
-        bus.subscribe('draw', this.handleBusMessage.bind(this));
+        this.bus.subscribe('draw', this.handleBusMessage.bind(this));
 
         // History and Undo Setup
         this.eraserStrokeLast = [];

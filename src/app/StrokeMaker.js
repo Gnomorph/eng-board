@@ -18,8 +18,8 @@ class StrokeMaker {
     constructor(bus) {
         this.bus = bus;
 
-        bus.subscribe('input', this.handleBusMessage.bind(this));
-        bus.subscribe('pen', this.handleBusMessage.bind(this));
+        this.bus.subscribe('input', this.handleBusMessage.bind(this));
+        this.bus.subscribe('pen', this.handleBusMessage.bind(this));
     }
 
     // Route the actions coming in from the message bus
