@@ -1,8 +1,21 @@
 'use strict'
 
 import { StrokePoint } from "./StrokePoint.js";
+import { DrawTipFactory } from "./DrawTip.js";
 
-export class Stroke {
+function StrokeFactory(data) {
+    let stroke = new Stroke();
+
+    stroke._id = data._id;
+    stroke._type = data._type;
+    stroke._tip = new DrawTipFactory(data._tip);
+    stroke._deleted = data._deleted;
+    stroke._path = data._path;
+
+    return stroke;
+}
+
+class Stroke {
     constructor(id, type, tip) {
         this._id = id;
         this._type = type || "pen";
@@ -10,6 +23,10 @@ export class Stroke {
         this._deleted = false;
 
         this._path = [];
+    }
+
+    factory(data) {
+
     }
 
     *[Symbol.iterator]() {
@@ -71,4 +88,9 @@ export class Stroke {
 
         }
     }
+}
+
+export {
+    Stroke,
+    StrokeFactory,
 }

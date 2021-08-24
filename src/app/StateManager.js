@@ -15,6 +15,7 @@ export class StateManager {
 
     actions = {
         "tryErase": this.findErasedStrokes,
+        "removeStroke": this.deleteStroke,
 
         "setTipWidth": this.setTipWidth,
         "setTipColor": this.setTipColor,
@@ -246,13 +247,19 @@ export class StateManager {
 
         for (let item of this.strokeQuad.getRect(...strokeSegment)) {
             if (strokeSegment.intersects(item._data)) {
-                this.deleteStroke(item._data.stroke);
+                this.bus.publish('draw', { action: 'removeStroke', stroke: item._data.stroke });
+                //this.deleteStroke(item._data.stroke);
                 this.undoStack.length = 0;
             }
         }
     }
 
-    deleteStroke(stroke) {
+    // TODO: There is a problem here. We depended on object references to be
+    // able to backtrack out and find the stroke. but over the network we will
+    // have no such links. We must explicitly find the references
+    deleteStroke(data) {
+    //deleteStroke(stroke) {
+        let stroke = data.stroke;
         stroke._deleted = true;
 
         // add this action into the event list history

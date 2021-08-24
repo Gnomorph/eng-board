@@ -2,7 +2,12 @@
 
 import { Browser } from "./Browser.js";
 
-export class StrokePoint {
+function StrokePointFactory(data) {
+    return new StrokePoint(data._x, data._y,
+        data._pressure, data._tiltx, data._tilty);
+}
+
+class StrokePoint {
     constructor(x, y, pressure, tiltx, tilty) {
         this._x = x;
         this._y = y;
@@ -31,4 +36,9 @@ export class StrokePoint {
     toString() {
         return "(" + this._x + ", " + this._y + ")";
     }
+}
+
+export {
+    StrokePoint,
+    StrokePointFactory,
 }

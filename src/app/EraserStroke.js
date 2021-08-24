@@ -1,6 +1,21 @@
-import { StrokePoint } from "./StrokePoint.js"
+import { StrokePoint, StrokePointFactory } from "./StrokePoint.js"
 
-export class EraserStroke {
+function EraserStrokeFactory(data) {
+    let eraserStroke = new EraserStroke(data._id, data._type);
+
+    eraserStroke.addXY(data._prev);
+    eraserStroke.addXY(data._curr);
+
+    //eraserStroke._id = data._id;
+    //eraserStroke._type = data._type;
+
+    //eraserStroke._curr = StrokePointFactory(data._curr);
+    //eraserStroke._prev = StrokePointFactory(data._prev);
+
+    return eraserStroke;
+}
+
+class EraserStroke {
     constructor(id, eraserType, x, y) {
         this._id = id;
         this._type = eraserType || 'standard';
@@ -54,4 +69,9 @@ export class EraserStroke {
 
         }
     }
+}
+
+export {
+    EraserStroke,
+    EraserStrokeFactory,
 }
