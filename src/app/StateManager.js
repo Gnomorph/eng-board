@@ -28,7 +28,7 @@ export class StateManager {
         "undo": this.undo,
         "redo": this.redo,
 
-        //"resize": this.redraw,
+        "resize": this.resize,
         "redraw": this.redraw,
         "saveSVG": this.saveSVG,
     };
@@ -75,22 +75,24 @@ export class StateManager {
     }
 
     constructor(bus) {
-        // listen to: pen, stroke, receive, timeline
+        // listen to: pen, stroke, timeline
         this.bus = bus;
 
         this.bus.subscribe("pen", this.handleBusMessage.bind(this));
         this.bus.subscribe("stroke", this.handleBusMessage.bind(this));
-        this.bus.subscribe("receive", this.handleBusMessage.bind(this));
         this.bus.subscribe("timeline", this.handleBusMessage.bind(this));
         this.bus.subscribe("events", this.handleBusMessage.bind(this));
         this.bus.subscribe("draw", this.handleBusMessage.bind(this));
     }
 
-    handleBusMessage(data) {
-        let action = data.action;
+    handleBusMessage(action, data) {
         if (action in this.actions) {
             this.actions[action].call(this, data);
         }
+    }
+
+    resize() {
+        this.bus.publish('draw', 'requestRedraw');
     }
 
     redraw() {
@@ -99,8 +101,7 @@ export class StateManager {
             .map(x => x.stroke)
             .filter(stroke => !(stroke._deleted))
             .forEach(stroke => {
-                this.bus.publish('draw',
-                    { action: 'drawStroke', stroke:stroke });
+                this.bus.publish('draw', 'drawStroke', stroke);
             });
     }
 
@@ -127,7 +128,7 @@ export class StateManager {
         //   about how to undo it: setTipWidth => what was the last width?
 
         this.rebuildStrokeQuad();
-        this.bus.publish('draw', { action: 'requestRedraw' });
+        this.bus.publish('draw', 'requestRedraw');
     }
 
     redo(data) {
@@ -154,7 +155,7 @@ export class StateManager {
                 console.log("OOPS, we missed an action");
             }
 
-            this.bus.publish('draw', { action: 'requestRedraw' });
+            this.bus.publish('draw', 'requestRedraw');
             this.rebuildStrokeQuad();
         }
     }
@@ -174,7 +175,7 @@ export class StateManager {
         this.strokeOrder = [];
 
         this.rebuildStrokeQuad();
-        this.bus.publish('draw', { action: 'requestRedraw' });
+        this.bus.publish('draw', 'requestRedraw');
     }
 
     drawStroke(data) {
@@ -185,20 +186,18 @@ export class StateManager {
     }
 
     // assume that all start points must have an origin x, y for the stoke
-    newStroke(data) {
+    newStroke(stroke) {
         // Maybe you want to destory the undo stack early?
         //this.undoStack.length = 0;
 
-        if (data?.stroke?.type == 'pen') {
-            let stroke = data.stroke;
-
+        if (stroke?.type == 'pen') {
             // create an entry for this stroke in openStrokes
             this.openStrokes[stroke.id] = stroke;
 
             // we probably want to do this at the end?
             this.strokeOrder.push({ action: 'stroke', stroke: stroke});
 
-            this.bus.publish('draw', { action: 'drawPoint', stroke: stroke });
+            this.bus.publish('draw', 'drawPoint', stroke);
         }
     }
 
@@ -213,7 +212,7 @@ export class StateManager {
 
             // draw a stroke segment onto the surface
             //this.surface.drawLine(stroke);
-            this.bus.publish('draw', { action: 'drawLine', stroke: stroke });
+            this.bus.publish('draw', 'drawLine', stroke);
 
             // optionally, add this segment into the quad tree (or all on end)
             // TODO: in order to make drawing fast, don't add.
@@ -239,16 +238,16 @@ export class StateManager {
         }
     }
 
-    findErasedStrokes(data) {
-        let [x1, y1] = data.stroke.previous.point;
-        let [x2, y2] = data.stroke.current.point;
+    findErasedStrokes(stroke) {
+        let [x1, y1] = stroke.previous.point;
+        let [x2, y2] = stroke.current.point;
 
         let strokeSegment = new StrokeSegment(null, [x1, y1], [x2, y2]);
 
         for (let item of this.strokeQuad.getRect(...strokeSegment)) {
             if (strokeSegment.intersects(item._data)) {
-                this.bus.publish('draw', { action: 'removeStroke', stroke: item._data.stroke });
-                //this.deleteStroke(item._data.stroke);
+                console.log("HELLO");
+                this.bus.broadcast('draw', 'removeStroke', item._data.stroke);
                 this.undoStack.length = 0;
             }
         }
@@ -257,16 +256,15 @@ export class StateManager {
     // TODO: There is a problem here. We depended on object references to be
     // able to backtrack out and find the stroke. but over the network we will
     // have no such links. We must explicitly find the references
-    deleteStroke(data) {
-    //deleteStroke(stroke) {
-        let stroke = data.stroke;
+    deleteStroke(stroke) {
+        console.log("deleting", stroke);
         stroke._deleted = true;
 
         // add this action into the event list history
         this.strokeOrder.push({ action: "delete", stroke: stroke });
 
         this.rebuildStrokeQuad();
-        this.bus.publish('draw', { action: 'requestRedraw' });
+        this.bus.publish('draw', 'requestRedraw');
     }
 
     rebuildStrokeQuad() {

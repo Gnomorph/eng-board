@@ -26,16 +26,16 @@ export class EraserManager {
                 return stroke;
             })
             .forEach(stroke => {
-                this.bus.publish('draw', { action: 'drawStroke', stroke:stroke });
+                this.bus.publish('draw', 'drawStroke', stroke);
             });
     }
 
-    newStroke(data) {
-        if (data?.stroke?.type === 'eraser') {
-            let stroke = data.stroke;
+    newStroke(stroke) {
+        if (stroke?.type === 'eraser') {
+            //let stroke = data.stroke;
 
             let eraser = new EraserStroke(stroke.id, 'standard');
-            eraser.add(data.stroke.last);
+            eraser.add(stroke.last);
             this.openErasers[stroke.id] = eraser;
         }
     }
@@ -46,15 +46,15 @@ export class EraserManager {
 
             eraser.addXY(...data.point);
 
-            this.bus.publish('stroke', { action: 'tryErase', stroke: eraser });
-            this.bus.publish('draw', { action: 'requestRedraw' });
+            this.bus.publish('stroke', 'tryErase', eraser);
+            this.bus.publish('draw', 'requestRedraw');
         }
     }
 
     endStroke(data) {
         if (data.id in this.openErasers) {
             delete  this.openErasers[data.id];
-            this.bus.publish('draw', { action: 'requestRedraw' });
+            this.bus.publish('draw', 'requestRedraw');
         }
     }
 }
@@ -68,9 +68,7 @@ function makeHandler() {
         "redraw": this.redraw.bind(this),
     };
 
-    return function(data) {
-        let action = data.action;
-
+    return function(action, data) {
         if (action in actions) {
             return actions[action].call(this, data);
         }

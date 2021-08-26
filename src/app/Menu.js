@@ -10,7 +10,7 @@ export class Menu {
 
         // Fullscreen change event action
         document.addEventListener(
-            'fullscreenchange', this.fullscreenChanged);
+            'fullscreenchange', this.fullscreenChanged.bind(this));
     }
 
     /******************
@@ -98,6 +98,7 @@ export class Menu {
         }
 
         // TODO call resize
+        //this.bus.publish('events', 'resize');
     }
 
     /***********************
@@ -111,24 +112,19 @@ export class Menu {
     }
 
     updatePenWidth(e) {
-        this.bus.publish('pen', {
-            action: 'setTipWidth',
-            value: e.target.value,
-        });
+        this.bus.publish('pen', 'setTipWidth', e.target.value);
     }
 
     makeSetPenColor(color) {
         return function(e) {
-            this.bus.publish('pen', {
-                action: 'setTipColor',
-                value: e.target.attributes.getNamedItem("title").nodeValue,
-            });
+            this.bus.publish('pen', 'setTipColor',
+                e.target.attributes.getNamedItem("title").nodeValue);
         }
     }
 
     clearSurface(e) {
         e.preventDefault();
-        this.bus.publish('stroke', { action: 'clear' });
+        this.bus.publish('stroke', 'clear');
     }
 
     deactivateMenu(e) {
@@ -139,12 +135,12 @@ export class Menu {
 
     undo(e) {
         e.preventDefault();
-        this.bus.publish('timeline', { action: 'undo' });
+        this.bus.publish('timeline', 'undo');
     }
 
     redo(e) {
         e.preventDefault();
-        this.bus.publish('timeline', { action: 'redo' });
+        this.bus.publish('timeline', 'redo');
     }
 
     mysave(e) {
@@ -157,7 +153,7 @@ export class Menu {
         //window.open(canvas.toDataURL('image/svg'), "_blank");
         //window.open(canvas.toDataURL('image/jpeg'), "_blank");
 
-        this.bus.publish('events', { action: 'saveSVG' });
+        this.bus.publish('events', 'saveSVG');
     }
 
     fullscreen(e) {

@@ -56,7 +56,7 @@ export class Surface {
             this.sheet.height = this.height;
 
             this.buildGreenScreen();
-            this.bus.publish('events', { action: 'resize' });
+            this.bus.publish('events', 'resize');
         }, 100);
     }
 
@@ -75,33 +75,30 @@ export class Surface {
      * Event Bus Listener and Functions
      ***************************/
 
-    handleBusMessage(data) {
-        let action = data.action;
+    handleBusMessage(action, data) {
         if (action in this.actions) {
             this.actions[action].call(this, data);
         }
     }
 
-    drawLine(data) {
-        let prev = data.stroke.current;
-        let cur = data.stroke.previous;
-        let width = data.stroke.tip.width;
-        let color = data.stroke.tip.color;
+    drawLine(stroke) {
+        let prev = stroke.current;
+        let cur = stroke.previous;
+        let width = stroke.tip.width;
+        let color = stroke.tip.color;
         Draw.line(this.bCtx, prev.x, prev.y, cur.x, cur.y, width, color);
     }
 
-    drawPoint(data) {
-        let x = data.stroke.last.x;
-        let y = data.stroke.last.y;
-        let width = data.stroke.tip.width;
-        let color = data.stroke.tip.color;
+    drawPoint(stroke) {
+        let x = stroke.last.x;
+        let y = stroke.last.y;
+        let width = stroke.tip.width;
+        let color = stroke.tip.color;
 
         Draw.dot(this.bCtx, x, y, width, color);
     }
 
-    drawStroke(data) {
-        let stroke = data.stroke;
-
+    drawStroke(stroke) {
         let color = stroke.tip.color || "black";
         let width = stroke.tip.width || 2;
         let last = null;
@@ -121,7 +118,7 @@ export class Surface {
     requestRedraw() {
         this.clearScreen();
 
-        this.bus.publish('draw', { action: 'redraw' });
+        this.bus.publish('draw', 'redraw');
     }
 
     buildGreenScreen() {

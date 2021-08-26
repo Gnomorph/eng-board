@@ -15,34 +15,28 @@ export class NetworkBridge {
         this.socket.on('message', this.receive.bind(this));
 
         // internal packets destined for the network
-        //this.bus.subscribe("draw", this.send.bind(this));
         this.bus.subscribe("stroke", this.send.bind(this));
         this.bus.subscribe("timeline", this.send.bind(this));
     }
 
-    send(data) {
-        this.socket.emit("message", data);
+    send(action, data) {
+        this.socket.emit("message", { action: action, data: data });
     }
 
     receive(msg) {
         //console.log(msg);
         if (msg.action === 'newStroke') {
-            msg.stroke = StrokeFactory(msg.stroke);
-            this.bus.publish("stroke", msg);
-        } else if (msg.action === 'addStroke') {
-            this.bus.publish("stroke", msg);
-        } else if (msg.action === 'endStroke') {
-            this.bus.publish("stroke", msg);
+            msg.data = StrokeFactory(msg.data);
+            this.bus.publish('stroke', msg.action, msg.data);
+        } else if (msg.action === 'addStroke' || msg.action === 'endStroke') {
+            this.bus.publish('stroke', msg.action, msg.data);
         } else if (msg.action === 'tryErase') {
-            //console.log(msg);
-            msg.stroke = EraserStrokeFactory(msg.stroke);
-            this.bus.publish("stroke", msg);
+            msg.data = EraserStrokeFactory(msg.data);
+            this.bus.publish('stroke', msg.action, msg.data);
         } else if (msg.action === 'clear') {
-            this.bus.publish("stroke", msg);
-        } else if (msg.action === 'undo') {
-            this.bus.publish("timeline", msg);
-        } else if (msg.action === 'redo') {
-            this.bus.publish("timeline", msg);
+            this.bus.publish('stroke', msg.action);
+        } else if (msg.action === 'undo' || msg.action === 'redo') {
+            this.bus.publish('timeline', msg.action);
         } else {
             console.log(msg);
             return;

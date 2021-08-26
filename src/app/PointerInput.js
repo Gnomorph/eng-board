@@ -18,25 +18,25 @@ export class PointerInput {
     }
 
     newInput(id, type, point, tilt, pressure) {
-        data = { action: 'newInput', id: id, type: type, point: point };
+        data = { id: id, type: type, point: point };
 
         if (tilt) { data.tilt = tilt }
         if (pressure) { data.pressure = pressure }
 
-        this.bus.publish('input', data);
+        this.bus.publish('input', 'newInput', data);
     }
 
     addInput(id, point, tilt, pressure) {
-        data = { action: 'addInput', id: id, point: point };
+        data = { id: id, point: point };
 
         if (tilt) { data.tilt = tilt }
         if (pressure) { data.pressure = pressure }
 
-        this.bus.publish('input', data);
+        this.bus.publish('input', 'addInput', data);
     }
 
     endInput(id) {
-        this.bus.publish('input', { action: 'endInput', id: id });
+        this.bus.publish('input', 'endInput', { id: id });
     }
 }
 
@@ -62,7 +62,7 @@ function move(e) {
 
     // TODO: Do we need this?
     if (typeof e === 'undefined') {
-        this.bus.publish('debug', "event is undefined, stopping it from adding");
+        this.bus.publish('debug', "error", "event is undefined, stopping it from adding");
         return;
     }
 

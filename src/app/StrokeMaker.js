@@ -23,21 +23,20 @@ class StrokeMaker {
     }
 
     // Route the actions coming in from the message bus
-    handleBusMessage(data) {
-        if (data.action in this.actions) {
-            this.actions[data.action].call(this, data);
+    handleBusMessage(action, data) {
+        if (action in this.actions) {
+            this.actions[action].call(this, data);
         }
     }
 
     // Update the current color when a message is received.
-    setTipColor(data) {
-        console.log(data);
-        this.color = data.value;
+    setTipColor(value) {
+        this.color = value;
     }
 
     // Update the current width when a message is received.
-    setTipWidth(data) {
-        this.width = data.value;
+    setTipWidth(value) {
+        this.width = value;
     }
 
     // Respond to a newInput action
@@ -52,21 +51,19 @@ class StrokeMaker {
         stroke.addXY(x, y, tiltX, tiltY);
 
         // then pass along
-        this.bus.publish("stroke", {action: "newStroke", stroke: stroke});
+        this.bus.publish('stroke', "newStroke", stroke);
     }
 
     // Respond to a addInput action
     addInput(data) {
         // Pass the data along without modifying
-        data.action = "addStroke";
-        this.bus.publish("stroke", data);
+        this.bus.publish('stroke', 'addStroke', data);
     }
 
     // Respond to a endInput action
     endInput(data) {
         // Pass the data along without modifying
-        data.action = "endStroke";
-        this.bus.publish("stroke", data);
+        this.bus.publish('stroke', 'endStroke', data);
     }
 }
 

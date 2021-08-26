@@ -1,18 +1,47 @@
 'use strict'
 
-class MessageBus {
-    constructor() {
-        this.channels = {};
+export class MessageBus {
+    channels = {
+        draw: [],
+        input: [],
+        stroke: [],
+        pen: [],
+        events: [],
+        timeline: [],
+        debug: [],
     }
 
-    _publish(src_id, channel, data) {
-        for (let [dst_id, callback] of this.channels[channel] || []) {
-            if (src_id != dst_id) { callback(data); }
+    constructor() {
+    }
+
+    _broadcast(channel, action, data) {
+        if (!(channel in this.channels)) {
+            throw `Channel ${channel} does not exits`;
         }
+
+        this.channels[channel]
+            .forEach(([dst_id, callback]) => {
+                callback(action, data)
+            });
+    }
+
+    _publish(src_id, channel, action, data) {
+        if (!(channel in this.channels)) {
+            throw `Channel ${channel} does not exits`;
+        }
+
+        this.channels[channel]
+            .filter(([dst_id, callback]) => dst_id != src_id)
+            .forEach(([dst_id, callback]) => {
+                callback(action, data)
+            });
     }
 
     _subscribe(id, channel, callback) {
-        this.channels[channel] = this.channels[channel] || [];
+        if (!(channel in this.channels)) {
+            throw `Channel ${channel} does not exits`;
+        }
+
         this.channels[channel].push([id, callback]);
     }
 
@@ -23,8 +52,12 @@ class MessageBus {
     client() {
         let id = Math.floor(Math.random()*2147483647);
 
-        let pub = function(channel, data) {
-            this._publish(id, channel, data);
+        let all = function(channel, action, data) {
+            this._broadcast(channel, action, data);
+        };
+
+        let pub = function(channel, action, data) {
+            this._publish(id, channel, action, data);
         };
 
         let sub = function(channel, callback) {
@@ -32,12 +65,9 @@ class MessageBus {
         };
 
         return {
+            broadcast: all.bind(this),
             publish: pub.bind(this),
             subscribe: sub.bind(this),
         };
     }
-}
-
-export {
-    MessageBus
 }
