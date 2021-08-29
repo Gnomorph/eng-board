@@ -1,6 +1,7 @@
 module.exports = {
     entry: {
-        main: "./src/index.js",
+        main: "./src/main.js",
+        teacher: "./src/teacher.js",
         vendor: "./src/vendor.js",
     },
     module: {

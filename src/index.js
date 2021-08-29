@@ -1,5 +1,7 @@
 import "./main.scss";
 
+import qs from "query-string";
+
 import { Debug } from "./app/Debug.js";
 import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
@@ -12,24 +14,22 @@ import { StateManager } from "./app/StateManager.js";
 import { EraserManager } from "./app/EraserManager.js";
 import { StrokeMaker } from "./app/StrokeMaker.js";
 
-// All modules interact through a Message Bus
-let bus = new MessageBus();
-//document.bus = bus;
+export default function run(entry) {
+    // All modules interact through a Message Bus
+    let bus = new MessageBus();
 
-let surface = new Surface(bus.client("Surface"), document.getElementById("bg-board"));
+    let surface = new Surface(bus.client("Surface"), document.getElementById("bg-board"));
 
-new NetworkBridge(bus.client("NetworkBridge"));
-new StateManager(bus.client("StateManager"), surface);
-new EraserManager(bus.client("EraserManager"));
-new StrokeMaker(bus.client("StrokeMaker"));
+    let room = qs.parse(location.search).room;
+    new NetworkBridge(bus.client("NetworkBridge"), room);
 
-new Menu(bus.client("Menu"));
-new TouchInput(bus.client("TouchInput"), surface);
-new PointerInput(bus.client("PointerInput"), surface);
+    new StateManager(bus.client("StateManager"), surface);
+    new EraserManager(bus.client("EraserManager"));
+    new StrokeMaker(bus.client("StrokeMaker"));
 
-new Debug(bus.client("Debug"), surface);
+    new Menu(bus.client("Menu"));
+    new TouchInput(bus.client("TouchInput"), surface);
+    new PointerInput(bus.client("PointerInput"), surface);
 
-//bus.publish('tools', {
-    //type: 'DrawTip',
-    //data: new DrawTip("pen", 5, "#000000", ()=>{}),
-//});
+    new Debug(bus.client("Debug"), surface);
+}

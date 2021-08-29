@@ -6,10 +6,15 @@ import { EraserStrokeFactory } from "./EraserStroke.js";
 // The "send" action is used to move message from bus to server
 // The "recieve" action is used to distribute messages from the serve
 export class NetworkBridge {
-    constructor(bus) {
+    constructor(bus, room) {
         this.bus = bus;
 
         this.socket = io("localhost:3000");
+
+        this.socket.on('connect', () => {
+            console.log('connected');
+            this.socket.emit('subscribe', room);
+        });
 
         // incoming packets from the network
         this.socket.on('message', this.receive.bind(this));
