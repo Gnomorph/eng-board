@@ -1,6 +1,22 @@
-export class Path {
+import { StrokePoint } from "stroke";
+
+function PathFactory(data) {
+    let path = new Path(data._id, data.width, data.pressureThreashold,
+        data.resolution, data.color);
+
+    if (data._points) {
+        path._points = data._points.map(p => new StrokePoint(p._x, p._y,
+            p._pressure, p._tiltx, p._tilty));
+    } else {
+        path._points = [];
+    }
+
+    return path;
+}
+
+class Path {
     constructor(id, width, pressureThreashold, resolution, color) {
-        this.index = null;
+        //this.index = null;
         this._id = id;
         this.width = width || 5;
         //this.pressureThreashold = pressureThreashold || 0.25;
@@ -9,7 +25,7 @@ export class Path {
         this.color = color || "#000000";
 
         this._points = [];
-        this.hasUpdates = false;
+        //this.hasUpdates = false;
     }
 
     get id() { return this._id; }
@@ -42,4 +58,9 @@ export class Path {
             this._points.push(value);
         }
     }
+}
+
+export {
+    PathFactory,
+    Path,
 }

@@ -1,5 +1,4 @@
-import { DrawTip } from "./DrawTip.js";
-import { Stroke } from "./Stroke.js";
+import { Stroke, DrawTip } from "stroke";
 
 // listen to input actions
 // send out stroke actions

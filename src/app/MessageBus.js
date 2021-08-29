@@ -25,7 +25,8 @@ export class MessageBus {
             });
     }
 
-    _publish(src_id, channel, action, data) {
+    _publish(src_id, name, channel, action, data) {
+        //console.log(name, channel, action);
         if (!(channel in this.channels)) {
             throw `Channel ${channel} does not exits`;
         }
@@ -49,7 +50,7 @@ export class MessageBus {
      * Publish Action Methods
      ************************/
 
-    client() {
+    client(name) {
         let id = Math.floor(Math.random()*2147483647);
 
         let all = function(channel, action, data) {
@@ -57,7 +58,7 @@ export class MessageBus {
         };
 
         let pub = function(channel, action, data) {
-            this._publish(id, channel, action, data);
+            this._publish(id, name, channel, action, data);
         };
 
         let sub = function(channel, callback) {

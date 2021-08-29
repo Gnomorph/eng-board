@@ -94,6 +94,8 @@ export class Debug {
     }
 
     enableDebug() {
+        this.bus.publish("stroke", "debug");
+
         this.debugState = true;
         this.debugMenu.style.display = "flex";
         this.surface.board.addEventListener(

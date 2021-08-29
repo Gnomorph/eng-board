@@ -17,8 +17,20 @@ export class Menu {
      * SETUP FUNCTIONS
      ******************/
 
+    eraser() {
+        // as the server to give you all of it's changes
+        this.bus.publish("timeline", "pull");
+    }
+
+    pencil() {
+        // ask the server to take all of your changes
+        this.bus.publish("timeline", "requestPush");
+    }
+
     setupButtons() {
         [
+            ["pencil", this.pencil],
+            ["eraser", this.eraser],
             ["fullscreen", this.fullscreen],
             ["trash", this.clearSurface],
             ["save", this.mysave],
@@ -226,12 +238,12 @@ const colorList = [
 const menus = [
     [ document.getElementById('pen'),
         document.getElementById('pen-submenu') ],
-    [ document.getElementById('pencil'),
-        document.getElementById('pencil-submenu') ],
+    //[ document.getElementById('pencil'),
+        //document.getElementById('pencil-submenu') ],
     [ document.getElementById('highlighter'),
         document.getElementById('highlighter-submenu') ],
-    [ document.getElementById('eraser'),
-        document.getElementById('eraser-submenu') ],
+    //[ document.getElementById('eraser'),
+        //document.getElementById('eraser-submenu') ],
 ];
 
 function makeColorButton(name, value) {

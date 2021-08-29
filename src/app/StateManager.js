@@ -1,19 +1,21 @@
 import { Browser } from "./Browser.js";
 import { QuadTree } from "./QuadTree.js";
-import { StrokeSegment } from "./StrokeSegment.js";
+import { StrokeSegment } from "stroke";
+import { SvgFactory } from "./SvgMaker.js";
+import { History, MakeHash } from "stroke-history";
 
 // The StateManager will manage the state of the overall application.
 // It will be responsible for mediating messages from the network and
 // locally created input. It will also manage the state of the surface
 // by redrawing the history onto a clean board when necessary.
 export class StateManager {
-    clearStack = [];
-    undoStack = [];
-    strokeOrder = [];
-    openStrokes = {};
+    history = new History();
     strokeQuad = new QuadTree(0, 2*Browser.width, 0, 2*Browser.height);
 
     actions = {
+        "requestPush": this.requestPush,
+        "push": this.push,
+
         "tryErase": this.findErasedStrokes,
         "removeStroke": this.deleteStroke,
 
@@ -33,48 +35,30 @@ export class StateManager {
         "saveSVG": this.saveSVG,
     };
 
+    requestPush(data) {
+        this.bus.publish('timeline', 'push', this.history.pickled);
+    }
+
+    // replace our whole history with the given history
+    push(msg) {
+        this.history.unpickle(msg.hash, msg.data);
+        this.rebuildStrokeQuad();
+        this.bus.publish('draw', 'requestRedraw');
+    }
+
     saveSVG() {
-        let svg = [];
-        let header = "xmlns='http://www.w3.org/2000/svg'"
-        let width = Browser.width
-        let height = Browser.height
-
-        svg.push(`<svg ${header} width="${width}" height="${height}">`);
-
-        this.strokeOrder
-            .filter(x => x.action==='stroke')
-            .map(x => x.stroke)
-            .forEach(stroke => {
-            let pairs = stroke._path.reduce((a, c) => {
-                a.push(`${c._x} ${c._y}`) 
-                return a;
-            }, []).join(', ')
-
-            svg.push(`<polyline fill="none" stroke="${stroke.tip.color}"
-                stroke-width="${stroke.tip.width}" points="${pairs}">
-                </polyline>`);
-        })
-        svg.push("</svg>");
-        svg = svg.join('');
-
-        svg = `data:image/svg+xml,${svg}`;
-
         var image = new Image();
-        image.src = svg;
-        image.alt = "sample";
+        image.src = SvgFactory(this.history.readOnlyHistory);
 
-        //var w = window.open("", "_blank");
-        //w.document.write(image.outerHTML);
+        document.getElementById('dl-image').src = image.src;
 
         let dlLink = document.getElementById('dl-link');
-        let dlImage = document.getElementById('dl-image');
-
-        dlImage.src = image.src;
         dlLink.href = image.src;
         dlLink.download = `wb-screenshot-${new Date()}.svg`;
     }
 
     constructor(bus) {
+        document.debugHistory = this.history;
         // listen to: pen, stroke, timeline
         this.bus = bus;
 
@@ -96,9 +80,9 @@ export class StateManager {
     }
 
     redraw() {
-        this.strokeOrder
+        this.history.readonlyStrokes
             .filter(action => action.action === 'stroke')
-            .map(x => x.stroke)
+            .map(x => x.data)
             .filter(stroke => !(stroke._deleted))
             .forEach(stroke => {
                 this.bus.publish('draw', 'drawStroke', stroke);
@@ -107,57 +91,21 @@ export class StateManager {
 
     // TODO: this needs to be more advanced
     undo(data) {
-        // FROM SURFACE'S OLD LOGIC
-        if (this.strokeOrder.length == 0 && this.clearStack.length > 0) {
-            this.strokeOrder = this.clearStack.pop();
-            this.undoStack.push({ action: "clear" });
-        } else if (this.strokeOrder.length > 0) {
-            let action = this.strokeOrder.pop();
-
-            if (action.action === "delete") {
-                action.stroke._deleted = false;
-            }
-
-            this.undoStack.push(action);
-        }
-
-        // TODO: We need to handle undelete
-        // every undo should log an appropriate "reverse" action to be
-        //   able to redo this action.
-        // actually, every action itself may need to have some information
-        //   about how to undo it: setTipWidth => what was the last width?
-
+        this.history.undo();
         this.rebuildStrokeQuad();
         this.bus.publish('draw', 'requestRedraw');
     }
 
     redo(data) {
-        // shuttle the most recent future command onto the current stack
-        // replay the reverse-reverse action for this command
-        // this could get confusing, so be careful
+        this.history.redo();
+        this.bus.publish('draw', 'requestRedraw');
+        this.rebuildStrokeQuad();
+    }
 
-        if (this.undoStack.length > 0) {
-            let action = this.undoStack.pop();
-
-            if (action?.action === 'clear') {
-                // Handle a clear action redo
-                this.clearStack.push(this.strokeOrder);
-                this.strokeOrder = [];
-            } else if (action?.action === 'delete') {
-                // handle the delete action
-                let stroke = action.stroke;
-
-                stroke._deleted = true;
-                this.strokeOrder.push(action);
-            } else if (action?.action === 'stroke') {
-                this.strokeOrder.push(action);
-            } else {
-                console.log("OOPS, we missed an action");
-            }
-
-            this.bus.publish('draw', 'requestRedraw');
-            this.rebuildStrokeQuad();
-        }
+    clearScreen(data) {
+        this.history.clearScreen();
+        this.rebuildStrokeQuad();
+        this.bus.publish('draw', 'requestRedraw');
     }
 
     setTipWidth(data) {
@@ -166,16 +114,6 @@ export class StateManager {
 
     setTipColor(data) {
         // add this action into the event list history
-    }
-
-    clearScreen(data) {
-        this.undoStack.length = 0;
-
-        this.clearStack.push(this.strokeOrder);
-        this.strokeOrder = [];
-
-        this.rebuildStrokeQuad();
-        this.bus.publish('draw', 'requestRedraw');
     }
 
     drawStroke(data) {
@@ -187,36 +125,23 @@ export class StateManager {
 
     // assume that all start points must have an origin x, y for the stoke
     newStroke(stroke) {
-        // Maybe you want to destory the undo stack early?
-        //this.undoStack.length = 0;
-
         if (stroke?.type == 'pen') {
-            // create an entry for this stroke in openStrokes
-            this.openStrokes[stroke.id] = stroke;
-
-            // we probably want to do this at the end?
-            this.strokeOrder.push({ action: 'stroke', stroke: stroke});
+            this.history.newStroke(stroke);
 
             this.bus.publish('draw', 'drawPoint', stroke);
         }
     }
 
     addStroke(data) {
-        if (data.id in this.openStrokes) {
-            let stroke = this.openStrokes[data.id];
+        let [ x, y ] = data.point;
+        let [ tiltX, tiltY ] = data.tilt || [undefined, undefined];
 
-            // add a point into the stroke's list of points
-            let [ x, y ] = data.point;
-            let [ tiltX, tiltY ] = data.tilt || [undefined, undefined];
-            stroke.addXY(x, y, tiltX, tiltY);
-
-            // draw a stroke segment onto the surface
-            //this.surface.drawLine(stroke);
+        let stroke;
+        if (this.history.has(data.id)) {
+            stroke = this.history.addStroke(data.id, x, y, tiltX, tiltY);
             this.bus.publish('draw', 'drawLine', stroke);
-
-            // optionally, add this segment into the quad tree (or all on end)
-            // TODO: in order to make drawing fast, don't add.
         }
+
     }
 
     // add this action into the event list history
@@ -228,13 +153,10 @@ export class StateManager {
 
     // finalize the given stroke (remove it from openStrokes)
     endStroke(data) {
-        if (data.id in this.openStrokes) {
-            this.undoStack.length = 0;
-
-            // add this stroke to the quadtree
-            this.addToQuadTree(this.openStrokes[data.id]);
-
-            delete  this.openStrokes[data.id];
+        let stroke;
+        if (this.history.has(data.id)) {
+            stroke = this.history.endStroke(data.id);
+            this.addToQuadTree(stroke);
         }
     }
 
@@ -246,9 +168,7 @@ export class StateManager {
 
         for (let item of this.strokeQuad.getRect(...strokeSegment)) {
             if (strokeSegment.intersects(item._data)) {
-                console.log("HELLO");
-                this.bus.broadcast('draw', 'removeStroke', item._data.stroke);
-                this.undoStack.length = 0;
+                this.bus.broadcast('stroke', 'removeStroke', item._data.stroke.id);
             }
         }
     }
@@ -256,12 +176,9 @@ export class StateManager {
     // TODO: There is a problem here. We depended on object references to be
     // able to backtrack out and find the stroke. but over the network we will
     // have no such links. We must explicitly find the references
-    deleteStroke(stroke) {
-        console.log("deleting", stroke);
-        stroke._deleted = true;
-
+    deleteStroke(id) {
         // add this action into the event list history
-        this.strokeOrder.push({ action: "delete", stroke: stroke });
+        this.history.remove(id)
 
         this.rebuildStrokeQuad();
         this.bus.publish('draw', 'requestRedraw');
@@ -270,9 +187,10 @@ export class StateManager {
     rebuildStrokeQuad() {
         this.strokeQuad.purge();
 
-        let strokes = this.strokeOrder
+        // TODO: this will need to actually be the history
+        let strokes = this.history.readonlyStrokes
             .filter(x => x.action === 'stroke')
-            .map(x => x.stroke)
+            .map(x => x.data)
             .forEach(stroke => {
                 this.addToQuadTree(stroke);
             });

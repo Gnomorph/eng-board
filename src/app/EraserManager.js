@@ -1,6 +1,5 @@
 import { EraserStroke } from "./EraserStroke.js";
-import { DrawTip } from "./DrawTip.js";
-import { Stroke } from "./Stroke.js";
+import { Stroke, DrawTip } from "stroke";
 
 export class EraserManager {
     openErasers = {};
