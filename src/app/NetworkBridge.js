@@ -9,7 +9,10 @@ export class NetworkBridge {
     constructor(bus, room) {
         this.bus = bus;
 
-        this.socket = io("localhost:3000");
+        //this.socket = io("localhost:3000");
+        //this.socket = io("localhost:7071", { transports: ["websocket"] });
+        //this.socket = io("wb.api.lan.gnomorph.com", { transports: ["websocket"] });
+        this.socket = io("wb.api.gnomorph.com", { transports: ["websocket"] });
 
         this.socket.on('connect', () => {
             console.log('connected');

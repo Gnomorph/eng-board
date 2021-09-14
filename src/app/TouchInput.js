@@ -51,9 +51,7 @@ export class TouchInput {
                 Browser.scale(pen.clientY)
             ];
 
-            /*this.surface.penStart(pen.identifier, "pen", ...pt);*/
-            this.bus.publish('input', 'newStroke',
-                { id: pen.identifier, point: pt, tip: "pen" });
+            this.bus.publish('input', 'newStroke', { id: pen.identifier, point: pt, type: "pen" });
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -63,7 +61,7 @@ export class TouchInput {
 
                 /*this.surface.penStart(eraser.identifier, "eraser", ...pt);*/
                 this.bus.publish('input', 'newStroke',
-                    { id: eraser.identifier, point: pt, tip: "eraser" });
+                    { id: eraser.identifier, point: pt, type: "eraser" });
             }
         }
     }
@@ -79,9 +77,7 @@ export class TouchInput {
                 Browser.scale(pen.clientY)
             ];
 
-            /*this.surface.penMove(pen.identifier, ...pt);*/
-            this.bus.publish('input', 'addStroke',
-                { id: pen.identifier, point: pt, tip: "pen" });
+            this.bus.publish('input', 'addStroke', { id: pen.identifier, point: pt, type: "pen" });
         } else if (erasers.length > 0){
             for (let eraser of erasers) {
                 let pt = [
@@ -91,7 +87,7 @@ export class TouchInput {
 
                 /*this.surface.penMove(eraser.identifier, ...pt);*/
                 this.bus.publish('input', 'addStroke',
-                    { id: eraser.identifier, point: pt, tip: "eraser" });
+                    { id: eraser.identifier, point: pt, type: "eraser" });
             }
         }
     }
@@ -103,9 +99,7 @@ export class TouchInput {
                 Browser.scale(touch.clientY)
             ];
 
-            /*this.surface.penEnd(touch.identifier, ...pt);*/
-            this.bus.publish('input', 'endStroke',
-                { id: pen.identifier, point: pt, tip: "pen" });
+            this.bus.publish('input', 'endStroke', { id: pen.identifier, point: pt, type: "pen" });
         }
 
         return;
@@ -115,7 +109,7 @@ export class TouchInput {
 
         /*this.surface.penEnd(pen.identifier, ...pt);*/
         this.bus.publish('input', 'endStroke',
-            { id: pen.identifier, point: pt, tip: "pen" });
+            { id: pen.identifier, point: pt, type: "pen" });
         if (pens.length > 0) {
             let pen = pens[0];
             let pt = [
@@ -131,7 +125,7 @@ export class TouchInput {
                 ];
                 /*this.surface.penEnd(eraser.identifier, ...pt);*/
                 this.bus.publish('input', 'endStroke',
-                    { id: eraser.identifier, point: pt, tip: "eraser" });
+                    { id: eraser.identifier, point: pt, type: "eraser" });
             }
         }
     }

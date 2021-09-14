@@ -24,13 +24,12 @@ function point(context, x, y, width, style) {
 
 function dot(ctx, x, y, width) {
     width = width || 2;
-    this.point(ctx, x, y, width*Browser.resolution);
-    this.point(ctx, x, y, width*Browser.resolution);
+    point(ctx, x, y, width*Browser.resolution);
 }
 
 function blot(dCtx, sCtx, x, y, width) {
     width = width || 25;
-    this.erase(dCtx, sCtx, y, x, y, width);
+    erase(dCtx, sCtx, y, x, y, width);
 }
 
 function erase(dCtx, sCtx, xi, yi, xf, yf, size) {

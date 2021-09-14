@@ -4,6 +4,9 @@ module.exports = {
         teacher: "./src/teacher.js",
         vendor: "./src/vendor.js",
     },
+    output: {
+        path: __dirname + '/dist/ui',
+    },
     module: {
         rules: [
             {
