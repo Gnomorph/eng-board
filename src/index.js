@@ -7,7 +7,6 @@ import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
 import { DrawTip } from "stroke";
 import { PointerInput } from "./app/PointerInput.js";
-//import { TouchInput } from "./app/TouchInput.js";
 import { MessageBus } from "./app/MessageBus.js";
 import { NetworkBridge } from "./app/NetworkBridge.js";
 import { StateManager } from "./app/StateManager.js";
@@ -28,7 +27,6 @@ export default function run(entry) {
     new StrokeMaker(bus.client("StrokeMaker"));
 
     new Menu(bus.client("Menu"));
-    //new TouchInput(bus.client("TouchInput"), surface);
     new PointerInput(bus.client("PointerInput"), surface);
 
     new Debug(bus.client("Debug"), surface);

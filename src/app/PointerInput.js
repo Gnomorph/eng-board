@@ -18,7 +18,7 @@ export class PointerInput {
     }
 
     newInput(id, type, point, tilt, pressure) {
-        data = { id: id, type: type, point: point };
+        let data = { id: id, type: type, point: point };
 
         if (tilt) { data.tilt = tilt }
         if (pressure) { data.pressure = pressure }
@@ -27,7 +27,7 @@ export class PointerInput {
     }
 
     addInput(id, point, tilt, pressure) {
-        data = { id: id, point: point };
+        let data = { id: id, point: point };
 
         if (tilt) { data.tilt = tilt }
         if (pressure) { data.pressure = pressure }
@@ -50,6 +50,7 @@ function getXY (e) {
 
 function start(e) {
     e.preventDefault();
+    e.target.setPointerCapture(e.pointerId);
 
     let [x, y] = getXY(e);
 
