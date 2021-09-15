@@ -13,8 +13,11 @@ export class Surface {
         "requestRedraw": this.requestRedraw,
     }
 
-    get width() { return Browser.width; }
-    get height() { return Browser.height; }
+    get trueWidth() { return 1600; }
+    get trueHeight() { return 1050; }
+
+    get width() { return Browser.rotated ? this.trueHeight : this.trueWidth; }
+    get height() { return Browser.rotated ? this.trueWidth : this.trueHeight; }
 
     constructor(bus, canvas) {
         this.bus = bus;
@@ -30,18 +33,27 @@ export class Surface {
         this.board.width = this.width;
         this.board.height = this.height;
 
-        // Make Offscreen Canvases
-        this.sheet = makeBoard(this.width, this.height);
-
         // Setup Each Context
         this.bCtx = getMinimalContext(this.board);
-        this.sheetCtx = getMinimalContext(this.sheet);
 
-        this.buildGreenScreen();
+        this.transform();
+
+        this.drawGreenScreen(this.bCtx);
 
         this.clearScreen();
 
         window.addEventListener('resize', this.resize.bind(this), 100);
+    }
+
+    scale(value) {
+        return 1600/32
+    }
+
+    transform() {
+        if (Browser.rotated) {
+            this.bCtx.translate(Browser.scale(Browser.height), 0);
+            this.bCtx.rotate(Math.PI/2);
+        }
     }
 
     resize() {
@@ -49,10 +61,10 @@ export class Surface {
             this.board.width = this.width;
             this.board.height = this.height;
 
-            this.sheet.width = this.width;
-            this.sheet.height = this.height;
+            this.transform();
 
-            this.buildGreenScreen();
+            this.drawGreenScreen(this.bCtx);
+
             this.bus.publish('events', 'resize');
         }, 100);
     }
@@ -109,7 +121,7 @@ export class Surface {
     }
 
     clearScreen() {
-        this.greenScreen();
+        this.drawGreenScreen(this.bCtx);
     }
 
     requestRedraw() {
@@ -118,38 +130,28 @@ export class Surface {
         this.bus.publish('draw', 'redraw');
     }
 
-    buildGreenScreen() {
-        this.sheetCtx.clearRect(0, 0, this.width, this.height);
-        this.sheetCtx.fillStyle = "#ccddcc";
-        this.sheetCtx.rect(0, 0, this.width, this.height);
-        this.sheetCtx.fill();
+    drawGreenScreen(ctx) {
+        ctx.clearRect(0, 0, this.trueWidth, this.trueHeight);
+        ctx.fillStyle = "#ccddcc";
+        ctx.rect(0, 0, this.trueWidth, this.trueHeight);
+        ctx.fill();
 
-        this.sheetCtx.beginPath();
-        this.sheetCtx.strokeStyle = "#99bbaa";
-        this.sheetCtx.lineWidth = 1;
-        for (let i=Browser.scale(50); i<this.width; i+=Browser.scale(50)) {
-            this.sheetCtx.moveTo(i, 0);
-            this.sheetCtx.lineTo(i, this.height);
+        ctx.beginPath();
+        ctx.strokeStyle = "#99bbaa";
+        ctx.lineWidth = 1;
+
+        for (let i=this.scale(50); i<this.trueWidth; i+=this.scale(50)) {
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, this.trueHeight);
         }
-        for (let i=Browser.scale(50); i<this.height; i+=Browser.scale(50)) {
-            this.sheetCtx.moveTo(0, i);
-            this.sheetCtx.lineTo(this.width, i);
+
+        for (let i=this.scale(50); i<this.trueHeight; i+=this.scale(50)) {
+            ctx.moveTo(0, i);
+            ctx.lineTo(this.trueWidth, i);
         }
-        this.sheetCtx.stroke();
-    }
 
-    greenScreen() {
-        this.bCtx.drawImage(this.sheet, 0, 0, this.width, this.height);
+        ctx.stroke();
     }
-}
-
-function makeBoard(width, height) {
-    let board = document.createElement('canvas');
-    board.class = "offscreen";
-    board.width = width;
-    board.height = height;
-    document.body.appendChild(board);
-    return board;
 }
 
 function getMinimalContext (canvas) {

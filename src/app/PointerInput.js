@@ -40,10 +40,20 @@ export class PointerInput {
     }
 }
 
+function transformXY (a, b) { return [b, Browser.height -  a]; }
+
+function getXY (e) {
+    let [x, y] = [ e.clientX, e.clientY ];
+
+    return Browser.rotated ? transformXY(x, y) : [x, y];
+}
+
 function start(e) {
     e.preventDefault();
 
-    let point = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+    let [x, y] = getXY(e);
+
+    let point = [ Browser.scale(x), Browser.scale(y) ];
     let tilt = [ e.tiltX, e.tiltY ];
     if (e.pointerType=="pen") {
         let type = (tilt[0] || tilt[1]) ? "pen" : "eraser";
@@ -68,7 +78,9 @@ function move(e) {
 
     e.preventDefault();
 
-    let point = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+    let [x, y] = getXY(e);
+
+    let point = [ Browser.scale(x), Browser.scale(y) ];
     let tilt = [e.tiltX, e.tiltY];
     if (e.pointerType == "pen") {
         this.addInput(e.pointerId, point, tilt);
@@ -80,11 +92,13 @@ function move(e) {
 function stop(e) {
     e.preventDefault();
 
-    let point = [ Browser.scale(e.clientX), Browser.scale(e.clientY) ];
+    let [x, y] = getXY(e);
 
+    let point = [ Browser.scale(x), Browser.scale(y) ];
+    let tilt = [e.tiltX, e.tiltY];
     if (e.pointerType == "mouse" && this.mouseInput) {
-        this.addInput(this.mouseInput.id, point);
-        this.endInput(this.mouseInput.id, point);
+        this.addInput(this.mouseInput.id, point, tilt);
+        this.endInput(this.mouseInput.id);
 
         this.mouseInput = undefined;
     } else if (e.pointerType=="pen") {
