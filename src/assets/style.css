@@ -1,7 +1,15 @@
 html, body {
     position: fixed;
-    overflow: hidden;
+
+    width: 100vw;
+    height: 100vh;
+
+    margin: 0px;
+    padding: 0px;
+
+    /* overflow: hidden; */
 }
+
 .radial {
     position: absolute;
     padding: 0px;
@@ -11,16 +19,16 @@ html, body {
 }
 
 #debug-output {
-   overflow-x:wrap;
-   overflow-y:scroll;
-   height:400px;
-   width:750px;
+    overflow-x:wrap;
+    overflow-y:scroll;
+    height:400px;
+    width:750px;
 }
 
 .show-me {
-    //border-color: black;
-    //border-width: 1px;
-    //border-style: solid;
+    /* border-color: black; */
+    /* border-width: 1px; */
+    /* border-style: solid; */
     outline: 5px solid blue;
     outline-offset: -10px;
 }
@@ -29,11 +37,62 @@ html, body {
     font-size:16px;
 }
 
+@media(orientation: landscape) {
+    @media(min-aspect-ratio: 16/10.5) {
+        .fixed-frame {
+            height: 100vh;
+            width: calc(100vh * 16/10.5);
+        }
+    }
+
+    @media(aspect-ratio: 16/10.5) {
+        .fixed-frame {
+            width: 100vw;
+            height: 100vh;
+        }
+    }
+
+    @media(max-aspect-ratio: 16/10.5) {
+        .fixed-frame {
+            width: 100vw;
+            height: calc(100vw * 10.5/16);
+        }
+    }
+}
+
+@media(orientation: portrait) {
+    @media(min-aspect-ratio: 10.5/16) {
+        .fixed-frame {
+            height: 100vh;
+            width: calc(100vh * 10.5/16);
+        }
+    }
+
+    @media(aspect-ratio: 10.5/16) {
+        .fixed-frame {
+            width: 100vw;
+            height: 100vh;
+        }
+    }
+
+    @media(max-aspect-ratio: 10.5/16) {
+        .fixed-frame {
+            width: 100vw;
+            height: calc(100vw * 16/10.5);
+        }
+    }
+}
+
+.fixed-frame {
+    /* outline: 5px solid blue;
+    outline-offset: -5px;*/
+}
+
 .full-frame {
     margin: 0px;
     padding: 0px;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
 }
 
@@ -141,29 +200,31 @@ html, body {
 }
 
 #bg-board {
-    width: 100%;
+    width: 100vw;
 }
 
 .offscreen {
-    width:100%;
+    position: absolute;
+    left: 100vw;
+    top: 100vh;
     display:none;
 }
 
 /*
 #fg-board {
-    width:100%;
-    display:none;
+width:100vw;
+display:none;
 }
 
 #bs-board {
-    width: 100%;
-    display:none;
+width: 100vw;
+display:none;
 }
-*/
+ */
 
-#canvas-container {
-    display:flex;
-}
+    #canvas-container {
+        display:flex;
+    }
 
-#whiteboard {
-}
+    #whiteboard {
+    }
