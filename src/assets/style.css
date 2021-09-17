@@ -37,63 +37,25 @@ html, body {
     font-size:16px;
 }
 
-@media(orientation: landscape) {
-    @media(min-aspect-ratio: 16/10.5) {
-        .fixed-frame {
-            height: 100vh;
-            width: calc(100vh * 16/10.5);
-        }
-    }
-
-    @media(aspect-ratio: 16/10.5) {
-        .fixed-frame {
-            width: 100vw;
-            height: 100vh;
-        }
-    }
-
-    @media(max-aspect-ratio: 16/10.5) {
-        .fixed-frame {
-            width: 100vw;
-            height: calc(100vw * 10.5/16);
-        }
+@media(min-aspect-ratio: 16/10.5) {
+    .fixed-frame {
+        width: calc(100vh * 16/10.5);
+        height: 100vh;
     }
 }
 
-@media(orientation: portrait) {
-    @media(min-aspect-ratio: 10.5/16) {
-        .fixed-frame {
-            height: 100vh;
-            width: calc(100vh * 10.5/16);
-        }
-    }
-
-    @media(aspect-ratio: 10.5/16) {
-        .fixed-frame {
-            width: 100vw;
-            height: 100vh;
-        }
-    }
-
-    @media(max-aspect-ratio: 10.5/16) {
-        .fixed-frame {
-            width: 100vw;
-            height: calc(100vw * 16/10.5);
-        }
+@media(aspect-ratio: 16/10.5) {
+    .fixed-frame {
+        width: 100vw;
+        height: 100vh;
     }
 }
 
-.fixed-frame {
-    /* outline: 5px solid blue;
-    outline-offset: -5px;*/
-}
-
-.full-frame {
-    margin: 0px;
-    padding: 0px;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
+@media(max-aspect-ratio: 16/10.5) {
+    .fixed-frame {
+        width: 100vw;
+        height: calc(100vw * 10.5/16);
+    }
 }
 
 .sub-menu {

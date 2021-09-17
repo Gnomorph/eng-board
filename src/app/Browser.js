@@ -9,7 +9,9 @@ class _Browser {
     constructor() { }
 
     get rotated() {
-        return this.trueWidth < this.trueHeight;
+        // It turns out, we probably shouldn't forcibly rotate the screen.
+        // We can use this as an entry point if we allow user rotation
+        return false;
     }
 
     // Is the board limited by the "height" in the aspect ratio
