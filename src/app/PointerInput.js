@@ -42,6 +42,10 @@ export class PointerInput {
 
 function transformXY (a, b) { return [b, Browser.height -  a]; }
 
+function magicTrigger(x, y) {
+    return x > 1450 && y > 900;
+}
+
 function getXY (e) {
     let [x, y] = [ e.clientX, e.clientY ];
 
@@ -64,6 +68,19 @@ function start(e) {
         let type = (e.buttons == 2) ? "eraser" : "pen";
         this.mouseInput = new MouseInput(type);
         this.newInput(this.mouseInput.id, type, point);
+    } else if (e.pointerType === "touch") {
+        // Send a single touch as a pointing event, (or handled downstream)
+
+        if (magicTrigger(...point)) {
+            console.log("MAGIC TIME");
+        }
+
+        // A single touch to the corner activates the eraser mode
+        // The next single touch acts as a stroke eraser
+        // the next touch make a double touch, hotwire eraser
+        // the next touch is ignored for now, maybe polygone eraser?
+    } else {
+        console.log(e);
     }
 }
 

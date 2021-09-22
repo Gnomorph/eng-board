@@ -80,16 +80,11 @@ export class StateManager {
     }
 
     redraw() {
-        this.history.readonlyStrokes
-            .filter(action => action.action === 'stroke')
-            .map(x => x.data)
-            .filter(stroke => !(stroke._deleted))
-            .forEach(stroke => {
-                this.bus.publish('draw', 'drawStroke', stroke);
-            });
+        this.history.liveStrokes.forEach(stroke => {
+            this.bus.publish('draw', 'drawStroke', stroke);
+        });
     }
 
-    // TODO: this needs to be more advanced
     undo(data) {
         this.history.undo();
         this.rebuildStrokeQuad();
@@ -144,13 +139,6 @@ export class StateManager {
 
     }
 
-    // add this action into the event list history
-    // note: this action needs to be a full drawStroke
-    // TODO: currently we do this when the stroke is created.
-
-    // destroy any future stack
-    // TODO: currently we do this when the stroke is created.
-
     // finalize the given stroke (remove it from openStrokes)
     endStroke(data) {
         let stroke;
@@ -173,9 +161,6 @@ export class StateManager {
         }
     }
 
-    // TODO: There is a problem here. We depended on object references to be
-    // able to backtrack out and find the stroke. but over the network we will
-    // have no such links. We must explicitly find the references
     deleteStroke(id) {
         // add this action into the event list history
         this.history.remove(id)
@@ -187,13 +172,8 @@ export class StateManager {
     rebuildStrokeQuad() {
         this.strokeQuad.purge();
 
-        // TODO: this will need to actually be the history
-        let strokes = this.history.readonlyStrokes
-            .filter(x => x.action === 'stroke')
-            .map(x => x.data)
-            .forEach(stroke => {
-                this.addToQuadTree(stroke);
-            });
+        let strokes = this.history.liveStrokes
+            .forEach(stroke => this.addToQuadTree(stroke));
     }
 
     addToQuadTree(stroke) {
