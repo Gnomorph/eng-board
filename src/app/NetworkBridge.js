@@ -1,4 +1,5 @@
-import { io } from "socket.io-client";
+//import { io } from "socket.io-client";
+import { Socket } from "./Socket.js";
 import { StrokeFactory } from "stroke";
 import { EraserStrokeFactory } from "./EraserStroke.js";
 
@@ -11,7 +12,8 @@ export class NetworkBridge {
     constructor(bus, room) {
         this.bus = bus;
 
-        this.socket = io(config.websocketHost, { transports: ["websocket"] });
+        //this.socket = io(config.websocketHost, { transports: ["websocket"] });
+        this.socket = new Socket(config.websocketHost);
 
         this.socket.on('connect', () => {
             console.log('connected');
