@@ -5,7 +5,7 @@ import qs from "query-string";
 import { Debug } from "./app/Debug.js";
 import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
-import { DrawTip } from "stroke";
+import { DrawTip } from "drawing-strokes";
 import { PointerInput } from "./app/PointerInput.js";
 import { MessageBus } from "./app/MessageBus.js";
 import { NetworkBridge } from "./app/NetworkBridge.js";

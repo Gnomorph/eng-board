@@ -1,8 +1,8 @@
 import { Browser } from "./Browser.js";
-import { QuadTree } from "./QuadTree.js";
-import { StrokeSegment } from "stroke";
+import { QuadTree } from "area-quadtree";
+import { StrokeSegment } from "drawing-strokes";
 import { SvgFactory } from "./SvgMaker.js";
-import { History, MakeHash } from "stroke-history";
+import { History, MakeHash } from "drawing-history";
 
 // The StateManager will manage the state of the overall application.
 // It will be responsible for mediating messages from the network and
@@ -155,8 +155,8 @@ export class StateManager {
         let strokeSegment = new StrokeSegment(null, [x1, y1], [x2, y2]);
 
         for (let item of this.strokeQuad.getRect(...strokeSegment)) {
-            if (strokeSegment.intersects(item._data)) {
-                this.bus.broadcast('stroke', 'removeStroke', item._data.stroke.id);
+            if (strokeSegment.intersects(item.data)) {
+                this.bus.broadcast('stroke', 'removeStroke', item.data.stroke.id);
             }
         }
     }

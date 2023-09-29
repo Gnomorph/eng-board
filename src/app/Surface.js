@@ -3,7 +3,7 @@
 import { Path } from "./Path.js";
 import { Browser } from "./Browser.js";
 import * as Draw from "./Draw.js";
-import { DrawTip, StrokeSegment, StrokePoint } from "stroke";
+import { DrawTip, StrokeSegment, StrokePoint } from "drawing-strokes";
 
 export class Surface {
     actions = {

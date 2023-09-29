@@ -1,4 +1,4 @@
-import { StrokePoint } from "stroke";
+import { StrokePoint } from "drawing-strokes";
 
 function PathFactory(data) {
     let path = new Path(data._id, data.width, data.pressureThreashold,

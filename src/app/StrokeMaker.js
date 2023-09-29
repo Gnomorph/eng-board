@@ -1,4 +1,4 @@
-import { Stroke, DrawTip } from "stroke";
+import { Stroke, DrawTip } from "drawing-strokes";
 
 // listen to input actions
 // send out stroke actions

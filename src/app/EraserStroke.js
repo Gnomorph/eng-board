@@ -1,4 +1,4 @@
-import { StrokePoint, StrokePointFactory } from "stroke"
+import { StrokePoint, StrokePointFactory } from "drawing-strokes"
 
 function EraserStrokeFactory(data) {
     let eraserStroke = new EraserStroke(data._id, data._type);

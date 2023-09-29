@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { StrokeFactory } from "stroke";
+import { StrokeFactory } from "drawing-strokes";
 import { EraserStrokeFactory } from "./EraserStroke.js";
 
 import { config } from "./config.js";
