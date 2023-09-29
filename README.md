@@ -3,14 +3,13 @@
 ## Synopsis
 A whiteboard inspired by the ease of use of pen and paper.  This is a personal project that started as a replacement for scratch paper while tutoring. However, it is a great tool for making quick notes, sketching out ideas and any basic, free-form (temporary) drawing.
 
-You can see a local demo of the whiteboard at [app.engbrd.com](https://app.engbrd.com)
-
-You can also test out one of the public rooms (please be respectful):
-[app.engbrd.com/?room=ps6tt](https://app.engbrd.com/?room=ps6tt)
-[app.engbrd.com/?room=m9r57](https://app.engbrd.com/?room=m9r57)
-[app.engbrd.com/?room=fowyj](https://app.engbrd.com/?room=fowyj)
-[app.engbrd.com/?room=ythyp](https://app.engbrd.com/?room=ythyp)
-[app.engbrd.com/?room=hf3jf](https://app.engbrd.com/?room=hf3jf)
+You can try a demo of Eng Board (please be respectful): 
+* [app.engbrd.com](https://app.engbrd.com) (local drawing only)
+* [app.engbrd.com/?room=ps6tt](https://app.engbrd.com/?room=ps6tt) (shared, public)
+* [app.engbrd.com/?room=m9r57](https://app.engbrd.com/?room=m9r57) (shared, public)
+* [app.engbrd.com/?room=fowyj](https://app.engbrd.com/?room=fowyj) (shared, public)
+* [app.engbrd.com/?room=ythyp](https://app.engbrd.com/?room=ythyp) (shared, public)
+* [app.engbrd.com/?room=hf3jf](https://app.engbrd.com/?room=hf3jf) (shared, public)
 
 ## Usage
 The whiteboard works best on an iPad with Apple Pencil or a Surface Pro with Surface Pen.
