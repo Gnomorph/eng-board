@@ -4,18 +4,16 @@
   "description": "A whiteboard app to replace a lost one",
   "main": "index.html",
   "scripts": {
+    "start": "NODE_OPTIONS=--openssl-legacy-provider cp -a config.local.js ./src/app/config.js; webpack serve --config webpack.dev.js --open",
+    "build-dev": "cp -a config.development.js ./src/app/config.js; rm -r dist; mkdir -p dist/ui; webpack --config webpack.prod.js; mv dist/ ui; mkdir dist; mv ui dist/; cp -a app-lan-engbrd-com.conf dist/;",
+    "build": "cp -a config.production.js ./src/app/config.js; rm -r dist; mkdir -p dist/ui; webpack --config webpack.prod.js; mv dist/ ui; mkdir dist; mv ui dist/; cp -a     app-engbrd-com.conf dist/;",
+    "setup-dev": "npm run build-dev; gnoDeploy setup    app-lan-engbrd-com aine      dist/ 18.18.0",
+    "deploy-dev": "npm run build-dev; gnoDeploy deploy   app-lan-engbrd-com aine      dist/ 18.18.0",
+    "setup": "npm run build;     gnoDeploy setup  app-engbrd-com azure-main dist/ 18.18.0",
+    "deploy": "npm run build;     gnoDeploy deploy app-engbrd-com azure-main dist/ 18.18.0"
   },
   "author": "Brandon OToole",
   "license": "MIT",
-  "scripts": {
-    "start":      "cp -a config.local.js ./src/app/config.js; webpack serve --config webpack.dev.js --open",
-    "build-dev":  "cp -a config.development.js ./src/app/config.js; rm -r dist; mkdir -p dist/ui; webpack --config webpack.prod.js; mv dist/ ui; mkdir dist; mv ui dist/; cp -a wb-lan-gnomorph-com.conf dist/;",
-    "build":      "cp -a config.production.js ./src/app/config.js; rm -r dist; mkdir -p dist/ui; webpack --config webpack.prod.js; mv dist/ ui; mkdir dist; mv ui dist/; cp -a     wb-gnomorph-com.conf dist/;",
-    "setup-dev":  "npm run build-dev; gnoDeploy setup    wb-lan-gnomorph-com aine      dist/ 14.17.5",
-    "deploy-dev": "npm run build-dev; gnoDeploy deploy   wb-lan-gnomorph-com aine      dist/ 14.17.5",
-    "setup":      "npm run build;     gnoDeploy setup  wb-gnomorph-com gnoPublic dist/ 14.17.5",
-    "deploy":     "npm run build;     gnoDeploy deploy wb-gnomorph-com gnoPublic dist/ 14.17.5"
-  },
   "devDependencies": {
     "clean-webpack-plugin": "*",
     "css-loader": "^6.2.0",
