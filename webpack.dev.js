@@ -4,10 +4,6 @@ const common = require("./webpack.config");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const {merge} = require("webpack-merge");
 
-
-
-
-
 module.exports = merge(common, {
     mode: "development",
     output: {
@@ -15,20 +11,11 @@ module.exports = merge(common, {
         path: path.resolve(__dirname, "dev")
     },
 
-
-
     plugins: [
-
-
         new HtmlWebpackPlugin({
             template: "./src/template.html",
             filename: "index.html",
             chunks: ['main'],
-        }),
-        new HtmlWebpackPlugin({
-            template: "./src/teacher.html",
-            filename: "teacher/index.html",
-            chunks: ['teacher'],
         })
     ],
     module: {
