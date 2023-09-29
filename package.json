@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
   },
-  "author": "Brandon O'Toole",
+  "author": "Brandon OToole",
   "license": "MIT",
   "scripts": {
     "start":      "cp -a config.local.js ./src/app/config.js; webpack serve --config webpack.dev.js --open",
