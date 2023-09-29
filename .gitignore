@@ -1,4 +1,6 @@
 *.swp
+config.*
+*.conf
 
 node_modules
 dist
