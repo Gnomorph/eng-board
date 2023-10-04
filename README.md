@@ -21,8 +21,8 @@ You can try a demo of Eng Board (please be respectful):
 * [app.engbrd.com/?room=hf3jf](https://app.engbrd.com/?room=hf3jf) (shared, public)
 
 ## Features
-* Real-time Collaborative Drawing
-* History, Undo/Redo
+* Real-time collaborative drawing
+* History, undo/redo
 * Stroke color
 * Stroke eraser (mouse only)
 * Fullscreen (not on Safari)
@@ -55,7 +55,7 @@ Drawing with the Surface Pen is seamless and intuitive.
 
 ### iOS bugs
 * on first load, the pen will scroll the window, and only make short marks. a temporary work-around is to open and close the debug menu
-
+* iOS chrome has alignment issue between cursor and stroke
 
 ## Surface Pro with Surface Pen
 > NOTE: Recent changes have affected Surface Pen compatability. The issue will be worked on soon.
@@ -63,3 +63,6 @@ Drawing with the Surface Pen is seamless and intuitive.
 When enabled and working, drawing with the Surface Pen is seamless and intuitive.
 *  **Draw:** Pen Tip
 *  **Erase:** Pen Eraser
+
+### Surface Pen bugs
+* Surface Pen may not work. enabling Pen and Touch support may help
