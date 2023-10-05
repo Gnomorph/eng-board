@@ -66,3 +66,8 @@ When enabled and working, drawing with the Surface Pen is seamless and intuitive
 
 ### Surface Pen bugs
 * Surface Pen may not work. enabling Pen and Touch support may help
+
+## Additional Modules
+* [area-quadtree](https://github.com/brandon-otoole/area-quadtree)
+* [drawing-strokes](https://github.com/brandon-otoole/drawing-strokes)
+* [drawing-history](https://github.com/brandon-otoole/drawing-history)
