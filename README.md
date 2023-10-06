@@ -25,13 +25,12 @@ You can try a demo of Eng Board (please be respectful):
 * History, undo/redo
 * Stroke color
 * Stroke eraser (mouse only)
-* Fullscreen (not on Safari)
+* Fullscreen
 * Clear screen
 * Save as image (right click needed)
 
 ### Issues
 * Magic Eraser
-* Safari fullscreen (see workaround)
 * Surface Pro pen (may need workaround)
 * Alternate strokes (pencil, pen, highlighter)
 * Debug menu clears strokes
