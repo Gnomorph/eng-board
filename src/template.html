@@ -16,34 +16,18 @@
     <!-- Custom styles for this template -->
   </head>
   <body>
-    <!--
-    <svg id=sw class=radial>
-      <use xlink:href="assets/radial-quad.svg#sw"></use>
-    </svg>
-    <svg id=nw class=radial>
-      <use xlink:href="assets/radial-quad.svg#nw"></use>
-    </svg>
-    <svg id=ne class=radial>
-      <use xlink:href="assets/radial-quad.svg#ne"></use>
-    </svg>
-    <svg id=se class=radial>
-      <use xlink:href="assets/radial-quad.svg#se"></use>
-    </svg>
-    -->
     <div id="pen-submenu" class="sub-menu">
       <div id=color-container></div>
       <div> pen width: <span id=pen-width-value></span></div>
       <input id=pen-width-slider class=pointer-width type=range min=1 max=100 step=1></input>
     </div>
-    <div id="pencil-submenu" class="sub-menu">
-      pencil submenu
-    </div>
-    <div id="highlighter-submenu" class="sub-menu">
-      highlighter some day
-    </div>
+
+    <!--
     <div id="eraser-submenu" class="sub-menu">
       eraser soon!
     </div>
+    -->
+
     <div id="debug-menu">
       <div id="data" class="row-container">
         <div class="debug-label"></div>
@@ -127,21 +111,21 @@
     <div id="menu-container">
       <button id="pen" class="menu-button">
         <img src="./assets/pencil.svg" class="icon"></img> </button>
-      <button id='pencil' class="menu-button">
-        <img src="./assets/pen.svg" class="icon"></img> </button>
-      <button id='highlighter' class="menu-button">
-        <img src="./assets/highlighter.svg" class="icon"></img> </button>
       <button id='undo' class="menu-button">
         <img src="./assets/undo.svg" class="icon"></img> </button>
       <button id='redo' class="menu-button">
         <img src="./assets/redo.svg" class="icon"></img> </button>
+      <!--
       <button id='eraser' class="menu-button">
         <img src="./assets/eraser.svg" class="icon"></img> </button>
+      -->
       <button id="trash" class="menu-button">
         <img src="./assets/trash.svg" class="icon"></img> </button>
+      <!--
       <button id='save' class="menu-button">
         <img src="./assets/save.svg" class="icon"></img>
       </button>
+      -->
       <button id='fullscreen' class="menu-button">
         <img id='expand' src="./assets/expand.svg" class="icon"></img>
         <img id='compress' src="./assets/compress.svg" class="icon"></img> </button>
