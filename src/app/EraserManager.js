@@ -9,7 +9,6 @@ export class EraserManager {
 
         bus.subscribe("stroke", makeHandler.call(this));
         bus.subscribe("draw", makeHandler.call(this));
-
     }
 
     redraw() {
