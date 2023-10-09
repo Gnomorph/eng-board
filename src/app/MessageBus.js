@@ -1,23 +1,19 @@
 'use strict'
 
-export class MessageBus {
-    channels = {
-        draw: [],
-        input: [],
-        stroke: [],
-        pen: [],
-        events: [],
-        timeline: [],
-        debug: [],
+export default class MessageBus {
+    constructor(actions) {
+        this.channels = {};
+        actions.forEach((action) => this.channels[action] = []);
     }
 
-    constructor() {
-    }
-
-    _broadcast(channel, action, data) {
+    _verify(channel) {
         if (!(channel in this.channels)) {
             throw `Channel ${channel} does not exits`;
         }
+    }
+
+    _broadcast(channel, action, data) {
+        this._verify(channel);
 
         this.channels[channel]
             .forEach(([dst_id, callback]) => {
@@ -25,11 +21,8 @@ export class MessageBus {
             });
     }
 
-    _publish(src_id, name, channel, action, data) {
-        //console.log(name, channel, action);
-        if (!(channel in this.channels)) {
-            throw `Channel ${channel} does not exits`;
-        }
+    _publish(src_id, channel, action, data) {
+        this._verify(channel);
 
         this.channels[channel]
             .filter(([dst_id, callback]) => dst_id != src_id)
@@ -39,10 +32,7 @@ export class MessageBus {
     }
 
     _subscribe(id, channel, callback) {
-        if (!(channel in this.channels)) {
-            throw `Channel ${channel} does not exits`;
-        }
-
+        this._verify(channel);
         this.channels[channel].push([id, callback]);
     }
 
@@ -54,14 +44,17 @@ export class MessageBus {
         let id = Math.floor(Math.random()*2147483647);
 
         let all = function(channel, action, data) {
+            //console.log(name);
             this._broadcast(channel, action, data);
         };
 
         let pub = function(channel, action, data) {
-            this._publish(id, name, channel, action, data);
+            //console.log(name);
+            this._publish(id, channel, action, data);
         };
 
         let sub = function(channel, callback) {
+            //console.log(name);
             this._subscribe(id, channel, callback);
         };
 

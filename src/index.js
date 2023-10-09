@@ -7,7 +7,7 @@ import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
 import { DrawTip } from "drawing-strokes";
 import { PointerInput } from "./app/PointerInput.js";
-import { MessageBus } from "./app/MessageBus.js";
+import MessageBus from "./app/MessageBus.js";
 import { NetworkBridge } from "./app/NetworkBridge.js";
 import { StateManager } from "./app/StateManager.js";
 import { EraserManager } from "./app/EraserManager.js";
@@ -15,7 +15,8 @@ import { StrokeMaker } from "./app/StrokeMaker.js";
 
 export default function run(entry) {
     // All modules interact through a Message Bus
-    let bus = new MessageBus();
+    let actions = ["draw", "input", "stroke", "pen", "events", "timeline", "debug"];
+    let bus = new MessageBus(actions);
 
     let surface = new Surface(bus.client("Surface"), document.getElementById("bg-board"));
 
