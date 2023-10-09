@@ -1,4 +1,4 @@
-export { box, arc, point, line, lines, curves, dot, blot, erase }
+export { box, arc, point, line, bline, lines, curves, dot, blot, erase }
 
 import * as Bezier from "./Bezier.js";
 import { CircularBuffer } from "./CircularBuffer.js";
@@ -119,6 +119,19 @@ function line(ctx, xi, yi, xf, yf, width, style) {
         ctx.strokeStyle = style || "black";
         ctx.moveTo(xi, yi);
         ctx.lineTo(xf, yf);
+        ctx.stroke();
+    }
+}
+
+function bline(ctx, xi, yi, xf, yf, xc, yc, width, style) {
+    if (xi && yi && xf && yf) {
+        ctx.beginPath();
+        ctx.lineWidth = width*Browser.resolution;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = style || "black";
+
+        ctx.moveTo(xi, yi);
+        ctx.quadraticCurveTo(xc, yc, xf, yf)
         ctx.stroke();
     }
 }

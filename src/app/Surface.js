@@ -9,6 +9,7 @@ export class Surface {
     actions = {
         "drawStroke": this.drawStroke,
         "drawLine": this.drawLine,
+        "drawEnd": this.drawEnd,
         "drawPoint": this.drawPoint,
         "requestRedraw": this.requestRedraw,
     }
@@ -91,11 +92,38 @@ export class Surface {
     }
 
     drawLine(stroke) {
-        let prev = stroke.current;
-        let cur = stroke.previous;
         let width = stroke.tip.width;
         let color = stroke.tip.color;
-        Draw.line(this.bCtx, prev.x, prev.y, cur.x, cur.y, width, color);
+
+        let l = stroke.length;
+        if (l == 2) {
+            let p = stroke.item(l-2);
+            let c = stroke.item(l-1);
+            let ax = (p.x+c.x)/2, ay = (p.y+c.y)/2;
+
+            Draw.line(this.bCtx, p.x, p.y, ax, ay, width, color);
+        } else {
+            let p = stroke.item(l-3);
+            let c = stroke.item(l-2);
+            let q = stroke.item(l-1);
+            let ax = (p.x+c.x)/2, ay = (p.y+c.y)/2;
+            let bx = (c.x+q.x)/2, by = (c.y+q.y)/2;
+            Draw.bline(this.bCtx, ax, ay, bx, by, c.x, c.y, width, color);
+        }
+    }
+
+    drawEnd(stroke) {
+        let width = stroke.tip.width;
+        let color = stroke.tip.color;
+
+        let l = stroke.length;
+        if (l >= 2) {
+            let c = stroke.item(l-2);
+            let q = stroke.item(l-1);
+            let ax = (c.x+q.x)/2, ay = (c.y+q.y)/2;
+
+            Draw.line(this.bCtx, ax, ay, q.x, q.y, width, color);
+        }
     }
 
     drawPoint(stroke) {
@@ -111,12 +139,60 @@ export class Surface {
         let color = stroke.tip.color || "black";
         let width = stroke.tip.width || 2;
         let last = null;
-        for (let point of stroke) {
-            if (last) {
-                Draw.line(this.bCtx, last.x, last.y, point.x, point.y, width, color);
+
+        const l = stroke.length
+        if (l <= 0) {
+            return;
+        }
+
+        if (l == 1) {
+            this.drawPoint(stroke);
+            return;
+        }
+
+        if (l == 2) {
+            // draw a single line
+            const p = stroke.item(0);
+            const q = stroke.item(1);
+            Draw.line(this.bCtx, p.x, p.y, q.x, q.y, width, color);
+            return;
+        }
+
+        // if l == 2, then it this will draw two half lines
+        if (l >= 2) {
+            // draw the start line
+            {
+                const p = stroke.item(0);
+                const q = stroke.item(1);
+                const mx = (p.x + q.x) / 2;
+                const my = (p.y + q.y) / 2;
+                Draw.line(this.bCtx, p.x, p.y, mx, my, width, color);
             }
 
-            last = point;
+            // draw the start line
+            {
+                const p = stroke.item(l-2);
+                const q = stroke.item(l-1);
+                const mx = (p.x + q.x) / 2;
+                const my = (p.y + q.y) / 2;
+                Draw.line(this.bCtx, mx, my, q.x, q.y, width, color);
+            }
+        }
+
+        // draw quadratics between each mid
+        for (let i=1; i<l-1; ++i) {
+            const c = stroke.item(i);
+            const p = stroke.item(i-1);
+            const q = stroke.item(i+1);
+
+            const ax = (p.x + c.x) / 2;
+            const ay = (p.y + c.y) / 2;
+
+            const bx = (c.x + q.x) / 2;
+            const by = (c.y + q.y) / 2;
+
+            Draw.bline(this.bCtx, ax, ay, bx, by, c.x, c.y, width, color);
+            //Draw.line(this.bCtx, ax, ay, bx, by, width, color);
         }
     }
 

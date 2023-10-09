@@ -144,6 +144,7 @@ export class StateManager {
         let stroke;
         if (this.history.has(data.id)) {
             stroke = this.history.endStroke(data.id);
+            this.bus.publish('draw', 'drawEnd', stroke);
             this.addToQuadTree(stroke);
         }
     }
