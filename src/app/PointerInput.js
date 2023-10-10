@@ -15,6 +15,10 @@ export class PointerInput {
 
         // turn off context menues
         surface.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // prevent touch scrolling
+        surface.addEventListener('touchstart', (e) => e.preventDefault());
+        surface.addEventListener('touchmove', (e) => e.preventDefault());
     }
 
     newInput(id, type, point, tilt, pressure) {
