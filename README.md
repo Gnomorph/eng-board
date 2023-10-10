@@ -40,25 +40,18 @@ Most devices with a mouse or Wacom tablet should work without issue. Firefox and
 Mobile devices are great for viewing drawings that others are making. They can also manipulate the drawing history with undo/redo, as well as clear the screen.
 
 ## iPad with Apple Pencil
-> NOTE: The Magic Eraser is not working currently. The issue will be worked on soon.
+> NOTE: The Magic Eraser is not working currently. The [issue](https://github.com/brandon-otoole/eng-board/issues/1) will be worked on soon.
 
 Drawing with the Surface Pen is seamless and intuitive.
 *  **Draw:** Pencil Tip
 *  **Erase:** Magic Eraser - One finger touches the bottom right corner, and a second finger becomes an eraser.
 
-### iOS bugs
-* on first load, the pen will scroll the window, and only make short marks. a temporary work-around is to open and close the debug menu
-* iOS chrome has alignment issue between cursor and stroke
-
 ## Surface Pro with Surface Pen
-> NOTE: Recent changes have affected Surface Pen compatability. The issue will be worked on soon.
+> NOTE: Recent changes have affected Surface Pen compatability. The [issue](https://github.com/brandon-otoole/eng-board/labels/input%3A%20Microsoft%20Surface%20Pen) will be worked on soon.
 
 When enabled and working, drawing with the Surface Pen is seamless and intuitive.
 *  **Draw:** Pen Tip
 *  **Erase:** Pen Eraser
-
-### Surface Pen bugs
-* Surface Pen may not work. enabling Pen and Touch support may help
 
 ## Additional Modules
 * [area-quadtree](https://github.com/brandon-otoole/area-quadtree)
