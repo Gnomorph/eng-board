@@ -38,7 +38,9 @@ Most devices with a mouse or Wacom tablet should work without issue. Firefox and
 > NOTE: Touch drawing is disabled by design. Mobile devices without a pen or mouse cannot draw.
 
 Mobile devices are great for viewing drawings that others are making. They can also manipulate the drawing history with undo/redo, as well as clear the screen.
-
+*  **Draw:** Not Allowed
+*  **Erase:** Not Allowed
+  
 ## iPad with Apple Pencil
 > NOTE: The Magic Eraser is not working currently. The [issue](https://github.com/brandon-otoole/eng-board/issues/1) will be worked on soon.
 
