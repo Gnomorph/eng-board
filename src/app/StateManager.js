@@ -133,10 +133,19 @@ export class StateManager {
 
         let stroke;
         if (this.history.has(data.id)) {
-            stroke = this.history.addStroke(data.id, x, y, tiltX, tiltY);
-            this.bus.publish('draw', 'drawLine', stroke);
-        }
+            // this should really be handled in history, maybe
+            let historyStroke = this.history.storage.getData(data.id);
+            let lastPath = historyStroke._path;
 
+            const l = lastPath.length
+            const lastPoint = l > 1 ? lastPath[l-1] : {x: -1, y:-1};
+
+            // filter out duplicate points
+            if (x != lastPoint._x || y != lastPoint._y) {
+                stroke = this.history.addStroke(data.id, x, y, tiltX, tiltY);
+                this.bus.publish('draw', 'drawLine', stroke);
+            }
+        }
     }
 
     // finalize the given stroke (remove it from openStrokes)
