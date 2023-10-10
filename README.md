@@ -29,12 +29,6 @@ You can try a demo of Eng Board (please be respectful):
 * Clear screen
 * Save as image (right click needed)
 
-### Issues
-* Magic Eraser
-* Surface Pro pen (may need workaround)
-* Alternate strokes (pencil, pen, highlighter)
-* Debug menu clears strokes
-
 ## Desktop
 Most devices with a mouse or Wacom tablet should work without issue. Firefox and Chromium based browsers have been tested on Windows and Linux.
 *  **Draw:** Left Click
