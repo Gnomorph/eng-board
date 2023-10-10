@@ -16,12 +16,12 @@ class _Browser {
 
     // Is the board limited by the "height" in the aspect ratio
     get shortLimited() {
-        return this.trueHeight / this.trueWidth <= 16/10.5;
+        return 1.0*this.trueWidth / this.trueHeight >= 16/10.5;
     }
 
     // Is the board limited by the "width" in the aspect ratio
     get longLimited() {
-        return this.trueWidth / this.trueHeight <= 16/10.5;
+        return 1.0*this.trueWidth / this.trueHeight <= 16/10.5;
     }
 
     get resolution() {
@@ -82,7 +82,7 @@ class _Browser {
 
     scale(value) {
         // only the limited edge can be used to scale correctly
-        let factor = this.shortLimited ? 1600/this.width : 1050/this.height;
+        const factor = this.shortLimited ? 1600/this.width : 1050/this.height;
         return value * factor;
     }
 }
