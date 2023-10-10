@@ -99,16 +99,21 @@ function move(e) {
     }
 
     e.preventDefault();
+    // try to get higher resolution points data
+    let points = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
 
-    let [x, y] = getXY(e);
+    for (const ce of points) {
+        let [x, y] = getXY(e);
 
-    let point = [ Browser.scale(x), Browser.scale(y) ];
-    let tilt = [e.tiltX, e.tiltY];
-    if (e.pointerType == "pen") {
-        this.addInput(e.pointerId, point, tilt);
-    } else if (e.pointerType == "mouse" && this.mouseInput) {
-        this.addInput(this.mouseInput.id, point, tilt);
+        let point = [ Browser.scale(x), Browser.scale(y) ];
+        let tilt = [e.tiltX, e.tiltY];
+        if (e.pointerType == "pen") {
+            this.addInput(e.pointerId, point, tilt);
+        } else if (e.pointerType == "mouse" && this.mouseInput) {
+            this.addInput(this.mouseInput.id, point, tilt);
+        }
     }
+
 }
 
 function stop(e) {
