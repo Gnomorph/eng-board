@@ -37,13 +37,12 @@ export class Surface {
         // Setup Each Context
         this.bCtx = getMinimalContext(this.board);
 
-        this.transform();
-
-        this.drawGreenScreen(this.bCtx);
+        this.resize();
 
         this.clearScreen();
 
-        window.addEventListener('resize', this.resize.bind(this), 100);
+        window.addEventListener('resize', this.resize.bind(this));
+        window.addEventListener('orientationchange', this.resize.bind(this));
     }
 
     scale(value) {
@@ -58,16 +57,18 @@ export class Surface {
     }
 
     resize() {
-        setTimeout(() => {
-            this.board.width = this.width;
-            this.board.height = this.height;
+        const bgboard = document.getElementById("bg-board");
+        if (Browser.longLimited) {
+            bgboard.style.width = window.innerWidth + "px";
+            bgboard.style.height = window.innerWidth*10.5/16 + "px";
+        } else {
+            bgboard.style.width = window.innerHeight*16/10.5 + "px";
+            bgboard.style.height = window.innerHeight + "px";
+        }
 
-            this.transform();
+        this.drawGreenScreen(this.bCtx);
 
-            this.drawGreenScreen(this.bCtx);
-
-            this.bus.publish('events', 'resize');
-        }, 100);
+        this.bus.publish('events', 'resize');
     }
 
     /***************************
