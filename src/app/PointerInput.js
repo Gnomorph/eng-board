@@ -1,11 +1,35 @@
 'use strict'
 
 import { Browser } from "./Browser.js";
-import { MouseInput } from "./MouseInput.js";
 import * as Draw from "./Draw.js";
 const touchEnabled = false;
 
 export class PointerInput {
+    takenIds = new Set();
+    idMap = {};
+
+    deregisterId(pointerId) {
+        const id = this.idMap[pointerId];
+
+        delete this.idMap[pointerId];
+
+        return id;
+    }
+
+    registerId(pointerId) {
+        let id;
+
+        // test to see if it already exists
+        while (!id || id in this.takenIds) {
+            id = Math.floor(Math.random()*2147483647);
+        }
+
+        this.takenIds.add(id);
+        this.idMap[pointerId] = id;
+
+        return id;
+    }
+
     constructor(bus, surface) {
         this.bus = bus;
 
@@ -66,12 +90,15 @@ function start(e) {
     let tilt = [ e.tiltX, e.tiltY ];
     if (e.pointerType=="pen") {
         let type = (tilt[0] || tilt[1]) ? "pen" : "eraser";
-        this.newInput(e.pointerId, type, point, tilt);
+
+        const id = this.registerId(e.pointerId);
+        this.newInput(id, type, point, tilt);
     } else if (e.pointerType == "mouse") {
         // button 2 is the right click, button 4 is (?) the wheel
         let type = (e.buttons == 2) ? "eraser" : "pen";
-        this.mouseInput = new MouseInput(type);
-        this.newInput(this.mouseInput.id, type, point);
+
+        const id = this.registerId(e.pointerId);
+        this.newInput(id, type, point);
     } else if (e.pointerType === "touch") {
         // Send a single touch as a pointing event, (or handled downstream)
 
@@ -99,6 +126,7 @@ function move(e) {
     }
 
     e.preventDefault();
+
     // try to get higher resolution points data
     let points = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
 
@@ -108,12 +136,13 @@ function move(e) {
         let point = [ Browser.scale(x), Browser.scale(y) ];
         let tilt = [e.tiltX, e.tiltY];
         if (e.pointerType == "pen") {
-            this.addInput(e.pointerId, point, tilt);
-        } else if (e.pointerType == "mouse" && this.mouseInput) {
-            this.addInput(this.mouseInput.id, point, tilt);
+            const id = this.idMap[e.pointerId];
+            this.addInput(id, point, tilt);
+        } else if (e.pointerType == "mouse") {
+            const id = this.idMap[e.pointerId];
+            this.addInput(id, point, tilt);
         }
     }
-
 }
 
 function stop(e) {
@@ -123,16 +152,19 @@ function stop(e) {
 
     let point = [ Browser.scale(x), Browser.scale(y) ];
     let tilt = [e.tiltX, e.tiltY];
-    if (e.pointerType == "mouse" && this.mouseInput) {
-        this.addInput(this.mouseInput.id, point, tilt);
-        this.endInput(this.mouseInput.id);
 
-        this.mouseInput = undefined;
+    if (e.pointerType == "mouse") {
+        const id = this.deregisterId(e.pointerId);
+
+        this.addInput(id, point, tilt);
+        this.endInput(id);
     } else if (e.pointerType=="pen") {
         if (buttons == "2") {
             return;
         }
 
+        const id = this.deregisterId(e.pointerId);
+        this.addInput(id, point, tilt);
         this.endInput(id);
     }
 }
