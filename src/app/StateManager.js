@@ -54,7 +54,7 @@ export class StateManager {
 
         let dlLink = document.getElementById('dl-link');
         dlLink.href = image.src;
-        dlLink.download = `wb-screenshot-${new Date()}.svg`;
+        dlLink.download = `engboard-screenshot-${new Date()}.svg`;
     }
 
     constructor(bus) {
