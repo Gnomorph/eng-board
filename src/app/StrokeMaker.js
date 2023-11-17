@@ -1,5 +1,17 @@
 import { Stroke, DrawTip } from "drawing-strokes";
 
+/**
+ *  The purpose of the StrokeMaker module is to manage the state of the software
+ *  defined drawing tool. It collects changes to width and color, and injects
+ *  them into a stroke which is passed along on the bus
+ *
+ *  currently it creates a stroke object on each new input, but this might be
+ *  contributing to a bit too much coupling with downstream modules
+ *
+ *  TODO: possibly move the "stroke" logic downstream, and just send raw
+ *        id, width, color, xy, and tilt
+ **/
+
 // listen to input actions
 // send out stroke actions
 class StrokeMaker {
@@ -17,7 +29,10 @@ class StrokeMaker {
     constructor(bus) {
         this.bus = bus;
 
+        // this picks up standardized input movement of the drawing tool
         this.bus.subscribe('input', this.handleBusMessage.bind(this));
+
+        // this picks up changes in the pen type (color, width)
         this.bus.subscribe('pen', this.handleBusMessage.bind(this));
     }
 
