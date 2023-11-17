@@ -4,7 +4,7 @@
   "description": "A whiteboard app to replace a lost one",
   "main": "index.html",
   "scripts": {
-    "start": "NODE_OPTIONS=--openssl-legacy-provider cp -a config.local.js ./src/app/config.js; webpack serve --config webpack.dev.js --open",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider; webpack serve --config webpack.dev.js",
     "build-dev": "webpack --config webpack.prod.js",
     "build": "webpack --config webpack.prod.js"
   },
