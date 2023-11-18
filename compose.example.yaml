@@ -1,0 +1,33 @@
+services:
+  proxy:
+    image: ghcr.io/brandon-otoole/eng-board-proxy
+    build: ./proxy
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "8000:80"
+
+  frontend:
+    image: ghcr.io/brandon-otoole/eng-board-frontend
+    build:
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend/src:/app/src
+    ports:
+      - "8080:8080"
+
+  backend:
+    image: ghcr.io/brandon-otoole/eng-board-backend
+    build:
+      context: ./backend
+      target: development
+    volumes:
+      - ./backend/src:/app/src
+    ports:
+      - "7000:7000"
+    environment:
+      - PORT=7000
+      - HTTP_HOST=localhost:8000
+      - ROOMS=[ "room1", "room2", "testroom", "asdf1234" ]
