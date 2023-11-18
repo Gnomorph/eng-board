@@ -9,16 +9,8 @@ FROM node:20.9-bookworm-slim as base
 # Create app directory
 WORKDIR /app
 
-# mount the source code
-VOLUME ./src
-
 # install config files for node
 COPY package*.json ./
-
-# install config files for weback
-COPY ./webpack.prod.js ./
-COPY ./webpack.dev.js ./
-COPY ./webpack.config.js ./
 
 ########## ########## ##########
 
@@ -29,26 +21,14 @@ COPY ./webpack.config.js ./
 ##################################################
 FROM base as development
 
+# mount the source code, so changes are transparent and live
+VOLUME ./src
+
 # install npm modules for a development system
 RUN npm install
 
-# serving dev site on internal port 8080
+# running on internal port 7000 (as default, set with PORT)
 CMD ["npm", "start"]
-
-########## ########## ##########
-
-##################################################
-#                                                #
-#        The builder stage for Production        #
-#                                                #
-##################################################
-FROM base as builder
-
-# install npm modules for a production system
-RUN npm ci --omit=dev
-
-# build for production (ends up in /app/dist)
-RUN npm run build
 
 ########## ########## ##########
 
@@ -57,21 +37,15 @@ RUN npm run build
 #             Final Production Build             #
 #                                                #
 ##################################################
-FROM nginx:1.25-bookworm
+FROM base as builder
 
-# install the nginx site config file
-COPY ./frontend.conf /etc/nginx/conf.d/default.conf
+# copy source files into the container so they are deployed
+COPY ./src ./src
 
-# set the working directory to the nginx site root
-WORKDIR /usr/share/nginx/html
+# install npm modules for a production system
+RUN npm ci --omit=dev
 
-# remove all default nginx files
-RUN rm -rf ./*
+# running on internal port 7000 (as default, set with PORT)
+CMD ["npm", "start"]
 
-# copy build files from previous stage
-COPY --from=builder /app/dist/* .
-
-# serving content on internal port 8080
-
-# start nginx and serve content
-CMD ["nginx", "-g", "daemon off;"]
+########## ########## ##########
