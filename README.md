@@ -12,13 +12,13 @@ Almost any device with a browser should be able to view realtime drawings in pub
 ### Demo
 > NOTE: Please see the section for your platform to check for any limitations, installation instructions, or bugs.
 
-You can try a demo of Eng Board (please be respectful): 
+You can try a demo of Eng Board (please be respectful):
 * [app.engbrd.com](https://app.engbrd.com) (local drawing only)
-* [app.engbrd.com/?room=ps6tt](https://app.engbrd.com/?room=ps6tt) (shared, public)
-* [app.engbrd.com/?room=m9r57](https://app.engbrd.com/?room=m9r57) (shared, public)
-* [app.engbrd.com/?room=fowyj](https://app.engbrd.com/?room=fowyj) (shared, public)
-* [app.engbrd.com/?room=ythyp](https://app.engbrd.com/?room=ythyp) (shared, public)
-* [app.engbrd.com/?room=hf3jf](https://app.engbrd.com/?room=hf3jf) (shared, public)
+* [app.engbrd.com/ps6tt](https://app.engbrd.com/ps6tt) (shared, public)
+* [app.engbrd.com/m9r57](https://app.engbrd.com/m9r57) (shared, public)
+* [app.engbrd.com/fowyj](https://app.engbrd.com/fowyj) (shared, public)
+* [app.engbrd.com/ythyp](https://app.engbrd.com/ythyp) (shared, public)
+* [app.engbrd.com/hf3jf](https://app.engbrd.com/hf3jf) (shared, public)
 
 ## Features
 * Real-time collaborative drawing
@@ -40,7 +40,7 @@ Most devices with a mouse or Wacom tablet should work without issue. Firefox and
 Mobile devices are great for viewing drawings that others are making. They can also manipulate the drawing history with undo/redo, as well as clear the screen.
 *  **Draw:** Not Allowed
 *  **Erase:** Not Allowed
-  
+
 ## iPad with Apple Pencil
 > NOTE: The Magic Eraser is not working currently. The [issue](https://github.com/brandon-otoole/eng-board/issues/1) will be worked on soon.
 

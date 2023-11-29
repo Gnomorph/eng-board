@@ -1,6 +1,9 @@
 import run from "./index.js";
 
-if (location.pathname === "/") {
-    run("main");
+let room;
+if (location.pathname != "" && location.pathname != "/") {
+    let path = location.pathname.split('/');
+    room = path[1];
 }
 
+run(room);

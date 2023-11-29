@@ -6,7 +6,12 @@ const {merge} = require("webpack-merge");
 
 module.exports = merge(common, {
     mode: "development",
+    devServer: {
+        port: 8080,
+        historyApiFallback: true,
+    },
     output: {
+        publicPath: "/",
         filename: "[name].[bundle].js",
         path: path.resolve(__dirname, "dev")
     },

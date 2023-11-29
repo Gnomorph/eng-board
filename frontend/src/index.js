@@ -1,7 +1,5 @@
 import "./main.scss";
 
-import qs from "query-string";
-
 import { Debug } from "./app/Debug.js";
 import { Menu } from "./app/Menu.js";
 import { Surface } from "./app/Surface.js";
@@ -13,14 +11,13 @@ import { StateManager } from "./app/StateManager.js";
 import { EraserManager } from "./app/EraserManager.js";
 import { StrokeMaker } from "./app/StrokeMaker.js";
 
-export default function run(entry) {
+export default function run(room) {
     // All modules interact through a Message Bus
     let actions = ["draw", "input", "stroke", "pen", "events", "timeline", "debug"];
     let bus = new MessageBus(actions);
 
     let surface = new Surface(bus.client("Surface"), document.getElementById("bg-board"));
 
-    let room = qs.parse(location.search).room;
     new NetworkBridge(bus.client("NetworkBridge"), room);
 
     new StateManager(bus.client("StateManager"), surface);
