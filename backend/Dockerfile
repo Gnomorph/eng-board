@@ -27,6 +27,8 @@ VOLUME ./src
 # install npm modules for a development system
 RUN npm install
 
+WORKDIR /app/src/
+
 # running on internal port 7000 (as default, set with PORT)
 CMD ["npm", "start"]
 
@@ -37,7 +39,7 @@ CMD ["npm", "start"]
 #             Final Production Build             #
 #                                                #
 ##################################################
-FROM base as builder
+FROM base as production
 
 # copy source files into the container so they are deployed
 COPY ./src ./src
@@ -45,7 +47,9 @@ COPY ./src ./src
 # install npm modules for a production system
 RUN npm ci --omit=dev
 
+WORKDIR /app/src/
+
 # running on internal port 7000 (as default, set with PORT)
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
 
 ########## ########## ##########

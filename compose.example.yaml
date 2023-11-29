@@ -1,7 +1,10 @@
 services:
   proxy:
     image: ghcr.io/brandon-otoole/eng-board-proxy
-    build: ./proxy
+    build:
+      context: ./proxy
+      args:
+        DOCKER_BUILDKIT: 1
     depends_on:
       - backend
       - frontend
@@ -13,6 +16,8 @@ services:
     build:
       context: ./frontend
       target: development
+      args:
+        DOCKER_BUILDKIT: 1
     volumes:
       - ./frontend/src:/app/src
     ports:
@@ -23,6 +28,8 @@ services:
     build:
       context: ./backend
       target: development
+      args:
+        DOCKER_BUILDKIT: 1
     volumes:
       - ./backend/src:/app/src
     ports:

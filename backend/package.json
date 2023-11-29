@@ -5,7 +5,7 @@
     "description": "A microservice to pass drawing data to clients of the whiteboard",
     "main": "src/index.js",
     "scripts": {
-        "start": "cd src/; nodemon index.js"
+        "start": "nodemon index.js"
     },
     "author": "Brandon OToole",
     "license": "ISC",

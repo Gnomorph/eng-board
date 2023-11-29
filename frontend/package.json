@@ -4,8 +4,7 @@
   "description": "A whiteboard app to replace a lost one",
   "main": "index.html",
   "scripts": {
-    "start": "NODE_OPTIONS=--openssl-legacy-provider; webpack serve --config webpack.dev.js",
-    "build-dev": "webpack --config webpack.prod.js",
+    "start": "webpack serve --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js"
   },
   "author": "Brandon OToole",

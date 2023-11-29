@@ -9,9 +9,6 @@ FROM node:20.9-bookworm-slim as base
 # Create app directory
 WORKDIR /app
 
-# mount the source code
-VOLUME ./src
-
 # install config files for node
 COPY package*.json ./
 
@@ -29,6 +26,9 @@ COPY ./webpack.config.js ./
 ##################################################
 FROM base as development
 
+# mount the source code
+VOLUME ./src
+
 # install npm modules for a development system
 RUN npm install
 
@@ -44,8 +44,11 @@ CMD ["npm", "start"]
 ##################################################
 FROM base as builder
 
+# mount the source code
+COPY ./src ./src
+
 # install npm modules for a production system
-RUN npm ci --omit=dev
+RUN npm ci
 
 # build for production (ends up in /app/dist)
 RUN npm run build
@@ -57,7 +60,7 @@ RUN npm run build
 #             Final Production Build             #
 #                                                #
 ##################################################
-FROM nginx:1.25-bookworm
+FROM nginx:1.25-bookworm as production
 
 # install the nginx site config file
 COPY ./frontend.conf /etc/nginx/conf.d/default.conf
