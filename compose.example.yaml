@@ -1,6 +1,6 @@
 services:
   proxy:
-    image: ghcr.io/brandon-otoole/eng-board-proxy
+    image: dev/eng-board-proxy
     build:
       context: ./proxy
       args:
@@ -12,7 +12,7 @@ services:
       - "8000:80"
 
   frontend:
-    image: ghcr.io/brandon-otoole/eng-board-frontend
+    image: dev/eng-board-frontend
     build:
       context: ./frontend
       target: development
@@ -24,7 +24,7 @@ services:
       - "8080:8080"
 
   backend:
-    image: ghcr.io/brandon-otoole/eng-board-backend
+    image: dev/eng-board-backend
     build:
       context: ./backend
       target: development
